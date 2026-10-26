@@ -4,21 +4,61 @@ CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
 -- CreateEnum
 CREATE TYPE "HouseStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
+-- CreateEnum
+CREATE TYPE "AccountType" AS ENUM ('VIEWER', 'HOST');
+
+-- CreateEnum
+CREATE TYPE "TokenPurpose" AS ENUM ('VERIFY', 'LOGIN');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "passwordHash" TEXT NOT NULL,
+    "username" TEXT NOT NULL,
+    "accountType" "AccountType" NOT NULL DEFAULT 'VIEWER',
+    "emailVerifiedAt" TIMESTAMP(3),
     "role" "Role" NOT NULL DEFAULT 'USER',
     "xp" INTEGER NOT NULL DEFAULT 0,
     "referralCode" TEXT NOT NULL,
     "referredById" TEXT,
     "marketingOptIn" BOOLEAN NOT NULL DEFAULT false,
+    "displayName" TEXT,
+    "bio" TEXT,
+    "hometown" TEXT,
+    "avatarUpdatedAt" TIMESTAMP(3),
+    "propertyAddress" TEXT,
+    "neighborhood" TEXT,
+    "hostSeason" TEXT,
+    "decorationTheme" TEXT,
+    "propertyDetails" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "lastLoginAt" TIMESTAMP(3),
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Avatar" (
+    "userId" TEXT NOT NULL,
+    "contentType" TEXT NOT NULL,
+    "data" BYTEA NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Avatar_pkey" PRIMARY KEY ("userId")
+);
+
+-- CreateTable
+CREATE TABLE "EmailToken" (
+    "id" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "purpose" "TokenPurpose" NOT NULL,
+    "next" TEXT,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "EmailToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -90,7 +130,16 @@ CREATE TABLE "EmailLog" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_referralCode_key" ON "User"("referralCode");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EmailToken_tokenHash_key" ON "EmailToken"("tokenHash");
+
+-- CreateIndex
+CREATE INDEX "EmailToken_userId_idx" ON "EmailToken"("userId");
 
 -- CreateIndex
 CREATE INDEX "House_season_status_idx" ON "House"("season", "status");
@@ -103,6 +152,12 @@ CREATE INDEX "EmailLog_createdAt_idx" ON "EmailLog"("createdAt");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_referredById_fkey" FOREIGN KEY ("referredById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Avatar" ADD CONSTRAINT "Avatar_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "EmailToken" ADD CONSTRAINT "EmailToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "House" ADD CONSTRAINT "House_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

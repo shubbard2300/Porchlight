@@ -5,9 +5,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   return (
     <main className="wrap narrow stack">
-      <h1 style={{ fontSize: 34 }}>Welcome back</h1>
+      <div className="stack" style={{ gap: 6 }}>
+        <h1 style={{ fontSize: 34 }}>Welcome back</h1>
+        <p className="muted">We&apos;ll email you a link that signs you in. No password to remember.</p>
+      </div>
       <div className="panel"><LoginForm next={next} /></div>
-      <p className="small muted">New here? <Link href={`/signup${next ? `?next=${encodeURIComponent(next)}` : ''}`}>Create an account</Link></p>
+      <p className="small muted">New here? <Link href="/join">Join Porchlight</Link></p>
     </main>
   );
 }

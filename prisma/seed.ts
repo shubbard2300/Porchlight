@@ -1,17 +1,15 @@
-import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 const db = new PrismaClient();
 
 async function main() {
-  const email = (process.env.SEED_ADMIN_EMAIL ?? '').toLowerCase();
-  const password = process.env.SEED_ADMIN_PASSWORD ?? '';
-  if (!email || password.length < 8) throw new Error('Set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD (8+ characters) to seed.');
+  const email = (process.env.SEED_ADMIN_EMAIL ?? '').trim().toLowerCase();
+  if (!email) throw new Error('Set SEED_ADMIN_EMAIL to seed the first admin.');
 
   const admin = await db.user.upsert({
     where: { email },
     update: { role: 'ADMIN' },
-    create: { email, name: 'Porchlight Admin', role: 'ADMIN', passwordHash: await bcrypt.hash(password, 12), referralCode: 'PORCH-ADMIN', xp: 100 },
+    create: { email, username: 'porchlight_team', accountType: 'HOST', role: 'ADMIN', emailVerifiedAt: new Date(), referralCode: 'PORCH-ADMIN', xp: 100 },
   });
   if (process.env.ADMIN_NOTIFY_EMAIL) {
     await db.setting.upsert({ where: { key: 'notificationEmail' }, update: {}, create: { key: 'notificationEmail', value: process.env.ADMIN_NOTIFY_EMAIL } });
@@ -27,7 +25,7 @@ async function main() {
       await db.house.create({ data: { ownerId: admin.id, season, name, address, neighborhood, description, tags: [...tags], litFrom: '6 pm', litUntil: '10 pm', contributionCents: cents, status: 'APPROVED', reviewedAt: new Date() } });
     }
   }
-  console.log(`Seeded admin ${email}`);
+  console.log(`Seeded admin ${email}. Run \`npm run sign-in-link -- ${email}\` to sign in before email is set up.`);
 }
 
 main().finally(() => db.$disconnect());

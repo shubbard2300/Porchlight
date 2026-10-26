@@ -1,18 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { houseSchema, signupSchema } from './validation';
+import { houseSchema, joinSchema } from './validation';
 
-describe('signupSchema', () => {
-  it('normalizes email and reads checkboxes', () => {
-    const r = signupSchema.safeParse({ name: 'Sam', email: '  Sam@Example.COM ', password: 'longenough', terms: 'on' });
+describe('joinSchema', () => {
+  const base = { accountType: 'VIEWER', email: '  Sam@Example.COM ', username: 'Sam_Rivera', terms: 'on' };
+  it('normalizes email and username and reads checkboxes', () => {
+    const r = joinSchema.safeParse(base);
     expect(r.success).toBe(true);
     if (r.success) {
       expect(r.data.email).toBe('sam@example.com');
+      expect(r.data.username).toBe('sam_rivera');
       expect(r.data.marketingOptIn).toBe(false);
     }
   });
-  it('requires accepting the rules', () => {
-    const r = signupSchema.safeParse({ name: 'Sam', email: 'sam@example.com', password: 'longenough' });
-    expect(r.success).toBe(false);
+  it('rejects bad and reserved usernames', () => {
+    expect(joinSchema.safeParse({ ...base, username: 'a b' }).success).toBe(false);
+    expect(joinSchema.safeParse({ ...base, username: 'xy' }).success).toBe(false);
+    expect(joinSchema.safeParse({ ...base, username: 'Admin' }).success).toBe(false);
+  });
+  it('requires accepting the rules and a known account type', () => {
+    expect(joinSchema.safeParse({ ...base, terms: undefined }).success).toBe(false);
+    expect(joinSchema.safeParse({ ...base, accountType: 'JUDGE' }).success).toBe(false);
+  });
+  it('lets hosts add an optional property location', () => {
+    const r = joinSchema.safeParse({ ...base, accountType: 'HOST', propertyAddress: '1820 SE Alder Ct' });
+    expect(r.success && r.data.propertyAddress).toBe('1820 SE Alder Ct');
   });
 });
 

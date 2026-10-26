@@ -20,14 +20,14 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
         return (
           <article key={h.id} className="panel stack" style={{ gap: 10 }}>
             <div className="row spread">
-              <div><h2 style={{ fontSize: 20 }}>{h.name}</h2><span className="small muted">{s ? `${s.name} ${s.year}` : h.season} · posted {h.createdAt.toLocaleDateString('en-US')} by {h.owner.name} &lt;{h.owner.email}&gt;</span></div>
+              <div><h2 style={{ fontSize: 20 }}>{h.name}</h2><span className="small muted">{s ? `${s.name} ${s.year}` : h.season} · posted {h.createdAt.toLocaleDateString('en-US')} by @{h.owner.username} &lt;{h.owner.email}&gt;</span></div>
               <span className={`pill ${h.status}`}>{h.status.toLowerCase()}</span>
             </div>
             <p className="small">{h.address}{h.neighborhood ? ` · ${h.neighborhood}` : ''} · {h.showExactAddress ? 'exact address public' : 'address hidden until check-in'} · lit {h.litFrom}–{h.litUntil} · pledge ${h.contributionCents / 100}</p>
             <p>{h.description}</p>
             {h.tags.length > 0 && <div className="row">{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
             {h.reviewNote && <p className="small muted">Note: {h.reviewNote}</p>}
-            <ReviewControls id={h.id} owner={h.owner.name} status={h.status} />
+            <ReviewControls id={h.id} owner={h.owner.username} status={h.status} />
           </article>
         );
       })}

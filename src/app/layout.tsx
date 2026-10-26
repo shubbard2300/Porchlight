@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { currentUser } from '@/lib/auth';
+import { avatarUrl } from '@/lib/users';
 import { logout } from './actions/auth';
 import './globals.css';
 
@@ -33,16 +34,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {user ? (
                 <>
                   {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
-                  <Link href="/account">{user.name.split(' ')[0]} · <span className="num">{user.xp}</span> XP</Link>
+                  <Link href="/profile" className="me">
+                    {avatarUrl(user) ? <img src={avatarUrl(user)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{user.username[0].toUpperCase()}</span>}
+                    {user.username} · <span className="num">{user.xp}</span> XP
+                  </Link>
                   <form action={logout}><button type="submit">Log out</button></form>
                 </>
               ) : (
                 <>
                   <Link href="/login">Log in</Link>
-                  <Link href="/signup">Sign up</Link>
+                  <Link href="/join">Sign up</Link>
                 </>
               )}
-              <Link href="/submit" className="cta">Post your house</Link>
+              <Link href={user ? '/submit' : '/join/host'} className="cta">Post your house</Link>
             </nav>
           </div>
         </header>

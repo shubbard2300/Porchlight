@@ -18,22 +18,73 @@ enum HouseStatus {
   REJECTED
 }
 
+enum AccountType {
+  VIEWER
+  HOST
+}
+
+enum TokenPurpose {
+  VERIFY
+  LOGIN
+}
+
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String
-  passwordHash   String
-  role           Role      @default(USER)
-  xp             Int       @default(0)
-  referralCode   String    @unique
-  referredById   String?
-  referredBy     User?     @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals      User[]    @relation("Referrals")
-  marketingOptIn Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  lastLoginAt    DateTime?
-  houses         House[]
-  votes          Vote[]
+  id               String       @id @default(cuid())
+  email            String       @unique
+  username         String       @unique
+  accountType      AccountType  @default(VIEWER)
+  emailVerifiedAt  DateTime?
+  role             Role         @default(USER)
+  xp               Int          @default(0)
+  referralCode     String       @unique
+  referredById     String?
+  referredBy       User?        @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals        User[]       @relation("Referrals")
+  marketingOptIn   Boolean      @default(false)
+
+  // Profile (all optional)
+  displayName      String?
+  bio              String?
+  hometown         String?
+  avatarUpdatedAt  DateTime?
+  avatar           Avatar?
+
+  // Host profile (optional, filled in after verifying)
+  propertyAddress  String?
+  neighborhood     String?
+  hostSeason       String?
+  decorationTheme  String?
+  propertyDetails  String?
+
+  createdAt        DateTime     @default(now())
+  lastLoginAt      DateTime?
+  houses           House[]
+  votes            Vote[]
+  tokens           EmailToken[]
+}
+
+/// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
+model Avatar {
+  userId      String   @id
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentType String
+  data        Bytes
+  updatedAt   DateTime @updatedAt
+}
+
+/// One-time links for verifying an email and for signing in. Only a SHA-256 hash of the token is stored.
+model EmailToken {
+  id        String       @id @default(cuid())
+  tokenHash String       @unique
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   TokenPurpose
+  next      String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
 }
 
 model House {

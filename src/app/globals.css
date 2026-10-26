@@ -128,3 +128,25 @@ th { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; t
 tr:last-child td { border-bottom: 0; }
 details summary { cursor: pointer; color: var(--mist); }
 pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var(--night); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px; margin: 8px 0 0; }
+
+/* join */
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.choice { display: grid; gap: 10px; align-content: start; padding: 26px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--dusk); color: var(--frost); text-decoration: none; transition: transform 0.15s, border-color 0.15s; }
+.choice:hover { transform: translateY(-2px); border-color: rgba(63, 210, 154, 0.6); }
+.choice.host:hover { border-color: rgba(255, 191, 82, 0.6); }
+.choice svg { width: 40px; height: 40px; fill: none; stroke: var(--pine); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.choice.host svg { stroke: var(--ember); }
+.choice h2 { font-size: 24px; }
+.choice .go { font-weight: 700; color: var(--pine); margin-top: 6px; }
+.choice.host .go { color: var(--ember); }
+@media (prefers-reduced-motion: reduce) { .choice { transition: none; } }
+
+/* profile */
+.avatar { width: 88px; height: 88px; border-radius: 26px; object-fit: cover; display: grid; place-items: center; flex: none;
+  font-family: var(--font-display); font-weight: 800; font-size: 36px; color: #2a1600; background: linear-gradient(160deg, var(--ember), var(--berry)); }
+.avatar.sm { width: 28px; height: 28px; border-radius: 9px; font-size: 13px; }
+.profile-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.profile-head > div { min-width: 0; }
+.xpbar { height: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.08); overflow: hidden; width: min(320px, 100%); }
+.xpbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ember), var(--gold)); border-radius: 8px; }
+.nav .me { display: inline-flex; align-items: center; gap: 8px; }

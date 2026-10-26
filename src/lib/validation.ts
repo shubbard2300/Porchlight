@@ -6,18 +6,43 @@ export { CONTRIBUTIONS, HOUSE_TAGS };
 
 const checkbox = z.preprocess((v) => v === 'on' || v === 'true' || v === true, z.boolean());
 
-export const signupSchema = z.object({
-  name: z.string().trim().min(1, 'Tell us your name.').max(60),
-  email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
-  password: z.string().min(8, 'Use at least 8 characters.').max(200),
+const RESERVED_USERNAMES = ['admin', 'administrator', 'porchlight', 'support', 'help', 'moderator', 'staff'];
+
+const email = z.string().trim().toLowerCase().email('Enter a valid email address.');
+const optional = (max: number) => z.string().trim().max(max, `Keep this under ${max} characters.`).optional().or(z.literal(''));
+
+export const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9_]{3,20}$/, 'Use 3 to 20 letters, numbers or underscores.')
+  .refine((u) => !RESERVED_USERNAMES.includes(u), 'That username is reserved. Try another.');
+
+export const joinSchema = z.object({
+  accountType: z.enum(['VIEWER', 'HOST']),
+  email,
+  username: usernameSchema,
+  propertyAddress: optional(120),
   referralCode: z.string().trim().toUpperCase().max(20).optional().or(z.literal('')),
   marketingOptIn: checkbox,
   terms: checkbox.refine((v) => v, 'Please accept the contest rules to continue.'),
 });
 
-export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
-  password: z.string().min(1, 'Enter your password.'),
+export const emailOnlySchema = z.object({ email });
+
+export const profileSchema = z.object({
+  displayName: optional(60),
+  hometown: optional(60),
+  bio: optional(500),
+  marketingOptIn: checkbox,
+});
+
+export const hostProfileSchema = z.object({
+  propertyAddress: optional(120),
+  neighborhood: optional(60),
+  hostSeason: optional(40),
+  decorationTheme: optional(80),
+  propertyDetails: optional(1000),
 });
 
 export const houseSchema = z.object({

@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/auth';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import type { FormState } from '@/lib/forms';
 import { getSeason } from '@/lib/seasons';
+import { displayName } from '@/lib/users';
 import { setSetting } from '@/lib/settings';
 import { fieldErrors, settingsSchema } from '@/lib/validation';
 
@@ -27,8 +28,8 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
     kind: decision === 'APPROVED' ? 'approved' : 'rejected',
     subject: decision === 'APPROVED' ? `${before.name} is live on Porchlight` : `About your ${before.name} submission`,
     text: decision === 'APPROVED'
-      ? [`Hi ${before.owner.name},`, '', `${before.name} is now on the ${season?.name ?? ''} map. You earned ${APPROVAL_XP} XP and the Lamplighter badge.`, note ? `\nNote from the team: ${note}` : '', '', appUrl('/')].join('\n')
-      : [`Hi ${before.owner.name},`, '', `We couldn't publish ${before.name} yet.`, note ? `Reason: ${note}` : '', '', `You can post it again any time: ${appUrl('/submit')}`].join('\n'),
+      ? [`Hi ${displayName(before.owner)},`, '', `${before.name} is now on the ${season?.name ?? ''} map. You earned ${APPROVAL_XP} XP and the Lamplighter badge.`, note ? `\nNote from the team: ${note}` : '', '', appUrl('/')].join('\n')
+      : [`Hi ${displayName(before.owner)},`, '', `We couldn't publish ${before.name} yet.`, note ? `Reason: ${note}` : '', '', `You can post it again any time: ${appUrl('/submit')}`].join('\n'),
   });
   revalidatePath('/admin', 'layout');
   revalidatePath('/');

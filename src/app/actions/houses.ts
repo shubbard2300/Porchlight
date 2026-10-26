@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
+import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
 import { contestToday, getSeason, openForSubmissions } from '@/lib/seasons';
 import { fieldErrors, houseSchema } from '@/lib/validation';
@@ -11,6 +12,7 @@ import { fieldErrors, houseSchema } from '@/lib/validation';
 export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser('/submit');
   const parsed = houseSchema.safeParse({ ...Object.fromEntries(fd), tags: fd.getAll('tags') });
+  if (user.accountType !== 'HOST') return { errors: { form: 'Only hosts can enter a house. Become a host from your profile first.' } };
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
   const d = parsed.data;
 
@@ -38,7 +40,7 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
   await notifyAdmin(
     `New ${season.name} submission: ${house.name}`,
     [
-      `${user.name} <${user.email}> posted a house for ${season.name} ${season.year}.`,
+      `${user.username} <${user.email}> posted a house for ${season.name} ${season.year}.`,
       '',
       `Name: ${house.name}`,
       `Address: ${house.address}${house.neighborhood ? ` (${house.neighborhood})` : ''}`,
@@ -57,14 +59,14 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
     to: user.email,
     subject: `We got ${house.name}`,
     text: [
-      `Hi ${user.name},`,
+      `Hi ${displayName(user)},`,
       '',
       `Thanks for posting ${house.name} for ${season.name} ${season.year}. We review new houses quickly, and you'll get an email once it's live on the map.`,
       '',
-      `See your entries: ${appUrl('/account')}`,
+      `See your entries: ${appUrl('/profile')}`,
     ].join('\n'),
     kind: 'submission-received',
   });
 
-  redirect('/account?submitted=1');
+  redirect('/profile?submitted=1');
 }

@@ -1,7 +1,7 @@
 import { db } from './db';
 import { emailFrom, notificationEmail } from './settings';
 
-export type EmailKind = 'signup' | 'welcome' | 'submission' | 'submission-received' | 'approved' | 'rejected' | 'test';
+export type EmailKind = 'signup' | 'verify' | 'login' | 'welcome' | 'submission' | 'submission-received' | 'approved' | 'rejected' | 'test';
 
 export const emailDeliveryConfigured = () => Boolean(process.env.RESEND_API_KEY);
 export const appUrl = (path = '') => `${(process.env.APP_URL ?? 'http://localhost:3000').replace(/\/$/, '')}${path}`;
