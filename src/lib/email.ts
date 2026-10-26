@@ -4,7 +4,12 @@ import { emailFrom, notificationEmail, replyTo } from './settings';
 export type EmailKind = 'signup' | 'verify' | 'login' | 'welcome' | 'submission' | 'submission-received' | 'approved' | 'rejected' | 'test';
 
 export const emailDeliveryConfigured = () => Boolean(process.env.RESEND_API_KEY);
-export const appUrl = (path = '') => `${(process.env.APP_URL ?? 'http://localhost:3000').replace(/\/$/, '')}${path}`;
+/** Preview deployments link to their own branch URL so emailed links work before the PR is merged. */
+const baseUrl = () =>
+  process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_BRANCH_URL
+    ? `https://${process.env.VERCEL_BRANCH_URL}`
+    : (process.env.APP_URL ?? 'http://localhost:3000');
+export const appUrl = (path = '') => `${baseUrl().replace(/\/$/, '')}${path}`;
 
 /**
  * Sends through Resend when RESEND_API_KEY is set. Every attempt is written to EmailLog,
