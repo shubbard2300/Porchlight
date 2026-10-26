@@ -34,6 +34,7 @@ export async function sendEmail(opts: { to: string; subject: string; text: strin
       error = String(e).slice(0, 500);
     }
   }
+  if (status !== 'sent') console.error(`[email] ${opts.kind} to ${opts.to} ${status}${error ? `: ${error}` : ' (RESEND_API_KEY not set)'}`);
   await db.emailLog.create({ data: { to: opts.to, subject: opts.subject, body: opts.text, kind: opts.kind, status, error } });
   return status;
 }
