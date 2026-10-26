@@ -1,5 +1,6 @@
 'use server';
 
+import bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import type { TokenPurpose, User } from '@prisma/client';
@@ -10,7 +11,9 @@ import { appUrl, emailDeliveryConfigured, notifyAdmin, sendEmail } from '@/lib/e
 import { safeNext, type FormState } from '@/lib/forms';
 import { consumeToken, issueToken, linkFor, sentRecently, TOKEN_TTL_MIN } from '@/lib/tokens';
 import { displayName } from '@/lib/users';
-import { emailOnlySchema, fieldErrors, joinSchema } from '@/lib/validation';
+import { emailOnlySchema, fieldErrors, joinSchema, loginSchema } from '@/lib/validation';
+
+const BCRYPT_ROUNDS = 12;
 
 async function uniqueReferralCode() {
   for (;;) {
@@ -63,6 +66,7 @@ export async function join(_prev: FormState, fd: FormData): Promise<FormState> {
 
   const profile = {
     username: d.username,
+    passwordHash: await bcrypt.hash(d.password, BCRYPT_ROUNDS),
     accountType: d.accountType,
     propertyAddress: d.propertyAddress || null,
     marketingOptIn: d.marketingOptIn,
@@ -74,6 +78,21 @@ export async function join(_prev: FormState, fd: FormData): Promise<FormState> {
         data: { ...profile, email: d.email, xp: SIGNUP_BONUS_XP, referralCode: await uniqueReferralCode(), role: isBootstrapAdmin(d.email) ? 'ADMIN' : 'USER' },
       });
   return sendLink(user, 'VERIFY', '/profile?welcome=1');
+}
+
+export async function login(_prev: FormState, fd: FormData): Promise<FormState> {
+  const parsed = loginSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  const user = await db.user.findUnique({ where: { email: parsed.data.email } });
+  const ok = Boolean(user?.passwordHash) && (await bcrypt.compare(parsed.data.password, user!.passwordHash!));
+  if (!user || !ok) {
+    return { errors: { form: 'That email and password don\u2019t match. Try again, or get a sign-in link by email.' } };
+  }
+  // Right password but the email was never confirmed: send the confirmation link again.
+  if (!user.emailVerifiedAt) return sendLink(user, 'VERIFY', '/profile?welcome=1');
+  await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  await startSession({ userId: user.id, role: user.role });
+  redirect(safeNext(fd.get('next')) ?? (user.role === 'ADMIN' ? '/admin' : '/profile'));
 }
 
 export async function requestLoginLink(_prev: FormState, fd: FormData): Promise<FormState> {

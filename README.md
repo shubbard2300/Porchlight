@@ -5,7 +5,7 @@ Neighbors post their holiday displays. Everyone else finds them, rates them, and
 This repo is the real app. It currently covers:
 
 - **Join screen** (`/join`): people choose **Viewer / rater** or **Host / decorator**. Viewers give an email and username; hosts can also give their property location.
-- **Email verification, no passwords**: joining sends a one-time link. Opening it confirms the email and lands on **My Profile**. Logging in later works the same way, with a 30-minute link. Links are stored only as hashes, work once, and need a button press so email scanners can't use them up.
+- **Passwords plus email verification**: both sign-up forms ask for a password (8+ characters, bcrypt-hashed). Joining sends a one-time link; opening it confirms the email and lands on **My Profile**. After that, people log in with email and password. Forgot your password? `/login/link` emails a 30-minute sign-in link, and a new password can be set on the profile. Links are stored only as hashes, work once, and need a button press so email scanners can't use them up.
 - **My Profile** (`/profile`): profile photo (cropped to a square in the browser, stored in Postgres), display name, hometown, bio. Hosts also get property address, neighborhood, the holiday they're decorating for, a decoration theme and property details. Viewers can switch to host at any time. 100 XP signup bonus and an invite code for everyone.
 - **Enter the contest**: hosts submit their house for the live or next holiday, prefilled from their profile. Entries start in review.
 - **Form emails**: every sign-up and submission is emailed to the notification address you choose in the admin portal. Posters get a confirmation, then an approval or rejection email.
@@ -16,7 +16,7 @@ Next up: the swipe deck, map, visit verification (location and photo), comments,
 
 ## Stack
 
-Next.js 15 (App Router, server actions) · PostgreSQL with Prisma · email through [Resend](https://resend.com) · emailed one-time links and a signed, HTTP-only session cookie.
+Next.js 15 (App Router, server actions) · PostgreSQL with Prisma · email through [Resend](https://resend.com) · bcrypt passwords, emailed one-time links and a signed, HTTP-only session cookie.
 
 ## Run it locally
 
@@ -24,9 +24,9 @@ Next.js 15 (App Router, server actions) · PostgreSQL with Prisma · email throu
 2. `cp .env.example .env` and fill it in. `SESSION_SECRET` must be at least 32 characters (`openssl rand -base64 48`).
 3. `npm install`
 4. `npm run db:migrate` to create the tables.
-5. `npm run db:seed` to create the first admin (from `SEED_ADMIN_EMAIL`) and three sample houses.
+5. `npm run db:seed` to create the first admin (from `SEED_ADMIN_EMAIL`, with `SEED_ADMIN_PASSWORD` if set) and three sample houses.
 6. `npm run dev` and open http://localhost:3000.
-7. `npm run sign-in-link -- admin@example.com` prints a one-time link for the admin. Open it to get into `/admin`.
+7. Log in at `/login` with the seeded admin's email and password. Without a seed password, `npm run sign-in-link -- admin@example.com` prints a one-time link instead.
 
 In development without `RESEND_API_KEY`, the "Check your email" page also shows the link it just sent, so you can test sign-up end to end.
 

@@ -6,7 +6,8 @@ import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import type { FormState } from '@/lib/forms';
 import { getSeason } from '@/lib/seasons';
-import { fieldErrors, hostProfileSchema, profileSchema } from '@/lib/validation';
+import bcrypt from 'bcryptjs';
+import { fieldErrors, hostProfileSchema, newPasswordSchema, profileSchema } from '@/lib/validation';
 
 const MAX_AVATAR_BYTES = 1_000_000;
 
@@ -21,6 +22,14 @@ export async function saveProfile(_prev: FormState, fd: FormData): Promise<FormS
   });
   revalidatePath('/', 'layout');
   return { message: 'Profile saved.' };
+}
+
+export async function setPassword(_prev: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser('/profile');
+  const parsed = newPasswordSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) return { errors: fieldErrors(parsed.error) };
+  await db.user.update({ where: { id: user.id }, data: { passwordHash: await bcrypt.hash(parsed.data.password, 12) } });
+  return { message: user.passwordHash ? 'Password changed.' : 'Password set. You can now log in with it.' };
 }
 
 export async function saveHostProfile(_prev: FormState, fd: FormData): Promise<FormState> {

@@ -9,7 +9,7 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
       <main className="wrap narrow stack" style={{ textAlign: 'center', justifyItems: 'center' }}>
         <h1 style={{ fontSize: 30 }}>This link has expired</h1>
         <p className="muted">Links work once and expire after a while. Request a fresh one and use the newest email.</p>
-        <Link href="/login" className="btn primary">Send me a new link</Link>
+        <Link href="/login/link" className="btn primary">Send me a new link</Link>
       </main>
     );
   }

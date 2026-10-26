@@ -5,7 +5,7 @@ import { contestToday, getSeason, openForSubmissions, phase, phaseLabel, visible
 import { avatarUrl, displayName, level } from '@/lib/users';
 import { becomeHost } from '../actions/profile';
 import { AvatarUploader } from './AvatarUploader';
-import { AboutForm, HostForm } from './ProfileForms';
+import { AboutForm, HostForm, PasswordForm } from './ProfileForms';
 
 export const metadata = { title: 'My profile · Porchlight' };
 
@@ -74,6 +74,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           <form action={becomeHost}><button className="btn ghost">Become a host</button></form>
         </section>
       )}
+
+      <section className="panel stack" id="password">
+        <h2 style={{ fontSize: 20 }}>Password</h2>
+        <p className="small muted">{user.passwordHash ? 'Change the password you log in with.' : 'You signed in with an email link. Set a password to log in with it next time.'}</p>
+        <PasswordForm hasPassword={Boolean(user.passwordHash)} />
+      </section>
 
       <section className="stats">
         <div className="stat"><span className="label">Invite code</span><b className="num" style={{ fontSize: 20, fontFamily: 'var(--font-mono)' }}>{user.referralCode}</b><span className="small muted">You both get XP after their first verified visit</span></div>

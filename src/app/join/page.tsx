@@ -26,7 +26,7 @@ export default function JoinPage() {
           <span className="go">Sign up as a host →</span>
         </Link>
       </div>
-      <p className="small muted" style={{ textAlign: 'center' }}>Already joined? <Link href="/login">Get a sign-in link</Link></p>
+      <p className="small muted" style={{ textAlign: 'center' }}>Already joined? <Link href="/login">Log in</Link></p>
     </main>
   );
 }

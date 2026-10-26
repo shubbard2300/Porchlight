@@ -18,10 +18,13 @@ export const usernameSchema = z
   .regex(/^[a-z0-9_]{3,20}$/, 'Use 3 to 20 letters, numbers or underscores.')
   .refine((u) => !RESERVED_USERNAMES.includes(u), 'That username is reserved. Try another.');
 
+export const passwordSchema = z.string().min(8, 'Use at least 8 characters.').max(200, 'Keep it under 200 characters.');
+
 export const joinSchema = z.object({
   accountType: z.enum(['VIEWER', 'HOST']),
   email,
   username: usernameSchema,
+  password: passwordSchema,
   propertyAddress: optional(120),
   referralCode: z.string().trim().toUpperCase().max(20).optional().or(z.literal('')),
   marketingOptIn: checkbox,
@@ -29,6 +32,12 @@ export const joinSchema = z.object({
 });
 
 export const emailOnlySchema = z.object({ email });
+
+export const loginSchema = z.object({ email, password: z.string().min(1, 'Enter your password.') });
+
+export const newPasswordSchema = z
+  .object({ password: passwordSchema, confirm: z.string() })
+  .refine((d) => d.password === d.confirm, { path: ['confirm'], message: 'The two passwords don\u2019t match.' });
 
 export const profileSchema = z.object({
   displayName: optional(60),

@@ -34,6 +34,8 @@ model User {
   username         String       @unique
   accountType      AccountType  @default(VIEWER)
   emailVerifiedAt  DateTime?
+  /// bcrypt hash. Null for accounts created before passwords existed; they can set one on their profile.
+  passwordHash     String?
   role             Role         @default(USER)
   xp               Int          @default(0)
   referralCode     String       @unique

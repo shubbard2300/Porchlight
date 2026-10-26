@@ -16,7 +16,7 @@ export default async function CheckEmail({ searchParams }: { searchParams: Promi
           <a href={dev} style={{ wordBreak: 'break-all' }}>{dev}</a>
         </div>
       )}
-      <p className="small muted">Wrong address? <Link href="/join">Start over</Link> · <Link href="/login">Send another link</Link></p>
+      <p className="small muted">Wrong address? <Link href="/join">Start over</Link> · <Link href="/login/link">Send another link</Link></p>
     </main>
   );
 }
