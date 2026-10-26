@@ -130,6 +130,7 @@ export async function confirmLink(fd: FormData) {
         `Manage users: ${appUrl('/admin/users')}`,
       ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n'),
       'signup',
+      user.email,
     );
     await sendEmail({
       to: user.email,

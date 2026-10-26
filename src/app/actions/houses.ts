@@ -54,6 +54,7 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
       `Review it: ${appUrl('/admin/submissions')}`,
     ].join('\n'),
     'submission',
+    user.email,
   );
   await sendEmail({
     to: user.email,

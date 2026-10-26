@@ -44,12 +44,14 @@ Admins can't demote or delete their own account, so there is always at least one
 
 Set the notification address in **Admin > Settings** (it falls back to `ADMIN_NOTIFY_EMAIL`). To actually deliver mail, create a Resend account, verify your sending domain, and set `RESEND_API_KEY` and a "from" address on that domain. Until a key is set, every email is still recorded in **Admin > Form inbox**, marked "not delivered", so nothing is lost while you set up.
 
+Receiving and replying uses a forwarding alias (ImprovMX): point the domain's MX records at `mx1.improvmx.com` / `mx2.improvmx.com`, add `include:spf.improvmx.com` next to Resend's `include:amazonses.com` in the SPF record, and forward `hello@yourdomain` to your own inbox. Set that alias as **Replies go to** in Admin > Settings (or `EMAIL_REPLY_TO`). Member replies to any Porchlight email land there, and sign-up and submission notifications reply straight to the member who triggered them.
+
 ## Deploy to Vercel
 
 1. Import this repo in Vercel.
 2. Add a Postgres database (Vercel Postgres or Neon) and set `DATABASE_URL`.
-3. Set `SESSION_SECRET`, `ADMIN_EMAILS`, `ADMIN_NOTIFY_EMAIL`, `APP_URL` (your site URL), and optionally `RESEND_API_KEY` and `EMAIL_FROM`.
-4. Set the build command to `npx prisma migrate deploy && npm run build`.
+3. Set `SESSION_SECRET`, `ADMIN_EMAILS`, `ADMIN_NOTIFY_EMAIL`, `APP_URL` (your site URL), and optionally `RESEND_API_KEY`, `EMAIL_FROM` and `EMAIL_REPLY_TO`.
+4. Vercel runs the `vercel-build` script, which applies database migrations before building.
 5. After the first deploy, join with an email from `ADMIN_EMAILS` to get admin access. Email delivery must be set up for the link to arrive; otherwise run `npm run sign-in-link -- <email>` against the production database.
 
 ## A note on the pot

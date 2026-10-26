@@ -57,6 +57,7 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
   await setSetting('notificationEmail', parsed.data.notificationEmail);
   if (parsed.data.emailFrom) await setSetting('emailFrom', parsed.data.emailFrom);
+  await setSetting('replyTo', parsed.data.replyTo ?? '');
   revalidatePath('/admin/settings');
   return { message: 'Saved. New form notifications will go to ' + parsed.data.notificationEmail + '.' };
 }

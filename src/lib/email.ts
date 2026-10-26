@@ -1,5 +1,5 @@
 import { db } from './db';
-import { emailFrom, notificationEmail } from './settings';
+import { emailFrom, notificationEmail, replyTo } from './settings';
 
 export type EmailKind = 'signup' | 'verify' | 'login' | 'welcome' | 'submission' | 'submission-received' | 'approved' | 'rejected' | 'test';
 
@@ -10,16 +10,17 @@ export const appUrl = (path = '') => `${(process.env.APP_URL ?? 'http://localhos
  * Sends through Resend when RESEND_API_KEY is set. Every attempt is written to EmailLog,
  * so the admin Form inbox shows all form traffic even before delivery is configured.
  */
-export async function sendEmail(opts: { to: string; subject: string; text: string; kind: EmailKind }) {
+export async function sendEmail(opts: { to: string; subject: string; text: string; kind: EmailKind; replyTo?: string }) {
   let status: 'sent' | 'skipped' | 'failed' = 'skipped';
   let error: string | null = null;
   const key = process.env.RESEND_API_KEY;
   if (key) {
     try {
+      const reply = opts.replyTo ?? (await replyTo());
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: await emailFrom(), to: [opts.to], subject: opts.subject, text: opts.text }),
+        body: JSON.stringify({ from: await emailFrom(), to: [opts.to], subject: opts.subject, text: opts.text, ...(reply && { reply_to: reply }) }),
       });
       if (res.ok) status = 'sent';
       else { status = 'failed'; error = `${res.status} ${await res.text()}`.slice(0, 500); }
@@ -33,11 +34,12 @@ export async function sendEmail(opts: { to: string; subject: string; text: strin
 }
 
 /** Sends a form notification to the admin inbox chosen in Admin > Settings. */
-export async function notifyAdmin(subject: string, text: string, kind: EmailKind) {
+/** replyTo lets the admin answer the member directly from their inbox. */
+export async function notifyAdmin(subject: string, text: string, kind: EmailKind, replyTo?: string) {
   const to = await notificationEmail();
   if (!to) {
     await db.emailLog.create({ data: { to: '(no notification address set)', subject, body: text, kind, status: 'skipped' } });
     return 'skipped';
   }
-  return sendEmail({ to, subject, text, kind });
+  return sendEmail({ to, subject, text, kind, replyTo });
 }

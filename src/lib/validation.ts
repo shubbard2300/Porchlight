@@ -71,6 +71,7 @@ export const houseSchema = z.object({
 export const settingsSchema = z.object({
   notificationEmail: z.string().trim().toLowerCase().email('Enter a valid email address.'),
   emailFrom: z.string().trim().max(120).optional().or(z.literal('')),
+  replyTo: z.string().trim().toLowerCase().email('Enter a valid email address.').optional().or(z.literal('')),
 });
 
 export type FieldErrors = Record<string, string | undefined>;

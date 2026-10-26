@@ -1,15 +1,15 @@
 import { emailDeliveryConfigured } from '@/lib/email';
-import { emailFrom, notificationEmail } from '@/lib/settings';
+import { emailFrom, notificationEmail, replyTo } from '@/lib/settings';
 import { sendTestEmail } from '../../actions/admin';
 import { SettingsForm } from './SettingsForm';
 
 export default async function Settings() {
-  const [to, from] = await Promise.all([notificationEmail(), emailFrom()]);
+  const [to, from, reply] = await Promise.all([notificationEmail(), emailFrom(), replyTo()]);
   const delivering = emailDeliveryConfigured();
   return (
     <>
       <h1 style={{ fontSize: 30 }}>Settings</h1>
-      <div className="panel"><SettingsForm notificationEmail={to ?? ''} emailFrom={from} /></div>
+      <div className="panel"><SettingsForm notificationEmail={to ?? ''} emailFrom={from} replyTo={reply ?? ''} /></div>
       <div className="panel stack" style={{ gap: 10 }}>
         <h2 style={{ fontSize: 18 }}>Email delivery</h2>
         <p className="small">
