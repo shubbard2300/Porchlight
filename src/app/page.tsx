@@ -49,7 +49,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           <h1>{season.name} {season.year}{p === 'final' ? ': final results' : ''}</h1>
           <p className="muted" style={{ maxWidth: 560, fontSize: 17 }}>
             {p === 'soon' && 'Houses are signing up now. Post yours early so neighbors can plan their route.'}
-            {p === 'live' && 'Visit houses, prove you were there, and like your favorites. The house with the most verified likes at midnight on the holiday wins the pot.'}
+            {p === 'live' && `Visit houses, prove you were there, and like your favorites. The ${theme.superlative} house with the most verified likes at midnight on ${theme.day} wins the pot.`}
             {p === 'final' && 'Voting is closed. These results stay up for one week, then move to each poster’s archive.'}
           </p>
           <div className="pot">
