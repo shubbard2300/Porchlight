@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Icon3D } from '@/components/Icon3D';
 import { requireUser } from '@/lib/auth';
 import { contestToday, defaultSeason, formatDay, openForSubmissions, phase } from '@/lib/seasons';
 import { becomeHost } from '../actions/profile';
@@ -20,9 +21,14 @@ export default async function SubmitPage() {
   const preferred = open.find((s) => s.key === user.hostSeason) ?? open.find((s) => s.key === defaultSeason(today).key) ?? open[0];
   return (
     <main className="wrap narrow stack">
+      <div className="page-head">
+        <Icon3D name="house" size={72} />
+        <div>
+          <span className="label">Enter the contest</span>
+          <h1 style={{ fontSize: 32 }}>Get your display on the map</h1>
+        </div>
+      </div>
       <div className="stack" style={{ gap: 6 }}>
-        <span className="label">Enter the contest</span>
-        <h1 style={{ fontSize: 34 }}>Get your display on the map</h1>
         <p className="muted">We filled in what you saved on your profile. We review new houses quickly and email you when yours is live. Approved houses earn 100 XP and the Lamplighter badge.</p>
       </div>
       <div className="panel">

@@ -23,11 +23,11 @@ export type Season = {
 export type Phase = 'soon' | 'live' | 'final' | 'expired';
 
 export const SEASONS: Season[] = [
-  { key: 'halloween-2026', name: 'Halloween', year: 2026, opens: '2026-10-01', day: '2026-10-31', color: '#ff8a2e' },
-  { key: 'christmas-2026', name: 'Christmas', year: 2026, opens: '2026-11-01', day: '2026-12-25', color: '#ff5a78' },
-  { key: 'july4-2027', name: 'Fourth of July', year: 2027, opens: '2027-06-01', day: '2027-07-04', color: '#7fb2ff' },
-  { key: 'halloween-2027', name: 'Halloween', year: 2027, opens: '2027-10-01', day: '2027-10-31', color: '#ff8a2e' },
-  { key: 'christmas-2027', name: 'Christmas', year: 2027, opens: '2027-11-01', day: '2027-12-25', color: '#ff5a78' },
+  { key: 'halloween-2026', name: 'Halloween', year: 2026, opens: '2026-10-01', day: '2026-10-31', color: '#FF6A1F' },
+  { key: 'christmas-2026', name: 'Christmas', year: 2026, opens: '2026-11-01', day: '2026-12-25', color: '#E8364F' },
+  { key: 'july4-2027', name: 'Fourth of July', year: 2027, opens: '2027-06-01', day: '2027-07-04', color: '#3D7BFF' },
+  { key: 'halloween-2027', name: 'Halloween', year: 2027, opens: '2027-10-01', day: '2027-10-31', color: '#FF6A1F' },
+  { key: 'christmas-2027', name: 'Christmas', year: 2027, opens: '2027-11-01', day: '2027-12-25', color: '#E8364F' },
 ];
 
 /** Today's date in the contest time zone, as YYYY-MM-DD. */

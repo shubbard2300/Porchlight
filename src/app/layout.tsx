@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
+import { Icon3D } from '@/components/Icon3D';
 import { logout } from './actions/auth';
 import './globals.css';
 
@@ -20,14 +21,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
       </head>
       <body>
         <header className="site-head">
           <div className="wrap">
             <Link href="/" className="brand">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 0 6.2 2.7 6.2 6.1 0 2.4-1.3 3.9-2.4 5.1-.8.9-1.3 1.6-1.3 2.6v.7H9.5v-.7c0-1-.5-1.7-1.3-2.6-1.1-1.2-2.4-2.7-2.4-5.1 0-3.4 2.6-6.1 6.2-6.1z" fill="#ffbf52" /><rect x="9.3" y="18" width="5.4" height="3.2" rx="1" fill="#9ca5d4" /></svg>
-              Porchlight
+              <span className="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v9H4z" fill="#fff4e4" stroke="#14123a" strokeWidth="2" strokeLinejoin="round" /><path d="M10 20v-5h4v5" fill="#ff6a1f" stroke="#14123a" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="10.4" r="1.6" fill="#ffb000" stroke="#14123a" strokeWidth="1.5" /></svg>
+              </span>
+              porchlight
             </Link>
             <nav className="nav" aria-label="Main">
               <Link href="/">Houses</Link>
@@ -36,7 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
                   <Link href="/profile" className="me">
                     {avatarUrl(user) ? <img src={avatarUrl(user)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{user.username[0].toUpperCase()}</span>}
-                    {user.username} · <span className="num">{user.xp}</span> XP
+                    {user.username} <span className="xp-chip num"><Icon3D name="sparkles" size={18} />{user.xp} XP</span>
                   </Link>
                   <form action={logout}><button type="submit">Log out</button></form>
                 </>
