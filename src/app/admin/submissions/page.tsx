@@ -37,7 +37,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
             </p>
             {h.tags.length > 0 && <div className="row">{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
             {h.reviewNote && <p className="small muted">Note: {h.reviewNote}</p>}
-            <ReviewControls id={h.id} owner={h.owner.username} status={h.status} />
+            <ReviewControls id={h.id} name={h.name} owner={h.owner.username} status={h.status} />
           </article>
         );
       })}
