@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { CONTACT_EMAIL, LEGAL_UPDATED } from '@/lib/legal';
 
 export function LegalPage({ title, intro, children }: { title: string; intro: React.ReactNode; children: React.ReactNode }) {
@@ -7,7 +8,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro: Re
       <h1>{title}</h1>
       <p className="lede">{intro}</p>
       {children}
-      <p className="muted small legal-contact">Questions? Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+      <p className="muted small legal-contact">Questions? <Link href="/contact" data-modal="contact">Send us a message</Link> or email {CONTACT_EMAIL}.</p>
     </main>
   );
 }

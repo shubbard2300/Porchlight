@@ -262,3 +262,21 @@ body > main { flex: 1 0 auto; width: 100%; }
 .legal table { border-collapse: collapse; width: 100%; font-size: 15px; }
 .legal th, .legal td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--sand); vertical-align: top; }
 .legal-contact { margin-top: 18px; }
+
+/* popups: log in, sign up, contact */
+.modal { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: var(--edge); border-radius: var(--r-lg); background: var(--cream); color: var(--ink); box-shadow: 6px 6px 0 var(--ink); overflow: auto; overscroll-behavior: contain; }
+.modal::backdrop { background: rgba(20, 18, 58, 0.62); backdrop-filter: blur(3px); }
+.modal[open] { animation: modal-in 0.18s ease-out; }
+@keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } }
+.modal-body { position: relative; padding: 26px 24px 24px; }
+.modal-body h2 { font-size: clamp(22px, 4vw, 26px); padding-right: 36px; }
+.modal-x { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; background: var(--paper); border: var(--edge); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+.modal-x:hover { background: var(--amber-soft); }
+.choices.compact { grid-template-columns: 1fr 1fr; gap: 14px; }
+.choices.compact .choice { padding: 18px; gap: 8px; font: inherit; text-align: left; cursor: pointer; }
+.choices.compact .choice h3 { font-size: 17px; }
+@media (max-width: 520px) { .choices.compact { grid-template-columns: 1fr; } .modal-body { padding: 22px 18px 20px; } }
+.linkish { justify-self: start; padding: 0; border: 0; background: none; cursor: pointer; font-weight: 700; text-decoration: underline; text-decoration-color: var(--amber); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .modal[open] { animation: none; } }
+html:has(dialog.modal[open]) { overflow: hidden; }

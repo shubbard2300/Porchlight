@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CONTACT_TOPICS } from './contact';
 import { CONTRIBUTIONS, HOUSE_TAGS } from './houseOptions';
 
 export { CONTRIBUTIONS, HOUSE_TAGS };
@@ -38,6 +39,15 @@ export const loginSchema = z.object({ email, password: z.string().min(1, 'Enter 
 export const newPasswordSchema = z
   .object({ password: passwordSchema, confirm: z.string() })
   .refine((d) => d.password === d.confirm, { path: ['confirm'], message: 'The two passwords don\u2019t match.' });
+
+export const contactSchema = z.object({
+  name: z.string().trim().min(1, 'Tell us your name.').max(60, 'Keep this under 60 characters.'),
+  email,
+  topic: z.enum(CONTACT_TOPICS, 'Pick a topic.'),
+  message: z.string().trim().min(10, 'Tell us a little more (at least 10 characters).').max(2000, 'Keep it under 2,000 characters.'),
+  /** Honeypot: hidden from people, so anything typed here came from a bot. */
+  website: z.string().optional(),
+});
 
 export const profileSchema = z.object({
   username: usernameSchema,

@@ -104,7 +104,7 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
             features: houses.map((h) => ({
               type: 'Feature',
               id: h.id,
-              properties: { id: h.id, exact: h.exact, rank: h.rank },
+              properties: { id: h.id, name: h.name, exact: h.exact, rank: h.rank },
               geometry: { type: 'Point', coordinates: [h.lng, h.lat] },
             })),
           },
@@ -143,16 +143,37 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
           });
         }
 
+        // Each house's title sits under its pin once you're zoomed in close enough to tell them apart.
+        map.addLayer({
+          id: 'pin-labels', type: 'symbol', source: 'houses', filter: ['!', ['has', 'point_count']], minzoom: 11,
+          layout: {
+            'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': 13, 'text-anchor': 'top', 'text-offset': [0, 1.9],
+            'text-max-width': 10, 'text-optional': true,
+          },
+          paint: { 'text-color': '#fff4e4', 'text-halo-color': '#14123a', 'text-halo-width': 2 },
+        });
+
         const popup = new maplibre.Popup({ offset: 20, maxWidth: '300px', className: styles.popWrap });
+        // Hovering a pin shows just its title; clicking opens the full card.
+        const tip = new maplibre.Popup({ offset: 22, closeButton: false, closeOnClick: false, className: styles.tipWrap });
+        let tipId = '';
+        const houseOf = (f?: MapGeoJSONFeature) => (f ? byId.get(String(f.properties.id)) : undefined);
         const openHouse = (f: MapGeoJSONFeature) => {
-          const h = byId.get(String(f.properties.id));
+          const h = houseOf(f);
           if (!h || !map) return;
+          tip.remove();
           popup.setLngLat([h.lng, h.lat]).setHTML(popupHtml(h, icon)).addTo(map);
         };
         for (const layer of ['pins', 'pin-icons']) {
           map.on('click', layer, (e) => e.features?.[0] && openHouse(e.features[0]));
-          map.on('mouseenter', layer, () => { map!.getCanvas().style.cursor = 'pointer'; });
-          map.on('mouseleave', layer, () => { map!.getCanvas().style.cursor = ''; });
+          map.on('mousemove', layer, (e) => {
+            const h = houseOf(e.features?.[0]);
+            map!.getCanvas().style.cursor = 'pointer';
+            if (!h || popup.isOpen() || (tip.isOpen() && tipId === h.id)) return;
+            tipId = h.id;
+            tip.setLngLat([h.lng, h.lat]).setHTML(`<b class="${styles.tipName}">${esc(h.name)}</b>`).addTo(map!);
+          });
+          map.on('mouseleave', layer, () => { map!.getCanvas().style.cursor = ''; tip.remove(); });
         }
         map.on('click', 'clusters', async (e) => {
           const f = e.features?.[0];

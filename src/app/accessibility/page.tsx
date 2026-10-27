@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/LegalPage';
 import { CONTACT_EMAIL } from '@/lib/legal';
@@ -22,7 +23,7 @@ export default function Accessibility() {
       <p>Photos uploaded by hosts may not have detailed descriptions, and the map may be harder to use with a screen reader. Every house on the map is also listed on the home page.</p>
 
       <h2>Tell us about a barrier</h2>
-      <p>If something on Porchlight is hard to use, email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> with the page and what happened. We will reply within 5 business days and work with you to get you what you need, including entering or voting another way.</p>
+      <p>If something on Porchlight is hard to use, <Link href="/contact?topic=Accessibility" data-modal="contact:Accessibility">send us a message</Link> (or email {CONTACT_EMAIL}) with the page and what happened. We will reply within 5 business days and work with you to get you what you need, including entering or voting another way.</p>
     </LegalPage>
   );
 }
