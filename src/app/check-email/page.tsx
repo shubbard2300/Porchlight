@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { emailDeliveryConfigured } from '@/lib/email';
 
 export default async function CheckEmail({ searchParams }: { searchParams: Promise<{ email?: string; dev?: string; wait?: string }> }) {
   const { email, dev, wait } = await searchParams;
@@ -9,6 +10,11 @@ export default async function CheckEmail({ searchParams }: { searchParams: Promi
       <p className="muted">
         {wait ? 'We just sent you a link a moment ago. Give it a minute, and check your spam folder.' : <>If {email ? <b style={{ color: 'var(--frost)' }}>{email}</b> : 'that address'} has a Porchlight account, a link is on its way. Open it on this device to continue.</>}
       </p>
+      {!dev && !emailDeliveryConfigured() && (
+        <div className="notice warn" style={{ textAlign: 'left', width: '100%' }}>
+          <b>Email delivery isn&apos;t set up on this server yet.</b> <span className="small">An admin needs to add RESEND_API_KEY and redeploy.</span>
+        </div>
+      )}
       {dev && (
         <div className="notice warn stack" style={{ gap: 6, textAlign: 'left', width: '100%' }}>
           <b>Development mode</b>
