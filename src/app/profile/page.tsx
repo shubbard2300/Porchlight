@@ -8,6 +8,7 @@ import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { avatarUrl, displayName, level } from '@/lib/users';
 import { becomeHost } from '../actions/profile';
 import { AvatarUploader } from './AvatarUploader';
+import { DeleteEntryButton } from './DeleteEntryButton';
 import { AboutForm, HostForm, PasswordForm } from './ProfileForms';
 
 export const metadata = { title: 'My profile · Porchlight' };
@@ -100,6 +101,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                   <span className={`pill ${h.status}`}>{h.status === 'PENDING' ? 'In review' : h.status === 'APPROVED' ? 'Live' : 'Not approved'}</span>
                 </div>
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
+                <div className="row" style={{ justifyContent: 'flex-end' }}><DeleteEntryButton id={h.id} name={h.name} /></div>
               </div>
             ))}
           </section>
@@ -109,7 +111,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             {archived.length === 0 ? <p className="muted small">No past contests yet.</p> : archived.map(({ h, s }) => (
               <div key={h.id} className="panel row spread">
                 <div><b>{h.name}</b><div className="small muted">{s ? `${s.name} ${s.year}` : h.season}</div></div>
-                <span className="pill">Archived</span>
+                <div className="row"><span className="pill">Archived</span><DeleteEntryButton id={h.id} name={h.name} /></div>
               </div>
             ))}
           </section>

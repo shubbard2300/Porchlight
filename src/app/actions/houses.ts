@@ -1,9 +1,10 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
-import { absolutePhotoUrl, attachPhotos, reviewUrl } from '@/lib/housePhotos';
+import { absolutePhotoUrl, attachPhotos, deleteHouse, reviewUrl } from '@/lib/housePhotos';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import { geocodeAddress } from '@/lib/geocode';
 import { displayName } from '@/lib/users';
@@ -82,4 +83,15 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
   });
 
   redirect('/profile?submitted=1');
+}
+
+/** A host deletes one of their own entries, with its photos. */
+export async function deleteMyHouse(id: string) {
+  const user = await requireUser('/profile');
+  const house = await db.house.findFirst({ where: { id, ownerId: user.id }, select: { id: true } });
+  if (!house) return;
+  await deleteHouse(house.id);
+  revalidatePath('/profile');
+  revalidatePath('/');
+  revalidatePath('/admin', 'layout');
 }

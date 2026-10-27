@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/auth';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import { geocodeAddress } from '@/lib/geocode';
 import type { FormState } from '@/lib/forms';
+import { deleteHouse } from '@/lib/housePhotos';
 import { deletePhotoFiles } from '@/lib/photoStorage';
 import { getSeason } from '@/lib/seasons';
 import { displayName } from '@/lib/users';
@@ -34,6 +35,23 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
     text: decision === 'APPROVED'
       ? [`Hi ${displayName(before.owner)},`, '', `${before.name} is now on the ${season?.name ?? ''} map. You earned ${APPROVAL_XP} XP and the Lamplighter badge.`, note ? `\nNote from the team: ${note}` : '', '', appUrl('/')].join('\n')
       : [`Hi ${displayName(before.owner)},`, '', `We couldn't publish ${before.name} yet.`, note ? `Reason: ${note}` : '', '', `You can post it again any time: ${appUrl('/submit')}`].join('\n'),
+  });
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/');
+}
+
+/** Removes any entry for good. The host gets an email, with the note if the admin wrote one. */
+export async function removeHouse(id: string, rawNote: string) {
+  await requireAdmin();
+  const note = String(rawNote ?? '').trim().slice(0, 500) || null;
+  const house = await db.house.findUnique({ where: { id }, include: { owner: true } });
+  if (!house) return;
+  await deleteHouse(id);
+  await sendEmail({
+    to: house.owner.email,
+    kind: 'removed',
+    subject: `${house.name} was removed from Porchlight`,
+    text: [`Hi ${displayName(house.owner)},`, '', `We removed ${house.name} from Porchlight.`, note ? `Reason: ${note}` : '', '', `You can post your house again any time: ${appUrl('/submit')}`].join('\n'),
   });
   revalidatePath('/admin', 'layout');
   revalidatePath('/');

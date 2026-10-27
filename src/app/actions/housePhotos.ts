@@ -132,3 +132,16 @@ export async function removeHousePhoto(id: string): Promise<Result> {
   }
   return {};
 }
+
+/** Moves a photo to the front of its entry, making it the cover on the house card. */
+export async function makeCoverPhoto(id: string): Promise<Result> {
+  const user = await requireUser('/profile');
+  const photo = await db.housePhoto.findFirst({ where: { id, ownerId: user.id }, select: { houseId: true } });
+  if (!photo?.houseId) return {};
+  const all = await db.housePhoto.findMany({ where: { houseId: photo.houseId }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }], select: { id: true } });
+  const ordered = [id, ...all.map((p) => p.id).filter((p) => p !== id)];
+  await db.$transaction(ordered.map((pid, position) => db.housePhoto.update({ where: { id: pid }, data: { position } })));
+  await syncHousePhotos(photo.houseId);
+  refresh();
+  return {};
+}
