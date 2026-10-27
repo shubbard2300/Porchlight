@@ -83,8 +83,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </div>
           {p !== 'final' && (
             <div className="row" style={{ gap: 14 }}>
-              <Link href="/submit" className="btn primary">Post your house</Link>
-              {!user && <Link href="/join/viewer" className="btn ghost">Join to vote</Link>}
+              <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Post your house</Link>
+              {!user && <Link href="/join/viewer" data-modal="join:viewer" className="btn ghost">Join to vote</Link>}
             </div>
           )}
         </div>
@@ -111,7 +111,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           <Icon3D name="house" size={72} />
           <h2>No {season.name} houses yet</h2>
           <p className="muted">Be the first pin on the map.</p>
-          <Link href="/submit" className="btn primary">Post your house</Link>
+          <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Post your house</Link>
         </div>
       ) : (
         <section className="stack" style={{ gap: 18 }} aria-labelledby="brightest">

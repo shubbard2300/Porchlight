@@ -49,7 +49,7 @@ export default function Terms() {
       <p>To the extent the law allows, {OWNER_NAME} is not liable for indirect or consequential damages, and our total liability to you is limited to the amount you paid us in the past 12 months, or $50 if you paid nothing.</p>
 
       <h2>Changes and contact</h2>
-      <p>We may update these terms and will change the date at the top when we do. Continuing to use Porchlight means you accept the update. Our <Link href="/privacy">Privacy Policy</Link> explains how we handle your data. Reach us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
+      <p>We may update these terms and will change the date at the top when we do. Continuing to use Porchlight means you accept the update. Our <Link href="/privacy">Privacy Policy</Link> explains how we handle your data. <Link href="/contact" data-modal="contact">Send us a message</Link> or email {CONTACT_EMAIL}.</p>
     </LegalPage>
   );
 }

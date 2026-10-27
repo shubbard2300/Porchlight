@@ -37,13 +37,13 @@ export default function Privacy() {
       <p>We keep your account until you delete it or ask us to. Past contests stay in the archive so results remain accurate. Sign-in links expire quickly, and email logs are kept only as long as they are useful for troubleshooting.</p>
 
       <h2>Your choices and rights</h2>
-      <p>You can edit your profile at any time. You can ask us to send you a copy of your data, correct it, or delete your account by emailing <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Depending on where you live (for example California under the CCPA, or the EU and UK under the GDPR), you may have additional rights, and we will honor them. We will not treat you differently for using them.</p>
+      <p>You can edit your profile at any time. You can ask us to send you a copy of your data, correct it, or delete your account by <Link href="/contact?topic=Privacy+and+my+data" data-modal="contact:Privacy and my data">sending us a message</Link> or emailing {CONTACT_EMAIL}. Depending on where you live (for example California under the CCPA, or the EU and UK under the GDPR), you may have additional rights, and we will honor them. We will not treat you differently for using them.</p>
 
       <h2>Cookies</h2>
       <p>We use one essential cookie to keep you signed in. See our <Link href="/cookies">Cookie Policy</Link>.</p>
 
       <h2>Children</h2>
-      <p>Porchlight is for people 18 and older. We do not knowingly collect information from children under 13. If you believe a child has signed up, contact us and we will delete the account.</p>
+      <p>Porchlight is for people 18 and older. We do not knowingly collect information from children under 13. If you believe a child has signed up, <Link href="/contact?topic=Privacy+and+my+data" data-modal="contact:Privacy and my data">contact us</Link> and we will delete the account.</p>
 
       <h2>Security</h2>
       <p>We use encrypted connections (HTTPS), hashed passwords, and limited admin access. No system is perfectly secure, so please use a password you don&apos;t use elsewhere.</p>

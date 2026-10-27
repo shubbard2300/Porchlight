@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema } from './validation';
+import { contactSchema, houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema } from './validation';
 
 describe('joinSchema', () => {
   const base = { accountType: 'VIEWER', email: '  Sam@Example.COM ', username: 'Sam_Rivera', password: 'lanterns-glow', terms: 'on' };
@@ -74,5 +74,18 @@ describe('profileSchema', () => {
     const r = profileSchema.safeParse({ username: ' Holly_Lane ' });
     expect(r.success && r.data.username).toBe('holly_lane');
     expect(profileSchema.safeParse({ username: 'admin' }).success).toBe(false);
+  });
+});
+
+describe('contactSchema', () => {
+  const base = { name: ' Sam ', email: 'Sam@Example.com', topic: 'General question', message: 'Love the lights on Alder Ct!' };
+  it('accepts a normal message and tidies it', () => {
+    const r = contactSchema.safeParse(base);
+    expect(r.success).toBe(true);
+    if (r.success) { expect(r.data.name).toBe('Sam'); expect(r.data.email).toBe('sam@example.com'); }
+  });
+  it('rejects unknown topics and very short messages', () => {
+    expect(contactSchema.safeParse({ ...base, topic: 'Spam' }).success).toBe(false);
+    expect(contactSchema.safeParse({ ...base, message: 'hi' }).success).toBe(false);
   });
 });

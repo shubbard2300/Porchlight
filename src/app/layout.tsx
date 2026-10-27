@@ -4,6 +4,7 @@ import { LogoMark, Wordmark } from '@/components/LogoMark';
 import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
 import { Icon3D } from '@/components/Icon3D';
+import { Modals } from '@/components/Modals';
 import { SiteFooter } from '@/components/SiteFooter';
 import { logout } from './actions/auth';
 import './globals.css';
@@ -46,16 +47,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </>
               ) : (
                 <>
-                  <Link href="/login">Log in</Link>
-                  <Link href="/join">Sign up</Link>
+                  <Link href="/login" data-modal="login">Log in</Link>
+                  <Link href="/join" data-modal="join">Sign up</Link>
                 </>
               )}
-              <Link href={user ? '/submit' : '/join/host'} className="cta">Post your house</Link>
+              <Link href={user ? '/submit' : '/join/host'} data-modal={user ? undefined : 'join:host'} className="cta">Post your house</Link>
             </nav>
           </div>
         </header>
         {children}
         <SiteFooter />
+        <Modals signedIn={Boolean(user)} contact={{ name: user ? (user.displayName ?? user.username) : undefined, email: user?.email }} />
       </body>
     </html>
   );
