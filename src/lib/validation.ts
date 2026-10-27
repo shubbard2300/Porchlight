@@ -1,0 +1,86 @@
+import { z } from 'zod';
+
+import { CONTRIBUTIONS, HOUSE_TAGS } from './houseOptions';
+
+export { CONTRIBUTIONS, HOUSE_TAGS };
+
+const checkbox = z.preprocess((v) => v === 'on' || v === 'true' || v === true, z.boolean());
+
+const RESERVED_USERNAMES = ['admin', 'administrator', 'porchlight', 'support', 'help', 'moderator', 'staff'];
+
+const email = z.string().trim().toLowerCase().email('Enter a valid email address.');
+const optional = (max: number) => z.string().trim().max(max, `Keep this under ${max} characters.`).optional().or(z.literal(''));
+
+export const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9_]{3,20}$/, 'Use 3 to 20 letters, numbers or underscores.')
+  .refine((u) => !RESERVED_USERNAMES.includes(u), 'That username is reserved. Try another.');
+
+export const passwordSchema = z.string().min(8, 'Use at least 8 characters.').max(200, 'Keep it under 200 characters.');
+
+export const joinSchema = z.object({
+  accountType: z.enum(['VIEWER', 'HOST']),
+  email,
+  username: usernameSchema,
+  password: passwordSchema,
+  propertyAddress: optional(120),
+  referralCode: z.string().trim().toUpperCase().max(20).optional().or(z.literal('')),
+  marketingOptIn: checkbox,
+  terms: checkbox.refine((v) => v, 'Please accept the contest rules to continue.'),
+});
+
+export const emailOnlySchema = z.object({ email });
+
+export const loginSchema = z.object({ email, password: z.string().min(1, 'Enter your password.') });
+
+export const newPasswordSchema = z
+  .object({ password: passwordSchema, confirm: z.string() })
+  .refine((d) => d.password === d.confirm, { path: ['confirm'], message: 'The two passwords don\u2019t match.' });
+
+export const profileSchema = z.object({
+  displayName: optional(60),
+  hometown: optional(60),
+  bio: optional(500),
+  marketingOptIn: checkbox,
+});
+
+export const hostProfileSchema = z.object({
+  propertyAddress: optional(120),
+  neighborhood: optional(60),
+  hostSeason: optional(40),
+  decorationTheme: optional(80),
+  propertyDetails: optional(1000),
+});
+
+export const houseSchema = z.object({
+  season: z.string().min(1, 'Pick a holiday.'),
+  name: z.string().trim().min(2, 'Give your display a name people will remember.').max(60),
+  address: z.string().trim().min(5, 'Add an address so visitors can find you.').max(120),
+  neighborhood: z.string().trim().max(60).optional().or(z.literal('')),
+  showExactAddress: checkbox,
+  tags: z.array(z.enum(HOUSE_TAGS)).max(9).default([]),
+  litFrom: z.string().trim().min(1).max(20),
+  litUntil: z.string().trim().min(1).max(20),
+  description: z.string().trim().min(10, 'Tell visitors what to look for (at least 10 characters).').max(600),
+  contribution: z.coerce.number().refine((n) => (CONTRIBUTIONS as readonly number[]).includes(n), 'Pick a contribution amount.'),
+  permission: checkbox.refine((v) => v, 'Please confirm you live here or have permission.'),
+});
+
+export const settingsSchema = z.object({
+  notificationEmail: z.string().trim().toLowerCase().email('Enter a valid email address.'),
+  emailFrom: z.string().trim().max(120).optional().or(z.literal('')),
+  replyTo: z.string().trim().toLowerCase().email('Enter a valid email address.').optional().or(z.literal('')),
+});
+
+export type FieldErrors = Record<string, string | undefined>;
+
+export function fieldErrors(err: z.ZodError): FieldErrors {
+  const out: FieldErrors = {};
+  for (const issue of err.issues) {
+    const k = String(issue.path[0] ?? 'form');
+    out[k] ??= issue.message;
+  }
+  return out;
+}

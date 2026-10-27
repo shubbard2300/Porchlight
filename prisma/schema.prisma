@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum HouseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AccountType {
+  VIEWER
+  HOST
+}
+
+enum TokenPurpose {
+  VERIFY
+  LOGIN
+}
+
+model User {
+  id               String       @id @default(cuid())
+  email            String       @unique
+  username         String       @unique
+  accountType      AccountType  @default(VIEWER)
+  emailVerifiedAt  DateTime?
+  /// bcrypt hash. Null for accounts created before passwords existed; they can set one on their profile.
+  passwordHash     String?
+  role             Role         @default(USER)
+  xp               Int          @default(0)
+  referralCode     String       @unique
+  referredById     String?
+  referredBy       User?        @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals        User[]       @relation("Referrals")
+  marketingOptIn   Boolean      @default(false)
+
+  // Profile (all optional)
+  displayName      String?
+  bio              String?
+  hometown         String?
+  avatarUpdatedAt  DateTime?
+  avatar           Avatar?
+
+  // Host profile (optional, filled in after verifying)
+  propertyAddress  String?
+  neighborhood     String?
+  hostSeason       String?
+  decorationTheme  String?
+  propertyDetails  String?
+
+  createdAt        DateTime     @default(now())
+  lastLoginAt      DateTime?
+  houses           House[]
+  votes            Vote[]
+  tokens           EmailToken[]
+}
+
+/// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
+model Avatar {
+  userId      String   @id
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentType String
+  data        Bytes
+  updatedAt   DateTime @updatedAt
+}
+
+/// One-time links for verifying an email and for signing in. Only a SHA-256 hash of the token is stored.
+model EmailToken {
+  id        String       @id @default(cuid())
+  tokenHash String       @unique
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   TokenPurpose
+  next      String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+}
+
+model House {
+  id                String      @id @default(cuid())
+  ownerId           String
+  owner             User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  season            String
+  name              String
+  address           String
+  neighborhood      String?
+  lat               Float?
+  lng               Float?
+  showExactAddress  Boolean     @default(true)
+  tags              String[]
+  litFrom           String
+  litUntil          String
+  description       String
+  photoUrls         String[]
+  contributionCents Int         @default(0)
+  status            HouseStatus @default(PENDING)
+  reviewNote        String?
+  reviewedAt        DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  votes             Vote[]
+
+  @@index([season, status])
+}
+
+/// One rating per person per house. A like only counts toward the pot once verifiedAt is set.
+model Vote {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  houseId    String
+  house      House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  liked      Boolean
+  verifiedAt DateTime?
+  verifyLat  Float?
+  verifyLng  Float?
+  photoUrl   String?
+  comment    String?
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, houseId])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/// Every email the app sends, delivered or not. Shown in the admin Form inbox.
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  kind      String
+  status    String
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
