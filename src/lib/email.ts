@@ -36,7 +36,7 @@ export async function sendEmail(opts: { to: string; subject: string; text: strin
   }
   if (status !== 'sent') console.error(`[email] ${opts.kind} to ${opts.to} ${status}${error ? `: ${error}` : ' (RESEND_API_KEY not set)'}`);
   await db.emailLog.create({ data: { to: opts.to, subject: opts.subject, body: opts.text, kind: opts.kind, status, error } });
-  return status;
+  return { status, code: error ? error.split(' ')[0] : null };
 }
 
 /** Sends a form notification to the admin inbox chosen in Admin > Settings. */
