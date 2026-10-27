@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
-import { photoSelect, syncHousePhotos } from '@/lib/housePhotos';
+import { notifyAdmin } from '@/lib/email';
+import { absolutePhotoUrl, photoSelect, reviewUrl, syncHousePhotos } from '@/lib/housePhotos';
 import { sniffImage } from '@/lib/images';
 import { deletePhotoFiles, storePhotoFile } from '@/lib/photoStorage';
 import { MAX_HOUSE_PHOTOS, photoLocationSchema, photoMetaSchema } from '@/lib/validation';
@@ -13,6 +14,8 @@ type Result = { photo?: HousePhotoView; error?: string };
 
 const MAX_PHOTO_BYTES = 3_000_000;
 const PENDING_TTL_MS = 24 * 60 * 60 * 1000;
+/** Photos added to one entry within this window share a single admin email. */
+const NOTIFY_QUIET_MS = 10 * 60 * 1000;
 
 function refresh() {
   revalidatePath('/profile');
@@ -25,6 +28,26 @@ async function sweepAbandoned(ownerId: string) {
   if (stale.length === 0) return;
   await db.housePhoto.deleteMany({ where: { id: { in: stale.map((p) => p.id) } } });
   await deletePhotoFiles(stale.map((p) => p.blobUrl));
+}
+
+/** Tells the admin inbox a photo was added to an existing entry, with a link to review it. */
+async function notifyNewPhoto(houseId: string, photoId: string, user: { username: string; email: string }) {
+  const recent = await db.housePhoto.count({ where: { houseId, id: { not: photoId }, createdAt: { gt: new Date(Date.now() - NOTIFY_QUIET_MS) } } });
+  if (recent > 0) return;
+  const house = await db.house.findUniqueOrThrow({ where: { id: houseId }, select: { id: true, name: true, status: true, photoUrls: true } });
+  const live = house.status === 'APPROVED';
+  await notifyAdmin(
+    `New photo on ${house.name}`,
+    [
+      `${user.username} <${user.email}> added a photo to ${house.name}${live ? ', which is live on the site now' : ''}.`,
+      '',
+      ...house.photoUrls.map((u) => absolutePhotoUrl(u)),
+      '',
+      `${live ? 'Review it (take it down if needed)' : 'Approve or reject it'}: ${reviewUrl(house)}`,
+    ].join('\n'),
+    'submission',
+    user.email,
+  );
 }
 
 export async function uploadHousePhoto(fd: FormData): Promise<Result> {
@@ -74,6 +97,7 @@ export async function uploadHousePhoto(fd: FormData): Promise<Result> {
   const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url: blobUrl ?? `/house-photo/${row.id}`, blobUrl }, select: photoSelect });
   if (m.houseId) {
     await syncHousePhotos(m.houseId);
+    await notifyNewPhoto(m.houseId, row.id, user);
     refresh();
   }
   return { photo };

@@ -39,6 +39,16 @@ export async function requireAdmin() {
   return user;
 }
 
+/**
+ * Makes an existing account an admin when its email is in ADMIN_EMAILS, so adding
+ * an email there later takes effect at that person's next sign-in.
+ */
+export async function applyBootstrapAdmin<U extends { id: string; email: string; role: 'USER' | 'ADMIN' }>(user: U): Promise<U> {
+  if (user.role === 'ADMIN' || !isBootstrapAdmin(user.email)) return user;
+  await db.user.update({ where: { id: user.id }, data: { role: 'ADMIN' } });
+  return { ...user, role: 'ADMIN' };
+}
+
 export function isBootstrapAdmin(email: string) {
   return (process.env.ADMIN_EMAILS ?? '')
     .split(',')

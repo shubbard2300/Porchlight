@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
-import { attachPhotos } from '@/lib/housePhotos';
+import { absolutePhotoUrl, attachPhotos, reviewUrl } from '@/lib/housePhotos';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
@@ -52,11 +52,12 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
       `Features: ${house.tags.join(', ') || 'none listed'}`,
       `Pot pledge: $${d.contribution}`,
       `Photos: ${placed.photoUrls.length}`,
+      ...placed.photoUrls.map((u) => `  ${absolutePhotoUrl(u)}`),
       `Map pin: ${placed.lat !== null ? `https://www.google.com/maps?q=${placed.lat},${placed.lng}` : 'none yet'}`,
       '',
       house.description,
       '',
-      `Review it: ${appUrl('/admin/submissions')}`,
+      `Approve or reject it: ${reviewUrl(house)}`,
     ].join('\n'),
     'submission',
     user.email,

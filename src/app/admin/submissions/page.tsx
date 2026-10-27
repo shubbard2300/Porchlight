@@ -18,7 +18,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
       {houses.map((h) => {
         const s = getSeason(h.season);
         return (
-          <article key={h.id} className="panel stack" style={{ gap: 10 }}>
+          <article key={h.id} id={`h-${h.id}`} className="panel stack" style={{ gap: 10, scrollMarginTop: 90 }}>
             <div className="row spread">
               <div><h2 style={{ fontSize: 20 }}>{h.name}</h2><span className="small muted">{s ? `${s.name} ${s.year}` : h.season} · posted {h.createdAt.toLocaleDateString('en-US')} by @{h.owner.username} &lt;{h.owner.email}&gt;</span></div>
               <span className={`pill ${h.status}`}>{h.status.toLowerCase()}</span>
