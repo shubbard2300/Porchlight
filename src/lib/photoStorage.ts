@@ -3,17 +3,19 @@ import { del, put } from '@vercel/blob';
 import { db } from './db';
 
 /**
- * House photos go to a public Vercel Blob store when one is connected to the project. Vercel either sets
- * BLOB_STORE_ID (the SDK then signs in with the deployment's OIDC token) or a BLOB_READ_WRITE_TOKEN.
- * Without either they are kept in Postgres and served from /house-photo/<id>.
+ * House photos go to a public Vercel Blob store when one is connected to the project. Connecting sets a
+ * store ID (the SDK then signs in with the deployment's OIDC token) or a BLOB_READ_WRITE_TOKEN.
+ * The store ID's name follows the prefix picked when connecting: BLOB_STORE_ID by default,
+ * PORCH_STORE_ID on the live project. Without either, photos are kept in Postgres.
  */
-export const blobEnabled = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+const storeId = () => process.env.BLOB_STORE_ID || process.env.PORCH_STORE_ID || undefined;
+export const blobEnabled = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN || storeId());
 
 /** Saves the image bytes for a HousePhoto row that already exists. Returns the Blob URL, or null for Postgres. */
 export async function storePhotoFile(photoId: string, data: Buffer, contentType: string) {
   if (blobEnabled()) {
     const ext = contentType.split('/')[1];
-    const blob = await put(`houses/${photoId}.${ext}`, data, { access: 'public', contentType, addRandomSuffix: true });
+    const blob = await put(`houses/${photoId}.${ext}`, data, { access: 'public', contentType, addRandomSuffix: true, storeId: storeId() });
     return blob.url;
   }
   console.warn('[photos] no Blob store connected; storing photo in Postgres');
@@ -26,7 +28,7 @@ export async function deletePhotoFiles(blobUrls: (string | null)[]) {
   const remote = blobUrls.filter((u): u is string => Boolean(u));
   if (remote.length === 0 || !blobEnabled()) return;
   try {
-    await del(remote);
+    await del(remote, { storeId: storeId() });
   } catch (err) {
     console.error('[photos] could not delete from Blob', err);
   }
