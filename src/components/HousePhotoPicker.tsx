@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { removeHousePhoto, setHousePhotoLocation, uploadHousePhoto, type HousePhotoView } from '@/app/actions/housePhotos';
+import { makeCoverPhoto, removeHousePhoto, setHousePhotoLocation, uploadHousePhoto, type HousePhotoView } from '@/app/actions/housePhotos';
 import { readPhotoMeta } from '@/lib/exif';
 import css from './HousePhotoPicker.module.css';
 
@@ -105,6 +105,11 @@ export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId
     setLocating(undefined);
   };
 
+  const makeCover = async (id: string) => {
+    setPhotos((ps) => [...ps.filter((p) => p.id === id), ...ps.filter((p) => p.id !== id)]);
+    if (houseId) await makeCoverPhoto(id);
+  };
+
   const remove = async (id: string) => {
     setPhotos((ps) => ps.filter((p) => p.id !== id));
     await removeHousePhoto(id);
@@ -117,7 +122,7 @@ export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId
           {photos.map((p, i) => (
             <li key={p.id} className={css.tile}>
               <img src={p.url} alt={`House photo ${i + 1}`} />
-              {i === 0 && <span className={css.cover}>Cover</span>}
+              {i === 0 ? <span className={css.cover}>Cover</span> : <button type="button" className={`${css.cover} ${css.makeCover}`} onClick={() => makeCover(p.id)}>Make cover</button>}
               <button type="button" className={css.remove} onClick={() => remove(p.id)} aria-label={`Remove photo ${i + 1}`}>×</button>
               <div className={css.meta}>
                 {p.lat !== null && p.lng !== null ? (
@@ -142,7 +147,7 @@ export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId
       </div>
       <span className="hint">
         {houseId
-          ? `Up to ${MAX_PHOTOS} photos. The first one is the cover on your house card.`
+          ? `Up to ${MAX_PHOTOS} photos. The cover shows on your house card. Use × to remove a photo, then add a new one to replace it.`
           : `Up to ${MAX_PHOTOS} photos; night shots with the lights on look best. We pin your house on the map from the photo's GPS, or from your phone's location when you take one here. Location data is stripped from the photo people see.`}
       </span>
       {error && <span className="err" role="alert">{error}</span>}

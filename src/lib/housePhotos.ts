@@ -2,6 +2,7 @@ import 'server-only';
 import type { HouseStatus } from '@prisma/client';
 import { db } from './db';
 import { appUrl } from './email';
+import { deletePhotoFiles } from './photoStorage';
 import { MAX_HOUSE_PHOTOS } from './validation';
 
 /** Fields the browser needs to show a photo. Never selects the stored bytes. */
@@ -44,3 +45,10 @@ export const reviewUrl = (h: { id: string; status: HouseStatus }) => appUrl(`/ad
 
 /** Photo URLs are absolute on Blob and site-relative when stored in Postgres. */
 export const absolutePhotoUrl = (url: string) => (url.startsWith('http') ? url : appUrl(url));
+
+/** Deletes an entry with its photos, votes and comments, then removes its photo files from Blob. */
+export async function deleteHouse(id: string) {
+  const photos = await db.housePhoto.findMany({ where: { houseId: id }, select: { blobUrl: true } });
+  await db.house.delete({ where: { id } });
+  await deletePhotoFiles(photos.map((p) => p.blobUrl));
+}
