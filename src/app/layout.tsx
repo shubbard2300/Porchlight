@@ -34,6 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               porchlight
             </Link>
             <nav className="nav" aria-label="Main">
+              <Link href="/#map">Map</Link>
               <Link href="/">Houses</Link>
               {user ? (
                 <>
