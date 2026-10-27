@@ -15,6 +15,7 @@ export async function storePhotoFile(photoId: string, data: Buffer, contentType:
     const blob = await put(`houses/${photoId}.${ext}`, data, { access: 'public', contentType, addRandomSuffix: true });
     return blob.url;
   }
+  console.warn('[photos] BLOB_READ_WRITE_TOKEN is not set; storing photo in Postgres');
   await db.housePhotoFile.create({ data: { photoId, contentType, data: new Uint8Array(data) } });
   return null;
 }
