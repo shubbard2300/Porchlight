@@ -224,6 +224,16 @@ pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var
 .float.a { left: 4%; bottom: 8%; }
 .float.b { right: 6%; top: 10%; animation-delay: -1.5s; }
 .float.c { left: 10%; top: 4%; animation-delay: -2.6s; }
+/* Soft pulsing glow on the "lit" things: windows, the main call to action, the pot and placeholder art. */
+.d-win, .d-attic { animation: lamp 2.8s ease-in-out infinite; }
+.d-attic { animation-delay: -1.4s; }
+.hero .btn.primary, .nav a.cta { animation: halo 3s ease-in-out infinite; }
+.pot .i3d, .house-photo > .i3d, .empty > .i3d { animation: aura 3.2s ease-in-out infinite; }
+.house-card:nth-child(2n) .house-photo > .i3d { animation-delay: -1.1s; }
+.house-card:nth-child(3n) .house-photo > .i3d { animation-delay: -2.2s; }
+@keyframes lamp { 0%, 100% { box-shadow: 0 0 10px var(--amber); filter: brightness(0.95); } 50% { box-shadow: 0 0 30px var(--amber), 0 0 60px rgba(255, 176, 0, 0.6); filter: brightness(1.12); } }
+@keyframes halo { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 176, 0, 0)); } 50% { filter: drop-shadow(0 0 20px rgba(255, 176, 0, 0.9)); } }
+@keyframes aura { 0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 176, 0, 0.25)); } 50% { filter: drop-shadow(0 0 18px rgba(255, 176, 0, 0.75)); } }
 @keyframes sway { from { transform: rotateX(-12deg) rotateY(-32deg); } to { transform: rotateX(-12deg) rotateY(32deg); } }
 @keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 @keyframes float { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-12px) rotate(4deg); } }
@@ -231,7 +241,7 @@ pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var
 
 @media (prefers-reduced-motion: reduce) {
   .diorama { animation: none; transform: rotateX(-12deg) rotateY(-24deg); }
-  .d-bulbs i, .float { animation: none; }
+  .d-bulbs i, .float, .d-win, .d-attic, .hero .btn.primary, .nav a.cta, .pot .i3d, .house-photo > .i3d, .empty > .i3d { animation: none; }
   .btn, .choice, .house-card { transition: none; }
   .btn:hover, .choice:hover, .house-card:hover { transform: none; }
 }
