@@ -30,7 +30,7 @@ async function sendLink(user: User, purpose: TokenPurpose, next: string): Promis
   const raw = await issueToken(user.id, purpose, next);
   const link = linkFor(raw);
   const verify = purpose === 'VERIFY';
-  await sendEmail({
+  const sent = await sendEmail({
     to: user.email,
     kind: verify ? 'verify' : 'login',
     subject: verify ? 'Confirm your email for Porchlight' : 'Your Porchlight sign-in link',
@@ -46,7 +46,8 @@ async function sendLink(user: User, purpose: TokenPurpose, next: string): Promis
 
   // Local development without an email service: show the link on screen so the flow can be tested.
   const showLink = !emailDeliveryConfigured() && process.env.NODE_ENV !== 'production';
-  redirect(showLink ? `${checkEmail}&dev=${encodeURIComponent(link)}` : checkEmail);
+  if (showLink) redirect(`${checkEmail}&dev=${encodeURIComponent(link)}`);
+  redirect(sent.status === 'failed' ? `${checkEmail}&failed=${encodeURIComponent(sent.code ?? 'error')}` : checkEmail);
 }
 
 export async function join(_prev: FormState, fd: FormData): Promise<FormState> {
