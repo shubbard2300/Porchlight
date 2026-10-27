@@ -6,6 +6,7 @@ import { APPROVAL_XP } from '@/lib/rewards';
 import { requireAdmin } from '@/lib/auth';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import type { FormState } from '@/lib/forms';
+import { deletePhotoFiles } from '@/lib/photoStorage';
 import { getSeason } from '@/lib/seasons';
 import { displayName } from '@/lib/users';
 import { setSetting } from '@/lib/settings';
@@ -47,7 +48,9 @@ export async function deleteUser(fd: FormData) {
   const admin = await requireAdmin();
   const id = String(fd.get('id'));
   if (id === admin.id || fd.get('confirm') !== 'on') return;
+  const photos = await db.housePhoto.findMany({ where: { ownerId: id }, select: { url: true } });
   await db.user.delete({ where: { id } });
+  await deletePhotoFiles(photos.map((p) => p.url));
   revalidatePath('/admin', 'layout');
 }
 

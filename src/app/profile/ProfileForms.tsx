@@ -5,7 +5,7 @@ import { Field } from '@/components/Field';
 import { SubmitButton } from '@/components/SubmitButton';
 import { useFormAction } from '@/components/useFormAction';
 
-type Profile = { displayName: string; hometown: string; bio: string; marketingOptIn: boolean };
+type Profile = { username: string; displayName: string; hometown: string; bio: string; marketingOptIn: boolean };
 type Host = { propertyAddress: string; neighborhood: string; hostSeason: string; decorationTheme: string; propertyDetails: string };
 
 export function AboutForm({ p }: { p: Profile }) {
@@ -13,6 +13,9 @@ export function AboutForm({ p }: { p: Profile }) {
   return (
     <form action={action} className="stack" noValidate>
       {state?.message && <p className="notice" role="status">{state.message}</p>}
+      <Field label="Username" htmlFor="username" error={e.username} hint="3 to 20 letters, numbers or underscores. This is your @handle on Porchlight.">
+        <input id="username" name="username" type="text" maxLength={20} autoComplete="username" autoCapitalize="none" spellCheck={false} defaultValue={value('username', p.username)} />
+      </Field>
       <div className="two">
         <Field label="Display name" htmlFor="displayName" error={e.displayName}><input id="displayName" name="displayName" type="text" maxLength={60} defaultValue={value('displayName', p.displayName)} placeholder="Sam R." /></Field>
         <Field label="Hometown" htmlFor="hometown" error={e.hometown}><input id="hometown" name="hometown" type="text" maxLength={60} defaultValue={value('hometown', p.hometown)} placeholder="Portland, OR" /></Field>

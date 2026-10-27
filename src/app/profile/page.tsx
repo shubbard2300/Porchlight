@@ -3,6 +3,8 @@ import { Icon3D } from '@/components/Icon3D';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { contestToday, getSeason, openForSubmissions, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
+import { photoSelect } from '@/lib/housePhotos';
+import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { avatarUrl, displayName, level } from '@/lib/users';
 import { becomeHost } from '../actions/profile';
 import { AvatarUploader } from './AvatarUploader';
@@ -16,7 +18,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const isHost = user.accountType === 'HOST';
   const today = contestToday();
   const lvl = level(user.xp);
-  const houses = isHost ? await db.house.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: 'desc' } }) : [];
+  const houses = isHost ? await db.house.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: 'desc' }, include: { photos: { select: photoSelect, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] } } }) : [];
   const withSeason = houses.map((h) => ({ h, s: getSeason(h.season) }));
   const active = withSeason.filter(({ s }) => s && phase(s, today) !== 'expired');
   const archived = withSeason.filter(({ s }) => !s || phase(s, today) === 'expired');
@@ -50,8 +52,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
       <section className="panel stack">
         <h2 style={{ fontSize: 20 }}>About you</h2>
-        <p className="small muted">Everything here is optional.</p>
-        <AboutForm p={{ displayName: user.displayName ?? '', hometown: user.hometown ?? '', bio: user.bio ?? '', marketingOptIn: user.marketingOptIn }} />
+        <p className="small muted">Only your username is required.</p>
+        <AboutForm p={{ username: user.username, displayName: user.displayName ?? '', hometown: user.hometown ?? '', bio: user.bio ?? '', marketingOptIn: user.marketingOptIn }} />
       </section>
 
       {isHost ? (
@@ -92,9 +94,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           <section className="stack">
             <h2 style={{ fontSize: 20 }}>My contest entries</h2>
             {active.length === 0 ? <p className="muted small">No entries for the current contests yet.</p> : active.map(({ h, s }) => (
-              <div key={h.id} className="panel row spread">
-                <div><b>{h.name}</b><div className="small muted">{s!.name} {s!.year} · {phaseLabel(s!, today).tag}</div>{h.reviewNote && <div className="small muted">Note: {h.reviewNote}</div>}</div>
-                <span className={`pill ${h.status}`}>{h.status === 'PENDING' ? 'In review' : h.status === 'APPROVED' ? 'Live' : 'Not approved'}</span>
+              <div key={h.id} className="panel stack">
+                <div className="row spread">
+                  <div><b>{h.name}</b><div className="small muted">{s!.name} {s!.year} · {phaseLabel(s!, today).tag}</div>{h.reviewNote && <div className="small muted">Note: {h.reviewNote}</div>}</div>
+                  <span className={`pill ${h.status}`}>{h.status === 'PENDING' ? 'In review' : h.status === 'APPROVED' ? 'Live' : 'Not approved'}</span>
+                </div>
+                <HousePhotoPicker houseId={h.id} initial={h.photos} />
               </div>
             ))}
           </section>
