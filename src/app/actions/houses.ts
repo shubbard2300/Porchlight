@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { absolutePhotoUrl, attachPhotos, deleteHouse, reviewUrl } from '@/lib/housePhotos';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
+import { geocodeAddress } from '@/lib/geocode';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
 import { contestToday, getSeason, openForSubmissions } from '@/lib/seasons';
@@ -39,7 +40,12 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
     },
   });
   await attachPhotos(user.id, house.id, fd.getAll('photoIds').map(String));
-  const placed = await db.house.findUniqueOrThrow({ where: { id: house.id }, select: { photoUrls: true, lat: true, lng: true } });
+  let placed = await db.house.findUniqueOrThrow({ where: { id: house.id }, select: { photoUrls: true, lat: true, lng: true } });
+  if (placed.lat === null) {
+    // No photo carried a location, so pin the house from its address.
+    const spot = await geocodeAddress(house.address);
+    if (spot) placed = await db.house.update({ where: { id: house.id }, data: spot, select: { photoUrls: true, lat: true, lng: true } });
+  }
 
   await notifyAdmin(
     `New ${season.name} submission: ${house.name}`,

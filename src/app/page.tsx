@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { HeroHouse } from '@/components/HeroHouse';
+import { HouseMap, type MapHouse } from '@/components/HouseMap';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
+import { publicPin } from '@/lib/mapPins';
 import { seasonTheme } from '@/lib/theme';
 import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
 
@@ -28,6 +30,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const ranked = [...houses].sort((a, b) => b._count.votes - a._count.votes);
 
   const theme = seasonTheme(season);
+  const pins: MapHouse[] = ranked.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
+    id: h.id,
+    name: h.name,
+    neighborhood: h.neighborhood,
+    address: h.showExactAddress ? h.address : null,
+    ...publicPin({ id: h.id, lat: h.lat, lng: h.lng, showExactAddress: h.showExactAddress }),
+    exact: h.showExactAddress,
+    photo: h.photoUrls[0] ?? null,
+    likes: h._count.votes,
+    rank: i + 1,
+    lit: `${h.litFrom}–${h.litUntil}`,
+  }]);
   const user = await currentUser();
 
   return (
@@ -39,6 +53,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </Link>
         ))}
       </nav>
+
+      <section id="map" aria-label={`${season.name} ${season.year} house map`} style={{ scrollMarginTop: 16 }}>
+        <HouseMap key={season.key} houses={pins} icon={theme.icon} seasonLabel={`${season.name} ${season.year}`} unplaced={houses.length - pins.length} />
+      </section>
 
       <section className="hero">
         <div className="hero-copy">

@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { APPROVAL_XP } from '@/lib/rewards';
 import { requireAdmin } from '@/lib/auth';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
+import { geocodeAddress } from '@/lib/geocode';
 import type { FormState } from '@/lib/forms';
 import { deleteHouse } from '@/lib/housePhotos';
 import { deletePhotoFiles } from '@/lib/photoStorage';
@@ -20,7 +21,9 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
   const before = await db.house.findUnique({ where: { id }, include: { owner: true } });
   if (!before) return;
 
-  await db.house.update({ where: { id }, data: { status: decision, reviewNote: note, reviewedAt: new Date() } });
+  // A house going live without a pin (no photo location, address lookup failed at submit) gets one more try.
+  const spot = decision === 'APPROVED' && before.lat === null ? await geocodeAddress(before.address) : null;
+  await db.house.update({ where: { id }, data: { status: decision, reviewNote: note, reviewedAt: new Date(), ...spot } });
   if (decision === 'APPROVED' && before.status !== 'APPROVED') {
     await db.user.update({ where: { id: before.ownerId }, data: { xp: { increment: APPROVAL_XP } } });
   }
