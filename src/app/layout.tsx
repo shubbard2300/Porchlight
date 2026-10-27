@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
 import { Icon3D } from '@/components/Icon3D';
+import { SiteFooter } from '@/components/SiteFooter';
 import { logout } from './actions/auth';
 import './globals.css';
 
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
         </header>
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

@@ -245,3 +245,20 @@ pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var
   .btn, .choice, .house-card { transition: none; }
   .btn:hover, .choice:hover, .house-card:hover { transform: none; }
 }
+
+/* footer + legal pages */
+body { display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; width: 100%; }
+.site-foot { background: var(--ink); color: var(--on-dark-2); font-size: 14px; }
+.site-foot .wrap { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; padding-block: 20px; }
+.site-foot nav { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.site-foot a { color: var(--on-dark); font-weight: 600; text-decoration: none; }
+.site-foot a:hover { text-decoration: underline; text-decoration-color: var(--amber); }
+.legal { max-width: 760px; padding-block: 40px 72px; display: grid; gap: 14px; }
+.legal h1 { font-size: clamp(30px, 6vw, 44px); }
+.legal h2 { font-size: 21px; margin-top: 18px; }
+.legal .lede { font-size: 18px; color: var(--text-2); }
+.legal ul { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.legal table { border-collapse: collapse; width: 100%; font-size: 15px; }
+.legal th, .legal td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--sand); vertical-align: top; }
+.legal-contact { margin-top: 18px; }

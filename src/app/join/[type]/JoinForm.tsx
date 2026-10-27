@@ -30,7 +30,7 @@ export function JoinForm({ accountType, invite }: { accountType: 'VIEWER' | 'HOS
       </Field>
       <label className="check" htmlFor="marketingOptIn"><input type="checkbox" id="marketingOptIn" name="marketingOptIn" defaultChecked={checked('marketingOptIn')} /><span>Email me when a new holiday contest opens.</span></label>
       <div className="field">
-        <label className="check" htmlFor="terms"><input type="checkbox" id="terms" name="terms" defaultChecked={checked('terms')} /><span>I&apos;m 18 or older and I accept the contest rules.</span></label>
+        <label className="check" htmlFor="terms"><input type="checkbox" id="terms" name="terms" defaultChecked={checked('terms')} /><span>I&apos;m 18 or older and I accept the <a href="/terms" target="_blank" rel="noopener">Terms and contest rules</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
         {e.terms && <span className="err" role="alert">{e.terms}</span>}
       </div>
       <SubmitButton pendingText="Sending your link…">Send my confirmation link</SubmitButton>
