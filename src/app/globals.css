@@ -69,8 +69,14 @@ main.wrap { padding-block: 32px 72px; }
 .site-head { background: var(--ink); color: var(--on-dark); position: sticky; top: 0; z-index: 10; }
 .site-head .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.03em; color: var(--on-dark); text-decoration: none; }
-.brand-mark { width: 38px; height: 38px; border-radius: 12px; background: var(--amber); border: 2px solid var(--on-dark); display: grid; place-items: center; }
-.brand-mark svg { width: 24px; height: 24px; }
+.brand-mark { flex: none; border-radius: 12px; box-shadow: 0 0 0 2px var(--on-dark), 3px 3px 0 2px var(--amber); transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+.brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
+.brand-mark .logo-halo { animation: logo-halo 3.2s ease-in-out infinite; }
+.wordmark { display: inline-block; }
+.wordmark-i { position: relative; display: inline-block; }
+.wordmark-dot { position: absolute; left: 50%; top: .17em; width: .22em; height: .22em; margin-left: -.11em; border-radius: 50%; background: var(--amber); box-shadow: 0 0 .25em var(--amber), 0 0 .6em rgba(255,176,0,.6); animation: logo-dot 3.2s ease-in-out infinite; }
+@keyframes logo-halo { 0%, 100% { opacity: .45; } 50% { opacity: .85; } }
+@keyframes logo-dot { 0%, 100% { box-shadow: 0 0 .2em var(--amber); } 50% { box-shadow: 0 0 .35em var(--amber), 0 0 .8em rgba(255,176,0,.75); } }
 .nav { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
 .nav a, .nav button { color: var(--on-dark); text-decoration: none; padding: 9px 12px; border-radius: 12px; font-weight: 700; font-size: 14.5px; background: none; border: 0; cursor: pointer; }
 .nav a:hover, .nav button:hover { background: var(--ink-2); }
@@ -241,7 +247,7 @@ pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var
 
 @media (prefers-reduced-motion: reduce) {
   .diorama { animation: none; transform: rotateX(-12deg) rotateY(-24deg); }
-  .d-bulbs i, .float, .d-win, .d-attic, .hero .btn.primary, .nav a.cta, .pot .i3d, .house-photo > .i3d, .empty > .i3d { animation: none; }
+  .d-bulbs i, .float, .d-win, .d-attic, .hero .btn.primary, .nav a.cta, .pot .i3d, .house-photo > .i3d, .empty > .i3d, .brand-mark .logo-halo, .wordmark-dot { animation: none; }
   .btn, .choice, .house-card { transition: none; }
   .btn:hover, .choice:hover, .house-card:hover { transform: none; }
 }
