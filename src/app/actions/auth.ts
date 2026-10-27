@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import type { TokenPurpose, User } from '@prisma/client';
 import { db } from '@/lib/db';
 import { SIGNUP_BONUS_XP } from '@/lib/rewards';
-import { endSession, isBootstrapAdmin, startSession } from '@/lib/auth';
+import { applyBootstrapAdmin, endSession, isBootstrapAdmin, startSession } from '@/lib/auth';
 import { appUrl, emailDeliveryConfigured, notifyAdmin, sendEmail } from '@/lib/email';
 import { safeNext, type FormState } from '@/lib/forms';
 import { consumeToken, issueToken, linkFor, sentRecently, TOKEN_TTL_MIN } from '@/lib/tokens';
@@ -92,8 +92,9 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
   // Right password but the email was never confirmed: send the confirmation link again.
   if (!user.emailVerifiedAt) return sendLink(user, 'VERIFY', '/profile?welcome=1');
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await startSession({ userId: user.id, role: user.role });
-  redirect(safeNext(fd.get('next')) ?? (user.role === 'ADMIN' ? '/admin' : '/profile'));
+  const signedIn = await applyBootstrapAdmin(user);
+  await startSession({ userId: signedIn.id, role: signedIn.role });
+  redirect(safeNext(fd.get('next')) ?? (signedIn.role === 'ADMIN' ? '/admin' : '/profile'));
 }
 
 export async function requestLoginLink(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -149,7 +150,8 @@ export async function confirmLink(fd: FormData) {
     });
   }
 
-  await startSession({ userId: user.id, role: user.role });
+  const signedIn = await applyBootstrapAdmin(user);
+  await startSession({ userId: signedIn.id, role: signedIn.role });
   redirect(safeNext(t.next) ?? '/profile');
 }
 

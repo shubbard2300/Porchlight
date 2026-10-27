@@ -1,5 +1,7 @@
 import 'server-only';
+import type { HouseStatus } from '@prisma/client';
 import { db } from './db';
+import { appUrl } from './email';
 import { MAX_HOUSE_PHOTOS } from './validation';
 
 /** Fields the browser needs to show a photo. Never selects the stored bytes. */
@@ -36,3 +38,9 @@ export async function attachPhotos(ownerId: string, houseId: string, ids: string
   );
   await syncHousePhotos(houseId);
 }
+
+/** Where an admin reviews this entry; the submissions page anchors each entry by id. */
+export const reviewUrl = (h: { id: string; status: HouseStatus }) => appUrl(`/admin/submissions?status=${h.status}#h-${h.id}`);
+
+/** Photo URLs are absolute on Blob and site-relative when stored in Postgres. */
+export const absolutePhotoUrl = (url: string) => (url.startsWith('http') ? url : appUrl(url));
