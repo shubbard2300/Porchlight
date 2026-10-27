@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Icon3D } from '@/components/Icon3D';
 import { db } from '@/lib/db';
 import { emailDeliveryConfigured } from '@/lib/email';
 import { notificationEmail } from '@/lib/settings';
@@ -24,9 +25,9 @@ export default async function AdminHome() {
       {!to && <p className="notice warn">No notification address is set, so form emails have nowhere to go. <Link href="/admin/settings">Set one in Settings</Link>.</p>}
       {to && !emailDeliveryConfigured() && <p className="notice warn">Emails are recorded in the Form inbox but not delivered yet. Add a <code>RESEND_API_KEY</code> to start sending to {to}.</p>}
       <div className="stats">
-        <div className="stat"><span className="label">Users</span><b className="num">{users}</b><span className="small muted">+{newUsers} this week</span></div>
-        <div className="stat"><span className="label">Waiting for review</span><b className="num">{pending}</b><Link className="small" href="/admin/submissions">Review</Link></div>
-        <div className="stat"><span className="label">Emails this week</span><b className="num">{recentMail}</b><Link className="small" href="/admin/inbox">Open inbox</Link></div>
+        <div className="stat"><span className="row" style={{ gap: 8 }}><Icon3D name="people" size={28} /><span className="label">Users</span></span><b className="num">{users}</b><span className="small muted">+{newUsers} this week</span></div>
+        <div className="stat"><span className="row" style={{ gap: 8 }}><Icon3D name="clipboard" size={28} /><span className="label">Waiting for review</span></span><b className="num">{pending}</b><Link className="small" href="/admin/submissions">Review</Link></div>
+        <div className="stat"><span className="row" style={{ gap: 8 }}><Icon3D name="inbox" size={28} /><span className="label">Emails this week</span></span><b className="num">{recentMail}</b><Link className="small" href="/admin/inbox">Open inbox</Link></div>
       </div>
       <h2 style={{ fontSize: 20 }}>Contests</h2>
       <div className="table-wrap">

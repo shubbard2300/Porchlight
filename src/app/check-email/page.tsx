@@ -1,14 +1,15 @@
 import Link from 'next/link';
+import { Icon3D } from '@/components/Icon3D';
 import { emailDeliveryConfigured } from '@/lib/email';
 
 export default async function CheckEmail({ searchParams }: { searchParams: Promise<{ email?: string; dev?: string; wait?: string; failed?: string }> }) {
   const { email, dev, wait, failed } = await searchParams;
   return (
     <main className="wrap narrow stack" style={{ textAlign: 'center', justifyItems: 'center' }}>
-      <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="var(--ember)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+      <Icon3D name="envelope" size={88} />
       <h1 style={{ fontSize: 32 }}>Check your email</h1>
       <p className="muted">
-        {wait ? 'We just sent you a link a moment ago. Give it a minute, and check your spam folder.' : <>If {email ? <b style={{ color: 'var(--frost)' }}>{email}</b> : 'that address'} has a Porchlight account, a link is on its way. Open it on this device to continue.</>}
+        {wait ? 'We just sent you a link a moment ago. Give it a minute, and check your spam folder.' : <>If {email ? <b style={{ color: 'var(--ink)' }}>{email}</b> : 'that address'} has a Porchlight account, a link is on its way. Open it on this device to continue.</>}
       </p>
       {failed && (
         <div className="notice warn" style={{ textAlign: 'left', width: '100%' }}>

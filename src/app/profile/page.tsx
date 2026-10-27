@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Icon3D } from '@/components/Icon3D';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { contestToday, getSeason, openForSubmissions, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
@@ -41,7 +42,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <h1 style={{ fontSize: 32 }}>{displayName(user)}</h1>
             <span className="small muted">@{user.username} · {user.email}</span>
             <div className="xpbar" aria-label={`${user.xp} XP`}><i style={{ width: `${lvl.next ? Math.min(100, (user.xp / lvl.next[0]) * 100) : 100}%` }} /></div>
-            <span className="small muted num">{user.xp} XP{lvl.next ? ` · ${lvl.next[0] - user.xp} to ${lvl.next[1]}` : ''}</span>
+            <span className="small muted num row" style={{ gap: 6 }}><Icon3D name="sparkles" size={20} />{user.xp} XP{lvl.next ? ` · ${lvl.next[0] - user.xp} to ${lvl.next[1]}` : ''}</span>
           </div>
         </div>
         <AvatarUploader src={avatarUrl(user)} initial={user.username[0].toUpperCase()} />
