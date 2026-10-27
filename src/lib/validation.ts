@@ -40,6 +40,7 @@ export const newPasswordSchema = z
   .refine((d) => d.password === d.confirm, { path: ['confirm'], message: 'The two passwords don\u2019t match.' });
 
 export const profileSchema = z.object({
+  username: usernameSchema,
   displayName: optional(60),
   hometown: optional(60),
   bio: optional(500),
@@ -66,6 +67,33 @@ export const houseSchema = z.object({
   description: z.string().trim().min(10, 'Tell visitors what to look for (at least 10 characters).').max(600),
   contribution: z.coerce.number().refine((n) => (CONTRIBUTIONS as readonly number[]).includes(n), 'Pick a contribution amount.'),
   permission: checkbox.refine((v) => v, 'Please confirm you live here or have permission.'),
+});
+
+export const MAX_HOUSE_PHOTOS = 6;
+
+const blankToUndefined = (v: unknown) => (v === '' || v === null ? undefined : v);
+const coord = (limit: number) => z.preprocess(blankToUndefined, z.coerce.number().min(-limit).max(limit).optional());
+
+/** Location and size that come with a house photo. A position needs both coordinates and where it came from. */
+export const photoMetaSchema = z
+  .object({
+    houseId: z.preprocess(blankToUndefined, z.string().max(40).optional()),
+    width: z.coerce.number().int().min(50).max(4096),
+    height: z.coerce.number().int().min(50).max(4096),
+    lat: coord(90),
+    lng: coord(180),
+    locationSource: z.preprocess(blankToUndefined, z.enum(['photo', 'device']).optional()),
+    takenAt: z.preprocess(blankToUndefined, z.coerce.date().optional()),
+  })
+  .refine((d) => (d.lat === undefined) === (d.lng === undefined) && (d.lat === undefined) === (d.locationSource === undefined), {
+    message: 'Location is incomplete.',
+    path: ['lat'],
+  })
+  .refine((d) => !(d.lat === 0 && d.lng === 0), { message: 'Location is not valid.', path: ['lat'] });
+
+export const photoLocationSchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
 });
 
 export const settingsSchema = z.object({

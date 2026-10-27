@@ -7,6 +7,7 @@ This repo is the real app. It currently covers:
 - **Join screen** (`/join`): people choose **Viewer / rater** or **Host / decorator**. Viewers give an email and username; hosts can also give their property location.
 - **Passwords plus email verification**: both sign-up forms ask for a password (8+ characters, bcrypt-hashed). Joining sends a one-time link; opening it confirms the email and lands on **My Profile**. After that, people log in with email and password. Forgot your password? `/login/link` emails a 30-minute sign-in link, and a new password can be set on the profile. Links are stored only as hashes, work once, and need a button press so email scanners can't use them up.
 - **My Profile** (`/profile`): profile photo (cropped to a square in the browser, stored in Postgres), display name, hometown, bio. Hosts also get property address, neighborhood, the holiday they're decorating for, a decoration theme and property details. Viewers can switch to host at any time. 100 XP signup bonus and an invite code for everyone.
+- **House photos with location**: hosts take a photo with their phone camera or choose from their library, on the submit form and on each entry in their profile (up to 6 per house; the first is the cover on the house card). The photo's GPS tags pin the house on the map; photos taken right there use the phone's location instead, and any photo without one gets an "Add my location" button. Photos are resized and stripped of metadata in the browser before upload, so the published image never carries GPS. Admins see the photos and map pin when reviewing.
 - **Enter the contest**: hosts submit their house for the live or next holiday, prefilled from their profile. Entries start in review.
 - **Form emails**: every sign-up and submission is emailed to the notification address you choose in the admin portal. Posters get a confirmation, then an approval or rejection email.
 - **Admin portal** (`/admin`): overview, submission review (approve, reject, take down, with a note to the poster), user management (filter viewers, hosts or unverified; search; make or remove admin; delete; CSV export with profile and property fields), a Form inbox showing every email the app has sent, and settings.
@@ -53,6 +54,10 @@ Receiving and replying uses a forwarding alias (ImprovMX): point the domain's MX
 3. Set `SESSION_SECRET`, `ADMIN_EMAILS`, `ADMIN_NOTIFY_EMAIL`, `APP_URL` (your site URL), and optionally `RESEND_API_KEY`, `EMAIL_FROM` and `EMAIL_REPLY_TO`.
 4. Vercel runs the `vercel-build` script, which applies database migrations before building.
 5. After the first deploy, join with an email from `ADMIN_EMAILS` to get admin access. Email delivery must be set up for the link to arrive; otherwise run `npm run sign-in-link -- <email>` against the production database.
+
+## Photo storage
+
+House photos go to a **public** [Vercel Blob](https://vercel.com/docs/vercel-blob) store when one is connected. In Vercel, open **Storage > Create > Blob**, choose Public, then connect the store to this project. Vercel sets `BLOB_STORE_ID` (and signs requests with the deployment's OIDC token), or `BLOB_READ_WRITE_TOKEN` if you tick that option; either works. Without one, photos are stored in Postgres and served from `/house-photo/<id>`, which is fine to start with but uses database space. Location data is stripped from photos before upload, so public URLs carry no GPS.
 
 ## A note on the pot
 

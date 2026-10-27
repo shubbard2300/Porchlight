@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
+import { attachPhotos } from '@/lib/housePhotos';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
@@ -36,6 +37,8 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
       contributionCents: d.contribution * 100,
     },
   });
+  await attachPhotos(user.id, house.id, fd.getAll('photoIds').map(String));
+  const placed = await db.house.findUniqueOrThrow({ where: { id: house.id }, select: { photoUrls: true, lat: true, lng: true } });
 
   await notifyAdmin(
     `New ${season.name} submission: ${house.name}`,
@@ -48,6 +51,8 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
       `Lit: ${house.litFrom} to ${house.litUntil}`,
       `Features: ${house.tags.join(', ') || 'none listed'}`,
       `Pot pledge: $${d.contribution}`,
+      `Photos: ${placed.photoUrls.length}`,
+      `Map pin: ${placed.lat !== null ? `https://www.google.com/maps?q=${placed.lat},${placed.lng}` : 'none yet'}`,
       '',
       house.description,
       '',

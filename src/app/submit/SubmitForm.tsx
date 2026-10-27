@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { submitHouse } from '../actions/houses';
+import type { HousePhotoView } from '../actions/housePhotos';
 import { Field } from '@/components/Field';
+import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { SubmitButton } from '@/components/SubmitButton';
 import { useFormAction } from '@/components/useFormAction';
 import { CONTRIBUTIONS, HOUSE_TAGS } from '@/lib/houseOptions';
@@ -10,7 +12,7 @@ import { CONTRIBUTIONS, HOUSE_TAGS } from '@/lib/houseOptions';
 type Option = { key: string; label: string; note: string };
 export type Prefill = { name: string; address: string; neighborhood: string; description: string };
 
-export function SubmitForm({ seasons, defaultSeason, prefill }: { seasons: Option[]; defaultSeason: string; prefill: Prefill }) {
+export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { seasons: Option[]; defaultSeason: string; prefill: Prefill; photos: HousePhotoView[] }) {
   const { formAction: action, errors: e, value, checked } = useFormAction(submitHouse);
   const [amount, setAmount] = useState(0);
   return (
@@ -25,6 +27,9 @@ export function SubmitForm({ seasons, defaultSeason, prefill }: { seasons: Optio
             </span>
           ))}
         </div>
+      </Field>
+      <Field label="Photos of your display" error={e.photoIds}>
+        <HousePhotoPicker inputName="photoIds" initial={photos} />
       </Field>
       <Field label="Name your display" htmlFor="name" error={e.name}><input id="name" name="name" type="text" maxLength={60} defaultValue={value('name', prefill.name)} placeholder="The Hollow at Alder" /></Field>
       <Field label="Street address" htmlFor="address" error={e.address}><input id="address" name="address" type="text" maxLength={120} autoComplete="street-address" defaultValue={value('address', prefill.address)} placeholder="1820 SE Alder Ct, Portland, OR" /></Field>

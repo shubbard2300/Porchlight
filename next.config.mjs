@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: { serverActions: { bodySizeLimit: '2mb' } },
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
   async redirects() {
     return [
       { source: '/signup', destination: '/join', permanent: false },

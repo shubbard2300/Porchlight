@@ -2,10 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import type { FormState } from '@/lib/forms';
 import { getSeason } from '@/lib/seasons';
+import { sniffImage } from '@/lib/images';
 import bcrypt from 'bcryptjs';
 import { fieldErrors, hostProfileSchema, newPasswordSchema, profileSchema } from '@/lib/validation';
 
@@ -16,10 +18,20 @@ export async function saveProfile(_prev: FormState, fd: FormData): Promise<FormS
   const parsed = profileSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
   const d = parsed.data;
-  await db.user.update({
-    where: { id: user.id },
-    data: { displayName: d.displayName || null, hometown: d.hometown || null, bio: d.bio || null, marketingOptIn: d.marketingOptIn },
-  });
+  if (d.username !== user.username) {
+    const taken = await db.user.findUnique({ where: { username: d.username }, select: { id: true } });
+    if (taken) return { errors: { username: 'That username is taken. Try another.' } };
+  }
+  try {
+    await db.user.update({
+      where: { id: user.id },
+      data: { username: d.username, displayName: d.displayName || null, hometown: d.hometown || null, bio: d.bio || null, marketingOptIn: d.marketingOptIn },
+    });
+  } catch (err) {
+    // Someone claimed the name between the check and the save.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') return { errors: { username: 'That username is taken. Try another.' } };
+    throw err;
+  }
   revalidatePath('/', 'layout');
   return { message: 'Profile saved.' };
 }
@@ -51,14 +63,6 @@ export async function saveHostProfile(_prev: FormState, fd: FormData): Promise<F
   });
   revalidatePath('/profile');
   return { message: 'Property details saved.' };
-}
-
-/** Accepts JPEG, PNG or WebP, checked by file signature rather than the browser's claimed type. */
-function sniffImage(b: Buffer): string | null {
-  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg';
-  if (b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
-  if (b.subarray(0, 4).toString('ascii') === 'RIFF' && b.subarray(8, 12).toString('ascii') === 'WEBP') return 'image/webp';
-  return null;
 }
 
 export async function uploadAvatar(fd: FormData): Promise<{ error?: string }> {

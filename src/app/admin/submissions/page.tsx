@@ -9,7 +9,7 @@ const FILTERS: [HouseStatus, string][] = [['PENDING', 'Waiting'], ['APPROVED', '
 export default async function Submissions({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const raw = (await searchParams).status;
   const status: HouseStatus = FILTERS.some(([k]) => k === raw) ? (raw as HouseStatus) : 'PENDING';
-  const houses = await db.house.findMany({ where: { status }, include: { owner: true }, orderBy: { createdAt: status === 'PENDING' ? 'asc' : 'desc' }, take: 100 });
+  const houses = await db.house.findMany({ where: { status }, include: { owner: true, photos: { select: { id: true, url: true, lat: true, lng: true, locationSource: true }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] } }, orderBy: { createdAt: status === 'PENDING' ? 'asc' : 'desc' }, take: 100 });
   return (
     <>
       <h1 style={{ fontSize: 30 }}>Submissions</h1>
@@ -25,6 +25,16 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
             </div>
             <p className="small">{h.address}{h.neighborhood ? ` · ${h.neighborhood}` : ''} · {h.showExactAddress ? 'exact address public' : 'address hidden until check-in'} · lit {h.litFrom}–{h.litUntil} · pledge ${h.contributionCents / 100}</p>
             <p>{h.description}</p>
+            {h.photos.length > 0 && (
+              <div className="row" style={{ gap: 8 }}>
+                {h.photos.map((p) => (
+                  <a key={p.id} href={p.url} target="_blank" rel="noreferrer"><img src={p.url} alt="" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 10, display: 'block' }} /></a>
+                ))}
+              </div>
+            )}
+            <p className="small muted">
+              {h.lat !== null ? <>Map pin: <a href={`https://www.google.com/maps?q=${h.lat},${h.lng}`} target="_blank" rel="noreferrer">{h.lat.toFixed(5)}, {h.lng!.toFixed(5)}</a> (from {h.photos.find((p) => p.lat !== null)?.locationSource === 'device' ? 'the host’s phone' : 'photo GPS'})</> : 'No map pin yet. Photos had no location.'}
+            </p>
             {h.tags.length > 0 && <div className="row">{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
             {h.reviewNote && <p className="small muted">Note: {h.reviewNote}</p>}
             <ReviewControls id={h.id} owner={h.owner.username} status={h.status} />

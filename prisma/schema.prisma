@@ -61,6 +61,7 @@ model User {
   createdAt        DateTime     @default(now())
   lastLoginAt      DateTime?
   houses           House[]
+  housePhotos      HousePhoto[]
   votes            Vote[]
   tokens           EmailToken[]
 }
@@ -104,7 +105,9 @@ model House {
   litFrom           String
   litUntil          String
   description       String
+  /// Public URLs of the house photos in display order. Kept in sync with `photos` so cards need no join.
   photoUrls         String[]
+  photos            HousePhoto[]
   contributionCents Int         @default(0)
   status            HouseStatus @default(PENDING)
   reviewNote        String?
@@ -114,6 +117,42 @@ model House {
   votes             Vote[]
 
   @@index([season, status])
+}
+
+/// A photo a host took or chose of their display. Uploaded before the entry exists (houseId null)
+/// when it comes from the submit form, then attached when the entry is created.
+model HousePhoto {
+  id             String          @id @default(cuid())
+  ownerId        String
+  owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  houseId        String?
+  house          House?          @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  /// Where the site shows the photo: the public Vercel Blob URL, or /house-photo/<id> when stored in Postgres.
+  url            String
+  /// The Vercel Blob file, when Blob is set up. Used to delete it.
+  blobUrl        String?
+  width          Int
+  height         Int
+  /// Where the photo was taken. Never shown publicly; the house's own lat/lng is what the map uses.
+  lat            Float?
+  lng            Float?
+  /// "photo" when read from the photo's GPS tags, "device" when the browser shared its location.
+  locationSource String?
+  takenAt        DateTime?
+  position       Int             @default(0)
+  createdAt      DateTime        @default(now())
+  file           HousePhotoFile?
+
+  @@index([houseId])
+  @@index([ownerId])
+}
+
+/// Image bytes for house photos when Vercel Blob isn't set up. Kept out of HousePhoto so photo queries stay small.
+model HousePhotoFile {
+  photoId     String     @id
+  photo       HousePhoto @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  contentType String
+  data        Bytes
 }
 
 /// One rating per person per house. A like only counts toward the pot once verifiedAt is set.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { houseSchema, joinSchema, newPasswordSchema } from './validation';
+import { houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema } from './validation';
 
 describe('joinSchema', () => {
   const base = { accountType: 'VIEWER', email: '  Sam@Example.COM ', username: 'Sam_Rivera', password: 'lanterns-glow', terms: 'on' };
@@ -53,5 +53,26 @@ describe('newPasswordSchema', () => {
     const r = newPasswordSchema.safeParse({ password: 'lanterns-glow', confirm: 'lanterns-glo' });
     expect(r.success).toBe(false);
     if (!r.success) expect(r.error.issues[0].path).toEqual(['confirm']);
+  });
+});
+
+describe('photoMetaSchema', () => {
+  it('accepts a photo with or without a full location', () => {
+    expect(photoMetaSchema.safeParse({ width: '1600', height: '1200' }).success).toBe(true);
+    const r = photoMetaSchema.safeParse({ width: '1600', height: '1200', lat: '45.5', lng: '-122.6', locationSource: 'photo', houseId: '' });
+    expect(r.success && r.data.lat).toBe(45.5);
+  });
+  it('rejects half a location, out-of-range coordinates and 0,0', () => {
+    expect(photoMetaSchema.safeParse({ width: 800, height: 600, lat: '45.5' }).success).toBe(false);
+    expect(photoMetaSchema.safeParse({ width: 800, height: 600, lat: '95', lng: '10', locationSource: 'device' }).success).toBe(false);
+    expect(photoMetaSchema.safeParse({ width: 800, height: 600, lat: '0', lng: '0', locationSource: 'device' }).success).toBe(false);
+  });
+});
+
+describe('profileSchema', () => {
+  it('normalizes an edited username and rejects reserved ones', () => {
+    const r = profileSchema.safeParse({ username: ' Holly_Lane ' });
+    expect(r.success && r.data.username).toBe('holly_lane');
+    expect(profileSchema.safeParse({ username: 'admin' }).success).toBe(false);
   });
 });

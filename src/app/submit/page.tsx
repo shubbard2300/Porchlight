@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Icon3D } from '@/components/Icon3D';
 import { requireUser } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { photoSelect } from '@/lib/housePhotos';
 import { contestToday, defaultSeason, formatDay, openForSubmissions, phase } from '@/lib/seasons';
 import { becomeHost } from '../actions/profile';
 import { SubmitForm } from './SubmitForm';
@@ -17,6 +19,8 @@ export default async function SubmitPage() {
     );
   }
   const today = contestToday();
+  // Photos uploaded on an earlier visit to this form that never became part of an entry.
+  const photos = await db.housePhoto.findMany({ where: { ownerId: user.id, houseId: null, createdAt: { gt: new Date(Date.now() - 20 * 60 * 60 * 1000) } }, orderBy: { createdAt: 'asc' }, select: photoSelect });
   const open = openForSubmissions(today);
   const preferred = open.find((s) => s.key === user.hostSeason) ?? open.find((s) => s.key === defaultSeason(today).key) ?? open[0];
   return (
@@ -36,6 +40,7 @@ export default async function SubmitPage() {
           <SubmitForm
             defaultSeason={preferred.key}
             seasons={open.map((s) => ({ key: s.key, label: `${s.name} ${s.year}`, note: phase(s, today) === 'live' ? 'voting now' : `opens ${formatDay(s.opens)}` }))}
+            photos={photos}
             prefill={{ name: user.decorationTheme ?? '', address: user.propertyAddress ?? '', neighborhood: user.neighborhood ?? '', description: user.propertyDetails ?? '' }}
           />
         )}
