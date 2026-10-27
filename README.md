@@ -57,7 +57,7 @@ Receiving and replying uses a forwarding alias (ImprovMX): point the domain's MX
 
 ## Photo storage
 
-House photos go to a **public** [Vercel Blob](https://vercel.com/docs/vercel-blob) store when `BLOB_READ_WRITE_TOKEN` is set. In Vercel, open **Storage > Create > Blob**, choose Public, then connect the store to this project and it adds the token for you. Without a token, photos are stored in Postgres and served from `/house-photo/<id>`, which is fine to start with but uses database space. Location data is stripped from photos before upload, so public URLs carry no GPS.
+House photos go to a **public** [Vercel Blob](https://vercel.com/docs/vercel-blob) store when one is connected. In Vercel, open **Storage > Create > Blob**, choose Public, then connect the store to this project. Vercel sets `BLOB_STORE_ID` (and signs requests with the deployment's OIDC token), or `BLOB_READ_WRITE_TOKEN` if you tick that option; either works. Without one, photos are stored in Postgres and served from `/house-photo/<id>`, which is fine to start with but uses database space. Location data is stripped from photos before upload, so public URLs carry no GPS.
 
 ## A note on the pot
 
