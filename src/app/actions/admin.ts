@@ -48,9 +48,9 @@ export async function deleteUser(fd: FormData) {
   const admin = await requireAdmin();
   const id = String(fd.get('id'));
   if (id === admin.id || fd.get('confirm') !== 'on') return;
-  const photos = await db.housePhoto.findMany({ where: { ownerId: id }, select: { url: true } });
+  const photos = await db.housePhoto.findMany({ where: { ownerId: id }, select: { blobUrl: true } });
   await db.user.delete({ where: { id } });
-  await deletePhotoFiles(photos.map((p) => p.url));
+  await deletePhotoFiles(photos.map((p) => p.blobUrl));
   revalidatePath('/admin', 'layout');
 }
 

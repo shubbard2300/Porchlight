@@ -21,10 +21,10 @@ function refresh() {
 
 /** Removes submit-form uploads that never became part of an entry. */
 async function sweepAbandoned(ownerId: string) {
-  const stale = await db.housePhoto.findMany({ where: { ownerId, houseId: null, createdAt: { lt: new Date(Date.now() - PENDING_TTL_MS) } }, select: { id: true, url: true } });
+  const stale = await db.housePhoto.findMany({ where: { ownerId, houseId: null, createdAt: { lt: new Date(Date.now() - PENDING_TTL_MS) } }, select: { id: true, blobUrl: true } });
   if (stale.length === 0) return;
   await db.housePhoto.deleteMany({ where: { id: { in: stale.map((p) => p.id) } } });
-  await deletePhotoFiles(stale.map((p) => p.url));
+  await deletePhotoFiles(stale.map((p) => p.blobUrl));
 }
 
 export async function uploadHousePhoto(fd: FormData): Promise<Result> {
@@ -63,15 +63,15 @@ export async function uploadHousePhoto(fd: FormData): Promise<Result> {
       position: count,
     },
   });
-  let url: string;
+  let blobUrl: string | null;
   try {
-    url = await storePhotoFile(row.id, data, contentType);
+    blobUrl = await storePhotoFile(row.id, data, contentType);
   } catch (err) {
     console.error('[photos] upload failed', err);
     await db.housePhoto.delete({ where: { id: row.id } });
     return { error: 'We could not save that photo. Try again in a moment.' };
   }
-  const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url }, select: photoSelect });
+  const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url: `/house-photo/${row.id}`, blobUrl }, select: photoSelect });
   if (m.houseId) {
     await syncHousePhotos(m.houseId);
     refresh();
@@ -96,10 +96,10 @@ export async function setHousePhotoLocation(id: string, lat: number, lng: number
 
 export async function removeHousePhoto(id: string): Promise<Result> {
   const user = await requireUser('/profile');
-  const photo = await db.housePhoto.findFirst({ where: { id, ownerId: user.id }, select: { url: true, houseId: true } });
+  const photo = await db.housePhoto.findFirst({ where: { id, ownerId: user.id }, select: { blobUrl: true, houseId: true } });
   if (!photo) return {};
   await db.housePhoto.delete({ where: { id } });
-  await deletePhotoFiles([photo.url]);
+  await deletePhotoFiles([photo.blobUrl]);
   if (photo.houseId) {
     const rest = await db.housePhoto.findMany({ where: { houseId: photo.houseId }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }], select: { id: true } });
     await db.$transaction(rest.map((p, position) => db.housePhoto.update({ where: { id: p.id }, data: { position } })));
