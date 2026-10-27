@@ -1,9 +1,11 @@
+import type React from 'react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { HeroHouse } from '@/components/HeroHouse';
 import { HouseMap, type MapHouse } from '@/components/HouseMap';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
+import { StringLights, Ticker } from '@/components/StringLights';
 import { publicPin } from '@/lib/mapPins';
 import { seasonTheme } from '@/lib/theme';
 import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
@@ -46,6 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
 
   return (
     <main className="wrap stack" style={{ gap: 32 }}>
+      <Ticker items={['Verified likes only', 'Check in with a photo or your location', 'Most-loved porch wins the pot', 'Earn XP and badges for every visit', 'Free to vote']} />
       <nav className="tabs" aria-label="Holiday contests">
         {seasons.map((s) => (
           <Link key={s.key} href={`/?season=${s.key}`} aria-current={s.key === season.key ? 'page' : undefined}>
@@ -58,13 +61,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         <HouseMap key={season.key} houses={pins} icon={theme.icon} seasonLabel={`${season.name} ${season.year}`} unplaced={houses.length - pins.length} />
       </section>
 
-      <section className="hero">
+      <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties}>
+        <StringLights />
         <div className="hero-copy">
           <div className="row">
             <span className={`pill ${p}`}>{label.tag}</span>
             <span className="muted small">{label.line}</span>
           </div>
-          <h1>{season.name} {season.year}{p === 'final' ? ': final results' : ''}</h1>
+          <h1><span className="glow-text">{season.name}</span> {season.year}{p === 'final' ? ': final results' : ''}</h1>
           <p className="muted" style={{ maxWidth: 560, fontSize: 17 }}>
             {p === 'soon' && 'Houses are signing up now. Post yours early so neighbors can plan their route.'}
             {p === 'live' && `Visit houses, prove you were there, and like your favorites. The ${theme.superlative} house with the most verified likes at midnight on ${theme.day} wins the pot.`}
@@ -89,11 +93,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
 
       {p !== 'final' && (
         <section className="stack" style={{ gap: 18 }} aria-labelledby="how">
-          <h2 id="how" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>Three steps. One very bright street.</h2>
+          <h2 id="how" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>Three steps. One very bright street.</h2>
           <div className="steps">
             {STEPS.map(([icon, title, text], i) => (
-              <div key={title} className="panel step">
-                <div className="step-top"><Icon3D name={icon} size={56} /><span aria-hidden="true">0{i + 1}</span></div>
+              <div key={title} className={`panel step step-${i + 1} reveal`}>
+                <div className="step-top"><span className="step-icon"><Icon3D name={icon} size={52} /></span><span aria-hidden="true">0{i + 1}</span></div>
                 <h3>{title}</h3>
                 <p className="muted">{text}</p>
               </div>
@@ -111,10 +115,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         </div>
       ) : (
         <section className="stack" style={{ gap: 18 }} aria-labelledby="brightest">
-          <h2 id="brightest" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>{p === 'final' ? 'Final standings' : 'The brightest so far'}</h2>
+          <h2 id="brightest" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>{p === 'final' ? 'Final standings' : 'The brightest so far'}</h2>
           <div className="grid">
             {ranked.map((h, i) => (
-              <article key={h.id} className="house-card">
+              <article key={h.id} className={`house-card reveal${i === 0 ? ' leader' : ''}`}>
                 <div className="house-photo">
                   {h.photoUrls[0] ? <img className="photo" src={h.photoUrls[0]} alt={`${h.name} at night`} loading="lazy" /> : <Icon3D name={theme.icon} size={96} />}
                   <span className="rank">{i < 3 ? <Icon3D name={i === 0 ? 'trophy' : 'medal'} size={20} /> : null}#{i + 1}</span>

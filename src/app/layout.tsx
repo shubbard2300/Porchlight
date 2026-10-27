@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { LogoMark, Wordmark } from '@/components/LogoMark';
 import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
 import { Icon3D } from '@/components/Icon3D';
@@ -29,10 +30,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="site-head">
           <div className="wrap">
             <Link href="/" className="brand">
-              <span className="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v9H4z" fill="#fff4e4" stroke="#14123a" strokeWidth="2" strokeLinejoin="round" /><path d="M10 20v-5h4v5" fill="#ff6a1f" stroke="#14123a" strokeWidth="2" strokeLinejoin="round" /><circle cx="12" cy="10.4" r="1.6" fill="#ffb000" stroke="#14123a" strokeWidth="1.5" /></svg>
-              </span>
-              porchlight
+              <LogoMark size={42} className="brand-mark" />
+              <Wordmark />
             </Link>
             <nav className="nav" aria-label="Main">
               <Link href="/#map">Map</Link>

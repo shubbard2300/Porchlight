@@ -1,11 +1,18 @@
 import Link from 'next/link';
+import { LogoMark, Wordmark } from '@/components/LogoMark';
 import { OWNER_NAME } from '@/lib/legal';
 
 export function SiteFooter() {
   return (
     <footer className="site-foot">
       <div className="wrap">
-        <p>© {new Date().getFullYear()} {OWNER_NAME}. All rights reserved.</p>
+        <div className="foot-brand">
+          <LogoMark size={36} />
+          <div>
+            <b><Wordmark /></b>
+            <p>© {new Date().getFullYear()} {OWNER_NAME}. Leave the light on.</p>
+          </div>
+        </div>
         <nav aria-label="Legal">
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>
