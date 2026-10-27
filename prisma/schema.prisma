@@ -127,9 +127,9 @@ model HousePhoto {
   owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   houseId        String?
   house          House?          @relation(fields: [houseId], references: [id], onDelete: Cascade)
-  /// Where the site shows the photo: always /house-photo/<id>, which reads from Blob or Postgres.
+  /// Where the site shows the photo: the public Vercel Blob URL, or /house-photo/<id> when stored in Postgres.
   url            String
-  /// The file in the private Vercel Blob store, when Blob is set up. Never sent to browsers.
+  /// The Vercel Blob file, when Blob is set up. Used to delete it.
   blobUrl        String?
   width          Int
   height         Int

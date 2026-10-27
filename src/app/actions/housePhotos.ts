@@ -71,7 +71,7 @@ export async function uploadHousePhoto(fd: FormData): Promise<Result> {
     await db.housePhoto.delete({ where: { id: row.id } });
     return { error: 'We could not save that photo. Try again in a moment.' };
   }
-  const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url: `/house-photo/${row.id}`, blobUrl }, select: photoSelect });
+  const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url: blobUrl ?? `/house-photo/${row.id}`, blobUrl }, select: photoSelect });
   if (m.houseId) {
     await syncHousePhotos(m.houseId);
     refresh();
