@@ -140,6 +140,7 @@ export default async function HousePage({ params, searchParams }: Props) {
           {house.status === 'APPROVED' && (
             <p className={styles.crowd}><i style={{ background: CROWD_LEVELS[crowdLevel(here)].color }} />{crowdLine(here)}</p>
           )}
+          {house.status === 'APPROVED' && house.lat !== null && <Link href={`/route?season=${house.season}&from=${house.id}`} className="btn ghost"><Icon3D name="map" size={22} />Plan a tour from here</Link>}
           {user && (house.ownerId === user.id || user.role === 'ADMIN') && <Link href={`/house/${house.id}/stats`} className="btn ghost"><Icon3D name="sparkles" size={22} />{house.ownerId === user.id ? 'My flex stats' : 'Host stats'}</Link>}
           <div className="panel stack" style={{ gap: 14 }}>
             <div className="row spread">

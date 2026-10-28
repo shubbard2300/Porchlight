@@ -1,0 +1,29 @@
+.layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+.controls { gap: 24px; position: sticky; top: 16px; }
+@media (max-width: 860px) { .controls { position: static; } }
+.controls select { width: 100%; }
+.step { display: flex; align-items: center; gap: 10px; font-size: 17px; }
+.step span { width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--amber); border: 2px solid var(--ink); display: grid; place-items: center; font-size: 14px; }
+.toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.toggle input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--ink); }
+.result { gap: 18px; }
+.empty { display: grid; justify-items: center; gap: 10px; text-align: center; padding: 48px 20px; border: 2px dashed var(--ink); border-radius: var(--r-lg); background: var(--paper); }
+.summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; background: var(--ink); color: var(--on-dark); border-radius: var(--r-lg); padding: 18px 20px; box-shadow: 5px 5px 0 var(--amber); }
+.summary > div { display: grid; gap: 4px; }
+.summary :global(.label), .summary :global(.muted) { color: var(--on-dark-2); }
+.big { font-family: var(--font-display); font-size: clamp(20px, 3.4vw, 26px); }
+.stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; position: relative; }
+.stop { position: relative; display: grid; grid-template-columns: 40px 1fr auto; gap: 14px; align-items: start; padding: 12px 0 16px; }
+.stop:not(:last-child)::before { content: ''; position: absolute; left: 19px; top: 46px; bottom: -6px; border-left: 3px dotted var(--ink); opacity: 0.45; }
+.stop > div { display: grid; gap: 3px; min-width: 0; }
+.stop a b { font-size: 17px; }
+.num { width: 40px; height: 40px; border-radius: 50%; border: 2.5px solid var(--ink); background: var(--paper); display: grid; place-items: center; font-family: var(--font-display); font-size: 16px; box-shadow: 2px 2px 0 var(--ink); }
+.home { background: var(--lilac); }
+.apple { font-size: 13px; font-weight: 700; white-space: nowrap; margin-top: 2px; }
+.crowd { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+.crowd i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); }
+@media (max-width: 520px) {
+  .stop { grid-template-columns: 40px 1fr; }
+  .apple { grid-column: 2; margin-top: -6px; }
+}

@@ -14,7 +14,7 @@
     "postinstall": "prisma generate",
     "sign-in-link": "tsx scripts/sign-in-link.ts",
     "email-preview": "tsx scripts/email-preview.ts",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+    "vercel-build": "prisma generate && bash scripts/migrate-deploy.sh && next build"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
