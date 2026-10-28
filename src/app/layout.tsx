@@ -9,6 +9,8 @@ import { Modals } from '@/components/Modals';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteNav } from '@/components/SiteNav';
+import { contestToday, defaultSeason } from '@/lib/seasons';
+import { seasonTheme } from '@/lib/theme';
 import { logout } from './actions/auth';
 import './globals.css';
 
@@ -23,16 +25,27 @@ export const viewport: Viewport = { themeColor: '#14123a' };
 
 export const dynamic = 'force-dynamic';
 
+const FONTS = 'https://fonts.googleapis.com/css2?' + [
+  'Unbounded:wght@700;800', // wordmark
+  'Plus+Jakarta+Sans:wght@400;500;600;700;800', // body, all seasons
+  'Bricolage+Grotesque:opsz,wght@12..96,600..800', // default headings
+  'Grenze:wght@600;700;800', 'Grenze+Gotisch:wght@800', // Halloween headings + hero accent
+  'Fraunces:opsz,wght,SOFT,WONK@9..144,600..900,0..100,0..1', 'Berkshire+Swash', // Christmas headings + hero accent
+].map((f) => `family=${f}`).join('&') + '&display=swap';
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
   const boosted = boostActive(user?.xpBoostUntil);
+  // Fonts and background follow the upcoming holiday. Pages about one contest can override it with data-season on <main>.
+  const look = seasonTheme(defaultSeason(contestToday())).look;
   return (
-    <html lang="en">
+    <html lang="en" data-season={look}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* One stylesheet for every season: browsers only download the font files a page actually uses. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
+        <link rel="stylesheet" href={FONTS} />
       </head>
       <body>
         <ServiceWorker />

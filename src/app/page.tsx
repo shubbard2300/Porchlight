@@ -68,7 +68,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const user = await currentUser();
 
   return (
-    <main className="wrap stack" style={{ gap: 32 }}>
+    <main className="wrap stack" style={{ gap: 32 }} data-season={theme.look}>
       <Ticker items={['Verified likes only', 'Check in by location or porch QR', 'Most-loved porch wins the pot', 'Earn XP and badges for every visit', 'Free to vote']} />
       <nav className="tabs" aria-label="Holiday contests">
         {seasons.map((s) => (
