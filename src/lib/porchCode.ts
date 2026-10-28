@@ -19,3 +19,18 @@ export function validPorchCode(houseId: string, code: string | null | undefined,
 
 /** Where a porch sign's QR code points. */
 export const porchUrl = (houseId: string) => appUrl(`/visit/${houseId}?k=${porchCode(houseId)}`);
+
+/** The code in a merchant's counter QR sign, derived the same way with its own prefix. */
+export function pitstopCode(merchantId: string, secret = process.env.SESSION_SECRET): string {
+  if (!secret) throw new Error('SESSION_SECRET must be set');
+  return createHmac('sha256', secret).update(`pitstop:${merchantId}`).digest('base64url').slice(0, 16);
+}
+
+export function validPitstopCode(merchantId: string, code: string | null | undefined, secret = process.env.SESSION_SECRET): boolean {
+  if (!code) return false;
+  const want = Buffer.from(pitstopCode(merchantId, secret));
+  const got = Buffer.from(code);
+  return want.length === got.length && timingSafeEqual(want, got);
+}
+
+export const pitstopUrl = (merchantId: string) => appUrl(`/pitstop/${merchantId}/scan?k=${pitstopCode(merchantId)}`);

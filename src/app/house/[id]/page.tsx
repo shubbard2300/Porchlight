@@ -11,13 +11,14 @@ import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
 import { crowdCounts } from '@/lib/crowdCounts';
 import { seasonTheme } from '@/lib/theme';
 import { avatarUrl, displayName } from '@/lib/users';
-import { SCORE_CATEGORIES, averageScore } from '@/lib/visits';
+import { SCORE_CATEGORIES, averageScore, formatDistance } from '@/lib/visits';
+import { BOOST_HOURS, TIERS, getCategory, nearestPitstop } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
 import { VisitPanel, type VisitState } from '@/components/VisitPanel';
 import styles from './house.module.css';
 
 const FLASH: Record<string, string> = {
-  'qr-first': 'Checked in with the porch sign. +20 XP! Now fill in your scorecard.',
+  'qr-first': 'Checked in with the porch sign and earned XP! Now fill in your scorecard.',
   qr: 'Checked in with the porch sign.',
   'bad-code': 'That QR code doesn’t match this house. Try scanning the sign again.',
   own: 'That’s your own porch sign. It works for visitors.',
@@ -72,6 +73,9 @@ export default async function HousePage({ params, searchParams }: Props) {
   const standings = house.status === 'APPROVED' ? await seasonStandings(house.season) : [];
   const overallPlace = standings.findIndex((h) => h.id === house.id) + 1 || null;
   const bracketPlace = bracket ? standings.filter((h) => h.bracket === bracket.key).findIndex((h) => h.id === house.id) + 1 || null : null;
+  const pitstop = house.lat !== null && house.lng !== null
+    ? nearestPitstop({ lat: house.lat, lng: house.lng }, await db.merchant.findMany({ where: { active: true }, select: { id: true, name: true, category: true, tier: true, offer: true, lat: true, lng: true } }))
+    : null;
   const where = house.showExactAddress ? house.address : `Near ${house.neighborhood ?? 'the neighborhood'}. The exact spot is shared when you check in.`;
 
   return (
@@ -161,6 +165,17 @@ export default async function HousePage({ params, searchParams }: Props) {
             flash={checkin ? FLASH[checkin] ?? null : null}
             myVote={myVote && { liked: myVote.liked, comment: myVote.comment, creativity: myVote.creativity, lighting: myVote.lighting, storytelling: myVote.storytelling, sound: myVote.sound }}
           />
+          {pitstop && (
+            <Link href={`/pitstop/${pitstop.id}`} className={styles.pitstop}>
+              <span className={styles.pitBadge} style={{ background: TIERS[pitstop.tier].color }}><Icon3D name={getCategory(pitstop.category).icon} size={30} /></span>
+              <span className="stack" style={{ gap: 2 }}>
+                <span className={styles.pitLabel}>Pitstop nearby{house.showExactAddress ? ` · ${formatDistance(pitstop.distanceM)}` : ''}</span>
+                <b>{pitstop.name}</b>
+                <span className="small">{pitstop.offer}</span>
+                <span className="small muted">Scan their counter QR for {BOOST_HOURS} hours of double XP. No purchase necessary.</span>
+              </span>
+            </Link>
+          )}
         </aside>
       </div>
     </main>

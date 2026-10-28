@@ -9,13 +9,14 @@ export function AdminNav({ pending }: { pending: number }) {
     ['/admin', 'Overview'],
     ['/admin/submissions', 'Submissions', pending],
     ['/admin/users', 'Users'],
+    ['/admin/merchants', 'Pitstops'],
     ['/admin/inbox', 'Form inbox'],
     ['/admin/settings', 'Settings'],
   ];
   return (
     <nav className="side" aria-label="Admin">
       {items.map(([href, label, count]) => (
-        <Link key={href} href={href} aria-current={path === href ? 'page' : undefined}>
+        <Link key={href} href={href} aria-current={path === href || (href === '/admin/merchants' && path.startsWith(href)) ? 'page' : undefined}>
           {label}{count ? <span className="pill PENDING num">{count}</span> : null}
         </Link>
       ))}
