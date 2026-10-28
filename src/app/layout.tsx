@@ -25,6 +25,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
+  const boosted = boostActive(user?.xpBoostUntil);
   return (
     <html lang="en">
       <head>
@@ -50,10 +51,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {user ? (
                 <>
                   {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
-                  <Link href="/profile" className="me">
-                    {avatarUrl(user) ? <img src={avatarUrl(user)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{user.username[0].toUpperCase()}</span>}
-                    {user.username} <span className="xp-chip num"><Icon3D name="sparkles" size={18} />{user.xp} XP{boostActive(user.xpBoostUntil) && <b className="xp-boost" title="Pitstop boost: double XP">2×</b>}</span>
-                  </Link>
+                  <span className="me-group">
+                    <Link href="/profile" className="me">
+                      {avatarUrl(user) ? <img src={avatarUrl(user)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{user.username[0].toUpperCase()}</span>}
+                      {user.username}
+                    </Link>
+                    <a href="/profile#about-xp" data-modal="xp" className="xp-chip num" aria-label={`${user.xp} XP${boosted ? ', double XP boost on' : ''}. How XP works`}>
+                      <Icon3D name="sparkles" size={18} />{user.xp} XP{boosted && <b className="xp-boost">2×</b>}
+                      <span className="xp-tip" aria-hidden="true">
+                        <b>XP: your explorer points</b>
+                        Earn them by checking in at porches, filling in scorecards and scanning pitstops. They level you up but never change votes.
+                        {boosted && <em>2× pitstop boost is on: everything you earn counts double.</em>}
+                        <span className="xp-tip-more">Click for how to earn more</span>
+                      </span>
+                    </a>
+                  </span>
                   <form action={logout}><button type="submit">Log out</button></form>
                 </>
               ) : (
@@ -68,7 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </header>
         {children}
         <SiteFooter />
-        <Modals signedIn={Boolean(user)} contact={{ name: user ? (user.displayName ?? user.username) : undefined, email: user?.email }} />
+        <Modals signedIn={Boolean(user)} contact={{ name: user ? (user.displayName ?? user.username) : undefined, email: user?.email }} xp={user ? { xp: user.xp, boostUntil: user.xpBoostUntil?.toISOString() ?? null } : null} />
       </body>
     </html>
   );
