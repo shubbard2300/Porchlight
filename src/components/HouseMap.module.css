@@ -56,7 +56,11 @@
 .popLikes { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; }
 .popLink {
   font-size: 13px; font-weight: 800; text-decoration: none; padding: 4px 12px; border-radius: 999px;
-  background: var(--amber); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+  background: var(--paper); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+}
+.popCta {
+  margin-top: 8px; display: block; text-align: center; font-size: 14px; font-weight: 800; text-decoration: none; padding: 8px 12px;
+  border-radius: 12px; background: var(--amber); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
 }
 
 /* Hover title */

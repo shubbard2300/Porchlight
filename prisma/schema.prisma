@@ -23,47 +23,54 @@ enum AccountType {
   HOST
 }
 
+/// How a visitor proved they were at a house: standing inside its geofence, or scanning the porch QR sign.
+enum CheckInMethod {
+  GEO
+  QR
+}
+
 enum TokenPurpose {
   VERIFY
   LOGIN
 }
 
 model User {
-  id               String       @id @default(cuid())
-  email            String       @unique
-  username         String       @unique
-  accountType      AccountType  @default(VIEWER)
-  emailVerifiedAt  DateTime?
+  id              String      @id @default(cuid())
+  email           String      @unique
+  username        String      @unique
+  accountType     AccountType @default(VIEWER)
+  emailVerifiedAt DateTime?
   /// bcrypt hash. Null for accounts created before passwords existed; they can set one on their profile.
-  passwordHash     String?
-  role             Role         @default(USER)
-  xp               Int          @default(0)
-  referralCode     String       @unique
-  referredById     String?
-  referredBy       User?        @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
-  referrals        User[]       @relation("Referrals")
-  marketingOptIn   Boolean      @default(false)
+  passwordHash    String?
+  role            Role        @default(USER)
+  xp              Int         @default(0)
+  referralCode    String      @unique
+  referredById    String?
+  referredBy      User?       @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals       User[]      @relation("Referrals")
+  marketingOptIn  Boolean     @default(false)
 
   // Profile (all optional)
-  displayName      String?
-  bio              String?
-  hometown         String?
-  avatarUpdatedAt  DateTime?
-  avatar           Avatar?
+  displayName     String?
+  bio             String?
+  hometown        String?
+  avatarUpdatedAt DateTime?
+  avatar          Avatar?
 
   // Host profile (optional, filled in after verifying)
-  propertyAddress  String?
-  neighborhood     String?
-  hostSeason       String?
-  decorationTheme  String?
-  propertyDetails  String?
+  propertyAddress String?
+  neighborhood    String?
+  hostSeason      String?
+  decorationTheme String?
+  propertyDetails String?
 
-  createdAt        DateTime     @default(now())
-  lastLoginAt      DateTime?
-  houses           House[]
-  housePhotos      HousePhoto[]
-  votes            Vote[]
-  tokens           EmailToken[]
+  createdAt   DateTime     @default(now())
+  lastLoginAt DateTime?
+  houses      House[]
+  housePhotos HousePhoto[]
+  votes       Vote[]
+  checkIns    CheckIn[]
+  tokens      EmailToken[]
 }
 
 /// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
@@ -91,16 +98,16 @@ model EmailToken {
 }
 
 model House {
-  id                String      @id @default(cuid())
+  id                String       @id @default(cuid())
   ownerId           String
-  owner             User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner             User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   season            String
   name              String
   address           String
   neighborhood      String?
   lat               Float?
   lng               Float?
-  showExactAddress  Boolean     @default(true)
+  showExactAddress  Boolean      @default(true)
   tags              String[]
   litFrom           String
   litUntil          String
@@ -108,13 +115,14 @@ model House {
   /// Public URLs of the house photos in display order. Kept in sync with `photos` so cards need no join.
   photoUrls         String[]
   photos            HousePhoto[]
-  contributionCents Int         @default(0)
-  status            HouseStatus @default(PENDING)
+  contributionCents Int          @default(0)
+  status            HouseStatus  @default(PENDING)
   reviewNote        String?
   reviewedAt        DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
   votes             Vote[]
+  checkIns          CheckIn[]
 
   @@index([season, status])
 }
@@ -155,20 +163,42 @@ model HousePhotoFile {
   data        Bytes
 }
 
+/// A visitor proving they stood at a house. Unlocks voting there; later feeds the crowd meter and host stats.
+/// The visitor's own coordinates are never stored, only how far from the house they were.
+model CheckIn {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  houseId   String
+  house     House         @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  method    CheckInMethod
+  distanceM Int?
+  createdAt DateTime      @default(now())
+
+  @@index([houseId, createdAt])
+  @@index([userId, houseId])
+}
+
 /// One rating per person per house. A like only counts toward the pot once verifiedAt is set.
+/// The four scores (1 to 10) are the visitor's scorecard; null on votes cast before scorecards existed.
 model Vote {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  houseId    String
-  house      House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
-  liked      Boolean
-  verifiedAt DateTime?
-  verifyLat  Float?
-  verifyLng  Float?
-  photoUrl   String?
-  comment    String?
-  createdAt  DateTime  @default(now())
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  houseId      String
+  house        House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  liked        Boolean
+  verifiedAt   DateTime?
+  verifyLat    Float?
+  verifyLng    Float?
+  photoUrl     String?
+  comment      String?
+  creativity   Int?
+  lighting     Int?
+  storytelling Int?
+  sound        Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
 
   @@unique([userId, houseId])
 }

@@ -12,7 +12,7 @@ import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeaso
 
 const STEPS: [Icon3DName, string, string][] = [
   ['house', 'Post your house', 'Snap your display at night, drop your pin, and you are on the map for the season.'],
-  ['camera', 'Neighbors check in and swipe', 'Visitors prove they stopped by with a photo or their location, then like the ones that make them grin.'],
+  ['camera', 'Neighbors check in and score', 'Visitors prove they stopped by with their location or the porch QR sign, then score creativity, lighting, story and sound.'],
   ['trophy', 'Most-loved wins the pot', 'Only verified likes count. The top porch takes the prize, and every voter keeps their XP and badges.'],
 ];
 
@@ -48,7 +48,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
 
   return (
     <main className="wrap stack" style={{ gap: 32 }}>
-      <Ticker items={['Verified likes only', 'Check in with a photo or your location', 'Most-loved porch wins the pot', 'Earn XP and badges for every visit', 'Free to vote']} />
+      <Ticker items={['Verified likes only', 'Check in by location or porch QR', 'Most-loved porch wins the pot', 'Earn XP and badges for every visit', 'Free to vote']} />
       <nav className="tabs" aria-label="Holiday contests">
         {seasons.map((s) => (
           <Link key={s.key} href={`/?season=${s.key}`} aria-current={s.key === season.key ? 'page' : undefined}>
@@ -126,7 +126,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
                 </div>
                 <div className="house-body">
                   <span className="label">{h.neighborhood ?? 'Neighborhood'}</span>
-                  <h3>{h.name}</h3>
+                  <h3><Link href={`/house/${h.id}`} className="card-link">{h.name}</Link></h3>
                   <p className="small muted">{h.showExactAddress ? h.address : `Near ${h.neighborhood ?? 'the neighborhood'} (exact spot shown at check-in)`} · lit {h.litFrom}–{h.litUntil}</p>
                   <p className="small">{h.description}</p>
                   {h.tags.length > 0 && <div className="row" style={{ gap: 6 }}>{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}

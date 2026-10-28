@@ -101,7 +101,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                   <span className={`pill ${h.status}`}>{h.status === 'PENDING' ? 'In review' : h.status === 'APPROVED' ? 'Live' : 'Not approved'}</span>
                 </div>
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
-                <div className="row" style={{ justifyContent: 'flex-end' }}><DeleteEntryButton id={h.id} name={h.name} /></div>
+                <div className="row spread">
+                  <div className="row">
+                    <Link href={`/house/${h.id}/sign`} className="btn sm primary">Print porch QR sign</Link>
+                    {h.status === 'APPROVED' && <Link href={`/house/${h.id}`} className="btn sm ghost">View house page</Link>}
+                  </div>
+                  <DeleteEntryButton id={h.id} name={h.name} />
+                </div>
               </div>
             ))}
           </section>

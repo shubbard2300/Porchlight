@@ -1,0 +1,21 @@
+.layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+.side { display: grid; gap: 22px; position: sticky; top: 16px; }
+@media (max-width: 860px) { .side { position: static; } }
+.gallery { display: grid; gap: 10px; }
+.hero { position: relative; aspect-ratio: 4 / 3; border: var(--edge); border-radius: var(--r-lg); overflow: hidden; box-shadow: 5px 5px 0 var(--ink); background: radial-gradient(200px 140px at 50% 78%, rgba(255, 176, 0, 0.35), transparent 70%), linear-gradient(180deg, #1b1850, #3a2a8e); display: grid; place-items: center; }
+.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.thumbs a { aspect-ratio: 4 / 3; border: var(--edge); border-radius: var(--r-sm); overflow: hidden; display: block; }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.title { display: grid; gap: 8px; }
+.title h1 { font-size: clamp(28px, 4.5vw, 44px); }
+.scores { display: grid; gap: 10px; }
+.score { display: grid; grid-template-columns: 112px 1fr 36px; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.bar { height: 12px; border-radius: 999px; border: 2px solid var(--ink); background: var(--paper); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--amber); }
+.score b { font-family: var(--font-display); text-align: right; }
+.comments { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.comment { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; background: var(--paper); border: var(--edge); border-radius: var(--r-md); padding: 12px 14px; }
+.comment .who { font-weight: 800; font-size: 14px; }
+.ava { width: 36px; height: 36px; border-radius: 11px; border: 2px solid var(--ink); object-fit: cover; display: grid; place-items: center; background: var(--lilac-soft); font-weight: 800; }
