@@ -126,6 +126,7 @@ main.wrap { padding-block: 32px 72px; }
 .hero-copy { display: grid; gap: 16px; align-content: center; min-width: 0; }
 .pot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pot b { font-family: var(--font-display); font-size: 32px; color: var(--amber); letter-spacing: -0.02em; }
+.pot .small a { color: var(--on-dark); }
 @media (max-width: 760px) { .hero { grid-template-columns: 1fr; padding: 26px 20px; } }
 
 .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 11px; font-size: 12.5px; font-weight: 800; background: var(--paper); color: var(--ink); border: var(--edge); white-space: nowrap; }
@@ -170,7 +171,7 @@ form.stack { gap: 18px; }
 .field > label, .field > .legend { font-weight: 800; font-size: 14.5px; }
 .hint { font-size: 13px; color: var(--text-3); }
 .err { color: #b3122f; font-size: 13.5px; font-weight: 700; }
-input[type='text'], input[type='email'], input[type='password'], input[type='search'], textarea, select {
+input:not([type]), input[type='text'], input[type='number'], input[type='url'], input[type='tel'], input[type='email'], input[type='password'], input[type='search'], textarea, select {
   width: 100%; background: var(--paper); border: var(--edge); border-radius: var(--r-sm); padding: 12px 13px; outline: none; transition: box-shadow 0.12s; }
 input::placeholder, textarea::placeholder { color: #6e6a9c; }
 input:focus, textarea:focus, select:focus { box-shadow: 3px 3px 0 var(--amber); }
@@ -387,3 +388,8 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 .block-card:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ink); }
 .block-card b { font-family: var(--font-display); font-size: 20px; line-height: 1.2; }
 .block-card .block-lead { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+
+/* Prize pot payment on a host's entry */
+.pot-panel { display: flex; gap: 12px; align-items: flex-start; border: var(--edge); border-radius: var(--r-md); padding: 12px 14px; background: var(--amber-soft); }
+.pot-panel.paid { align-items: center; background: var(--mint-soft); }
+.pot-panel .chips label { padding: 6px 12px; }

@@ -20,7 +20,9 @@ This repo is the real app. It currently covers:
 - **Caravan mode** (`/caravan`, in the nav when logged in): someone starts a caravan for the night (12 hours, up to 12 people) and shares a link or QR with a 6-letter code (`/caravan/join?code=…`). Check-ins and scorecards made while in a caravan are tagged with it. Checking in at a porch where a squadmate checked in within the last 30 minutes earns +5 bonus XP (doubled during a pitstop boost). The caravan page shows the squad, tonight's stops and the squad's score at each. Once two or more squadmates score a house, the house page shows their **Squad review**: average scores, likes, best category and cheers. Votes still count one per person. Leaders can end the caravan; anyone can leave (`src/lib/caravans.ts`).
 - **Season rules**: the site defaults to the upcoming holiday. A finished contest stays viewable for one week after the holiday, then leaves the public site and appears in each poster's archive. See `src/lib/seasons.ts`.
 
-Next up, per the roadmap: online pot payments (Stripe), then a native app for push alerts, AR and smart-light triggers.
+- **Prize pot payments** (Stripe Checkout over plain `fetch`, `src/lib/stripe.ts`): entering stays free. Once a house is approved, its host can pay their optional pledge ($10, $25 or $50) from their profile. Stripe sends them back to `/pot/<id>/done`, which confirms the payment straight away; the webhook at `/api/stripe/webhook` also records completed, expired and refunded payments. The home page pot counts only paid money (plus a "more pledged" note). Admins see payments, refund them and record sponsor money in **Admin > Prize pot**. Official rules (no purchase necessary) live at `/rules`. Without `STRIPE_SECRET_KEY` the pay buttons stay hidden; see `.env.example` for the webhook setup. Winner payouts are made by hand.
+
+Next up, per the roadmap: a native app for push alerts, AR and smart-light triggers.
 
 ## Stack
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { submitHouse } from '../actions/houses';
 import type { HousePhotoView } from '../actions/housePhotos';
@@ -63,7 +64,7 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
       <Field label="Tell visitors what to look for" htmlFor="description" error={e.description}>
         <textarea id="description" name="description" maxLength={600} defaultValue={value('description', prefill.description)} placeholder="The skeleton choir sings every 20 minutes. Park on 18th and walk down." />
       </Field>
-      <Field label="Add to the pot (optional)" error={e.contribution} hint="Free entries compete for the same prize. This records your pledge; payment is collected separately.">
+      <Field label="Add to the pot (optional)" error={e.contribution} hint={<>Free entries compete for the same prize. This records your pledge; you can pay it by card once your house is approved. <Link href="/rules">Official rules</Link></>}>
         <div className="chips">
           {CONTRIBUTIONS.map((a) => (
             <span key={a}>

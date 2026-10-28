@@ -11,6 +11,8 @@ import type { FormState } from '@/lib/forms';
 import { deleteHouse } from '@/lib/housePhotos';
 import { deletePhotoFiles } from '@/lib/photoStorage';
 import { getSeason } from '@/lib/seasons';
+import { dollars } from '@/lib/pot';
+import { stripeConfigured } from '@/lib/stripe';
 import { displayName } from '@/lib/users';
 import { setSetting } from '@/lib/settings';
 import { fieldErrors, settingsSchema } from '@/lib/validation';
@@ -33,7 +35,7 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
     to: before.owner.email,
     kind: decision === 'APPROVED' ? 'approved' : 'rejected',
     ...(decision === 'APPROVED'
-      ? approvedEmail({ name: displayName(before.owner), house: before.name, season: season?.name ?? '', xp: APPROVAL_XP, note }, appUrl)
+      ? approvedEmail({ name: displayName(before.owner), house: before.name, season: season?.name ?? '', xp: APPROVAL_XP, note, pledge: stripeConfigured() && before.contributionCents > 0 ? dollars(before.contributionCents) : null }, appUrl)
       : rejectedEmail({ name: displayName(before.owner), house: before.name, note }, appUrl)),
   });
   revalidatePath('/admin', 'layout');

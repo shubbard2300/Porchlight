@@ -11,16 +11,27 @@ import { becomeHost } from '../actions/profile';
 import { AvatarUploader } from './AvatarUploader';
 import { DeleteEntryButton } from './DeleteEntryButton';
 import { AboutForm, HostForm, PasswordForm } from './ProfileForms';
+import { PotPanel } from './PotPanel';
+import { stripeConfigured } from '@/lib/stripe';
 
 export const metadata = { title: 'My profile · Porchlight' };
 
-export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ welcome?: string; submitted?: string; host?: string }> }) {
+const PAY_NOTES: Record<string, string> = {
+  cancelled: 'Payment cancelled. Nothing was charged, and your entry is still in the contest.',
+  error: 'We couldn’t reach our payment processor. Nothing was charged. Please try again in a minute.',
+  closed: 'That pot is closed: payments open once a house is approved and close when voting ends.',
+  off: 'Online payments aren’t switched on yet.',
+  amount: 'Pick an amount to add to the pot.',
+  missing: 'We couldn’t find that entry.',
+};
+
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ welcome?: string; submitted?: string; host?: string; pay?: string }> }) {
   const user = await requireUser('/profile');
-  const { welcome, submitted, host: becameHost } = await searchParams;
+  const { welcome, submitted, host: becameHost, pay } = await searchParams;
   const isHost = user.accountType === 'HOST';
   const today = contestToday();
   const lvl = level(user.xp);
-  const houses = isHost ? await db.house.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: 'desc' }, include: { photos: { select: photoSelect, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] } } }) : [];
+  const houses = isHost ? await db.house.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: 'desc' }, include: { photos: { select: photoSelect, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] }, potPayments: { where: { status: 'PAID', source: 'HOST' }, select: { amountCents: true, paidAt: true } } } }) : [];
   const withSeason = houses.map((h) => ({ h, s: getSeason(h.season) }));
   const active = withSeason.filter(({ s }) => s && phase(s, today) !== 'expired');
   const archived = withSeason.filter(({ s }) => !s || phase(s, today) === 'expired');
@@ -38,6 +49,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       )}
       {becameHost && <p className="notice">You&apos;re a host now. Add your property details below.</p>}
       {submitted && <p className="notice">Thanks! Your house is in review. We&apos;ll email you when it&apos;s live.</p>}
+      {pay && PAY_NOTES[pay] && <p className="notice warn" role="alert">{PAY_NOTES[pay]}</p>}
 
       <section className="panel stack">
         <div className="profile-head">
@@ -96,13 +108,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           <section className="stack">
             <h2 style={{ fontSize: 20 }}>My contest entries</h2>
             {active.length === 0 ? <p className="muted small">No entries for the current contests yet.</p> : active.map(({ h, s }) => (
-              <div key={h.id} className="panel stack">
+              <div key={h.id} id={`entry-${h.id}`} className="panel stack" style={{ scrollMarginTop: 16 }}>
                 <div className="row spread">
                   <div><b>{h.name}</b><div className="small muted">{s!.name} {s!.year} · {phaseLabel(s!, today).tag}</div>{h.reviewNote && <div className="small muted">Note: {h.reviewNote}</div>}</div>
                   <span className={`pill ${h.status}`}>{h.status === 'PENDING' ? 'In review' : h.status === 'APPROVED' ? 'Live' : 'Not approved'}</span>
                 </div>
                 {phase(s!, today) !== 'final' && <BracketPicker houseId={h.id} holiday={s!.name} initial={h.bracket} />}
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
+                <PotPanel houseId={h.id} status={h.status} phase={phase(s!, today)} pledgeCents={h.contributionCents} paid={h.potPayments[0] ?? null} online={stripeConfigured()} />
                 <div className="row spread">
                   <div className="row">
                     <Link href={`/house/${h.id}/sign`} className="btn sm primary">Print porch QR sign</Link>

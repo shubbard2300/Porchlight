@@ -14,6 +14,7 @@ export function SiteFooter() {
           </div>
         </div>
         <nav aria-label="Legal">
+          <Link href="/rules">Contest rules</Link>
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/cookies">Cookies</Link>

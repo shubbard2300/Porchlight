@@ -31,7 +31,7 @@ export default function Privacy() {
       <p>Your username, profile photo, and comments are visible to other users. If you host, your house name, photos, description, and its location on the map are public. You can choose to hide your exact address.</p>
 
       <h2>Who we share it with</h2>
-      <p>We use a few service providers to run the site, and they only process data on our behalf: Vercel (hosting and photo storage), Neon (database), Resend (sending email), ImprovMX (forwarding mail sent to us), and Google Fonts (typefaces, which means your browser contacts Google when a page loads). We may also share information if the law requires it.</p>
+      <p>We use a few service providers to run the site, and they only process data on our behalf: Vercel (hosting and photo storage), Neon (database), Resend (sending email), Stripe (taking pot payments; card details go straight to Stripe and we never see them), ImprovMX (forwarding mail sent to us), and Google Fonts (typefaces, which means your browser contacts Google when a page loads). We may also share information if the law requires it.</p>
 
       <h2>How long we keep it</h2>
       <p>We keep your account until you delete it or ask us to. Past contests stay in the archive so results remain accurate. Sign-in links expire quickly, and email logs are kept only as long as they are useful for troubleshooting.</p>
