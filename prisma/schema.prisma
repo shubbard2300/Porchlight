@@ -29,6 +29,13 @@ enum CheckInMethod {
   QR
 }
 
+/// Sponsorship level for a merchant pitstop. Higher tiers get bigger pins and show up nearer the top.
+enum PitstopTier {
+  BRONZE
+  SILVER
+  GOLD
+}
+
 enum TokenPurpose {
   VERIFY
   LOGIN
@@ -64,13 +71,16 @@ model User {
   decorationTheme String?
   propertyDetails String?
 
-  createdAt   DateTime     @default(now())
-  lastLoginAt DateTime?
-  houses      House[]
-  housePhotos HousePhoto[]
-  votes       Vote[]
-  checkIns    CheckIn[]
-  tokens      EmailToken[]
+  createdAt    DateTime      @default(now())
+  lastLoginAt  DateTime?
+  houses       House[]
+  housePhotos  HousePhoto[]
+  votes        Vote[]
+  checkIns     CheckIn[]
+  tokens       EmailToken[]
+  pitstopScans PitstopScan[]
+  /// Scanning a merchant's counter QR doubles XP until this time. Contest votes are never boosted.
+  xpBoostUntil DateTime?
 }
 
 /// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
@@ -224,4 +234,36 @@ model EmailLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// A local business sponsoring the contest. Admins add these until sponsorships can be bought online.
+model Merchant {
+  id        String        @id @default(cuid())
+  name      String
+  category  String
+  tier      PitstopTier   @default(SILVER)
+  address   String
+  lat       Float?
+  lng       Float?
+  /// The deal shown on the map, e.g. "20% off hot cocoa after 5 pm".
+  offer     String
+  hours     String?
+  website   String?
+  active    Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  scans     PitstopScan[]
+}
+
+/// A visitor scanning a merchant's counter QR. Starts an XP boost; also tells the merchant how much foot traffic the contest sent.
+model PitstopScan {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([merchantId, createdAt])
+  @@index([userId, createdAt])
 }

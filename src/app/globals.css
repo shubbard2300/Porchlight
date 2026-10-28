@@ -84,6 +84,7 @@ main.wrap { padding-block: 32px 72px; }
 .nav a.cta:hover { background: #ffc233; }
 .nav .me { display: inline-flex; align-items: center; gap: 8px; }
 .xp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: var(--lilac); color: var(--ink); font-weight: 800; font-size: 12.5px; }
+.xp-boost { margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--amber); border: 1.5px solid var(--ink); font-size: 11px; }
 .nav-toggle { display: none; }
 @media (max-width: 760px) {
   .site-head .wrap { flex-wrap: nowrap; padding-block: 10px; }

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { HeroHouse } from '@/components/HeroHouse';
-import { HouseMap, type MapHouse } from '@/components/HouseMap';
+import { HouseMap, type MapHouse, type MapPitstop } from '@/components/HouseMap';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import { StringLights, Ticker } from '@/components/StringLights';
 import { publicPin } from '@/lib/mapPins';
@@ -49,6 +49,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     lit: `${h.litFrom}–${h.litUntil}`,
     crowd: crowd[h.id] ?? 0,
   }]);
+  const pitstops: MapPitstop[] = (await db.merchant.findMany({
+    where: { active: true, lat: { not: null }, lng: { not: null } },
+    select: { id: true, name: true, category: true, tier: true, offer: true, address: true, lat: true, lng: true },
+  })).map((m) => ({ ...m, lat: m.lat!, lng: m.lng! }));
   const user = await currentUser();
 
   return (
@@ -73,7 +77,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             ))}
           </nav>
         )}
-        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
       </section>
 
       <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties}>

@@ -5,6 +5,7 @@ import type { GeoJSONSource, Map as MapLibreMap, MapGeoJSONFeature } from 'mapli
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Icon3DName } from './Icon3D';
 import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
+import { BOOST_HOURS, TIERS, type Tier } from '@/lib/pitstops';
 import styles from './HouseMap.module.css';
 
 export type MapHouse = {
@@ -22,6 +23,18 @@ export type MapHouse = {
   lit: string;
   /** Visitors who checked in during the crowd window. */
   crowd: number;
+};
+
+/** A sponsor's pin. Shown under the houses so the decorations stay the main event. */
+export type MapPitstop = {
+  id: string;
+  name: string;
+  category: string;
+  tier: Tier;
+  offer: string;
+  address: string;
+  lat: number;
+  lng: number;
 };
 
 /** How often an open map refreshes its crowd meter. */
@@ -56,7 +69,21 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
   </div>`;
 }
 
-export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { houses: MapHouse[]; icon: Icon3DName; seasonLabel: string; unplaced: number; seasonKey: string }) {
+function pitstopHtml(p: MapPitstop) {
+  const tier = TIERS[p.tier];
+  return `<div class="${styles.pop}">
+    <div class="${styles.popBody}">
+      <span class="${styles.popTier}" style="background:${tier.color}">${esc(tier.label)}</span>
+      <b class="${styles.popName}">${esc(p.name)}</b>
+      <span class="${styles.popOffer}"><img src="/icons/3d/gift.webp" alt="" width="18" height="18" />${esc(p.offer)}</span>
+      <span class="${styles.popMeta}">${esc(p.address)}</span>
+      <span class="${styles.popMeta}">Scan the counter QR for ${BOOST_HOURS} hours of double XP. No purchase necessary.</span>
+      <a class="${styles.popCta}" href="/pitstop/${encodeURIComponent(p.id)}">See the pitstop</a>
+    </div>
+  </div>`;
+}
+
+export function HouseMap({ houses, pitstops = [], icon, seasonLabel, unplaced, seasonKey }: { houses: MapHouse[]; pitstops?: MapPitstop[]; icon: Icon3DName; seasonLabel: string; unplaced: number; seasonKey: string }) {
   const el = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -97,9 +124,10 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { h
       map.addControl(new maplibre.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false }), 'top-right');
       map.addControl(new maplibre.FullscreenControl(), 'top-right');
 
-      if (houses.length > 0) {
+      const framed = houses.length > 0 ? houses : pitstops;
+      if (framed.length > 0) {
         const bounds = new maplibre.LngLatBounds();
-        houses.forEach((h) => bounds.extend([h.lng, h.lat]));
+        framed.forEach((h) => bounds.extend([h.lng, h.lat]));
         map.fitBounds(bounds, { padding: { top: 80, bottom: 40, left: 40, right: 60 }, maxZoom: 14, duration: 0 });
       }
 
@@ -108,8 +136,38 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { h
         try {
           const img = await (await fetch(`/icons/3d/${icon}.webp`)).blob().then(createImageBitmap);
           if (!map.hasImage('season')) map.addImage('season', img, { pixelRatio: 2 });
+          if (pitstops.length > 0) {
+            const gift = await (await fetch('/icons/3d/gift.webp')).blob().then(createImageBitmap);
+            if (!map.hasImage('gift')) map.addImage('gift', gift, { pixelRatio: 2 });
+          }
         } catch {
           // Without the icon the pins still show as glowing dots.
+        }
+
+        // Sponsor pitstops sit beneath the house layers: a tier-colored square-ish badge with a gift.
+        const pitById = new Map(pitstops.map((p) => [p.id, p]));
+        if (pitstops.length > 0) {
+          map.addSource('pitstops', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: pitstops.map((p) => ({
+                type: 'Feature', id: p.id,
+                properties: { id: p.id, name: p.name, color: TIERS[p.tier].color, radius: TIERS[p.tier].radius },
+                geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+              })),
+            },
+          });
+          map.addLayer({
+            id: 'pitstops', type: 'circle', source: 'pitstops',
+            paint: { 'circle-color': ['get', 'color'], 'circle-stroke-color': '#14123a', 'circle-stroke-width': 2.5, 'circle-radius': ['get', 'radius'] },
+          });
+          if (map.hasImage('gift')) {
+            map.addLayer({
+              id: 'pitstop-icons', type: 'symbol', source: 'pitstops',
+              layout: { 'icon-image': 'gift', 'icon-size': 0.2, 'icon-allow-overlap': true },
+            });
+          }
         }
 
         map.addSource('houses', {
@@ -182,6 +240,22 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { h
           tip.remove();
           popup.setLngLat([h.lng, h.lat]).setHTML(popupHtml(h, icon)).addTo(map);
         };
+        const pitPopup = (id: string) => {
+          const p = pitById.get(id);
+          if (!p || !map) return;
+          tip.remove();
+          popup.setLngLat([p.lng, p.lat]).setHTML(pitstopHtml(p)).addTo(map);
+        };
+        for (const layer of ['pitstops', 'pitstop-icons']) {
+          map.on('click', layer, (e) => {
+            // A house pin drawn on top wins the click.
+            if (map!.queryRenderedFeatures(e.point, { layers: ['pins'] }).length) return;
+            const f = e.features?.[0];
+            if (f) pitPopup(String(f.properties.id));
+          });
+          map.on('mouseenter', layer, () => { map!.getCanvas().style.cursor = 'pointer'; });
+          map.on('mouseleave', layer, () => { map!.getCanvas().style.cursor = ''; });
+        }
         for (const layer of ['pins', 'pin-icons']) {
           map.on('click', layer, (e) => e.features?.[0] && openHouse(e.features[0]));
           map.on('mousemove', layer, (e) => {
@@ -219,7 +293,7 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { h
       clearInterval(poll);
       map?.remove();
     };
-  }, [houses, icon, seasonKey]);
+  }, [houses, pitstops, icon, seasonKey]);
 
   return (
     <>
@@ -242,6 +316,7 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { h
           <b>Crowd meter</b>
           {(['lively', 'busy', 'packed'] as const).map((k) => <span key={k}><i style={{ background: CROWD_LEVELS[k].color }} />{CROWD_LEVELS[k].label}</span>)}
           <span className={styles.legendNote}>Rings show check-ins in the last 30 minutes, updated every minute.</span>
+          {pitstops.length > 0 && <span><img src="/icons/3d/gift.webp" alt="" width={16} height={16} className={styles.legendGift} />Pitstops: scan for {BOOST_HOURS} h of double XP</span>}
         </p>
       )}
       {unplaced > 0 && (

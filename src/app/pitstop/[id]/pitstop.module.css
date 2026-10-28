@@ -1,0 +1,10 @@
+.card { background: var(--paper); border: var(--edge); border-radius: var(--r-lg); box-shadow: 6px 6px 0 var(--ink); padding: 24px; display: grid; gap: 18px; }
+.head { display: flex; gap: 16px; align-items: center; }
+.badge { width: 72px; height: 72px; flex: none; border: 3px solid var(--ink); border-radius: 22px; display: grid; place-items: center; box-shadow: 3px 3px 0 var(--ink); }
+.name { font-size: clamp(26px, 5vw, 38px); }
+.offer { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; background: var(--lilac-soft); border: 2px solid var(--ink); border-radius: var(--r-md); padding: 12px 14px; margin: 0; }
+.facts { display: grid; gap: 10px; margin: 0; }
+.facts div { display: grid; grid-template-columns: 90px 1fr; gap: 10px; }
+.facts dt { font-weight: 800; color: var(--text-2); font-size: 14px; }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.boost h2 { display: flex; align-items: center; gap: 8px; }

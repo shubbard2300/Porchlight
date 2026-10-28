@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CONTACT_TOPICS } from './contact';
 import { CONTRIBUTIONS, HOUSE_TAGS } from './houseOptions';
 import { isKind } from './visits';
+import { PITSTOP_CATEGORIES } from './pitstops';
 
 export { CONTRIBUTIONS, HOUSE_TAGS };
 
@@ -141,4 +142,21 @@ export const voteSchema = z.object({
     .refine(isKind, 'Comments are for cheering hosts on. Try saying what you loved.')
     .optional()
     .or(z.literal('')),
+});
+
+const optionalCoord = (min: number, max: number) =>
+  z.preprocess(blankToUndefined, z.coerce.number().min(min, 'Out of range.').max(max, 'Out of range.').optional());
+
+export const merchantSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2, 'Give the business a name.').max(60),
+  category: z.enum(PITSTOP_CATEGORIES.map((c) => c.key) as [string, ...string[]], 'Pick a category.'),
+  tier: z.enum(['BRONZE', 'SILVER', 'GOLD'], 'Pick a tier.'),
+  address: z.string().trim().min(5, 'Add the street address.').max(120),
+  offer: z.string().trim().min(5, 'Say what visitors get, e.g. “20% off hot cocoa”.').max(120),
+  hours: z.string().trim().max(60).optional().or(z.literal('')),
+  website: z.string().trim().url('Use a full link starting with https://').max(200).optional().or(z.literal('')),
+  lat: optionalCoord(-90, 90),
+  lng: optionalCoord(-180, 180),
+  active: checkbox,
 });

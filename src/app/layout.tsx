@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { LogoMark, Wordmark } from '@/components/LogoMark';
 import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
+import { boostActive } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
 import { Modals } from '@/components/Modals';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -43,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
                   <Link href="/profile" className="me">
                     {avatarUrl(user) ? <img src={avatarUrl(user)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{user.username[0].toUpperCase()}</span>}
-                    {user.username} <span className="xp-chip num"><Icon3D name="sparkles" size={18} />{user.xp} XP</span>
+                    {user.username} <span className="xp-chip num"><Icon3D name="sparkles" size={18} />{user.xp} XP{boostActive(user.xpBoostUntil) && <b className="xp-boost" title="Pitstop boost: double XP">2×</b>}</span>
                   </Link>
                   <form action={logout}><button type="submit">Log out</button></form>
                 </>

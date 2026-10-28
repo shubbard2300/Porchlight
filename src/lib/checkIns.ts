@@ -2,6 +2,7 @@ import 'server-only';
 import type { CheckInMethod, House } from '@prisma/client';
 import { db } from './db';
 import { CHECKIN_XP } from './rewards';
+import { boostedXp } from './pitstops';
 import { contestToday, getSeason, phase } from './seasons';
 import { CHECKIN_REPEAT_HOURS } from './visits';
 
@@ -29,9 +30,10 @@ export async function recordCheckIn(userId: string, houseId: string, method: Che
   });
   if (recent) return { first: false };
   const before = await db.checkIn.count({ where: { userId, houseId } });
+  const visitor = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { xpBoostUntil: true } });
   await db.$transaction([
     db.checkIn.create({ data: { userId, houseId, method, distanceM } }),
-    ...(before === 0 ? [db.user.update({ where: { id: userId }, data: { xp: { increment: CHECKIN_XP } } })] : []),
+    ...(before === 0 ? [db.user.update({ where: { id: userId }, data: { xp: { increment: boostedXp(CHECKIN_XP, visitor.xpBoostUntil) } } })] : []),
   ]);
   return { first: before === 0 };
 }

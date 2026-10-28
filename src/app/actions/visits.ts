@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { VOTE_XP } from '@/lib/rewards';
+import { boostedXp } from '@/lib/pitstops';
 import { fieldErrors, voteSchema } from '@/lib/validation';
 import type { FormState } from '@/lib/forms';
 import { distanceM, formatDistance, insideGeofence } from '@/lib/visits';
@@ -49,6 +50,7 @@ export async function castVote(_prev: FormState, fd: FormData): Promise<FormStat
   const checkIn = await db.checkIn.findFirst({ where: { userId: user.id, houseId: d.houseId }, orderBy: { createdAt: 'asc' } });
   if (!checkIn) return { errors: { form: 'Check in at the house first, by location or the porch QR sign.' } };
 
+  const xp = boostedXp(VOTE_XP, user.xpBoostUntil);
   const scores = { creativity: d.creativity, lighting: d.lighting, storytelling: d.storytelling, sound: d.sound };
   const existing = await db.vote.findUnique({ where: { userId_houseId: { userId: user.id, houseId: d.houseId } }, select: { id: true } });
   await db.$transaction([
@@ -57,9 +59,9 @@ export async function castVote(_prev: FormState, fd: FormData): Promise<FormStat
       create: { userId: user.id, houseId: d.houseId, liked: d.liked, verifiedAt: checkIn.createdAt, comment: d.comment || null, ...scores },
       update: { liked: d.liked, verifiedAt: checkIn.createdAt, comment: d.comment || null, ...scores },
     }),
-    ...(existing ? [] : [db.user.update({ where: { id: user.id }, data: { xp: { increment: VOTE_XP } } })]),
+    ...(existing ? [] : [db.user.update({ where: { id: user.id }, data: { xp: { increment: xp } } })]),
   ]);
   revalidatePath(`/house/${d.houseId}`);
   revalidatePath('/');
-  return { message: existing ? 'Scorecard updated.' : `Scorecard saved. +${VOTE_XP} XP` };
+  return { message: existing ? 'Scorecard updated.' : `Scorecard saved. +${xp} XP${xp > VOTE_XP ? ' (pitstop boost!)' : ''}` };
 }

@@ -43,3 +43,9 @@ it('flags put-downs but not praise', () => {
   expect(isKind('The skeleton band made my night!')).toBe(true);
   expect(isKind('Honestly kind of ugly')).toBe(false);
 });
+
+it('keeps porch and pitstop codes apart', async () => {
+  const { pitstopCode, validPitstopCode } = await import('./porchCode');
+  expect(validPitstopCode('h1', pitstopCode('h1', SECRET), SECRET)).toBe(true);
+  expect(validPitstopCode('h1', porchCode('h1', SECRET), SECRET)).toBe(false);
+});
