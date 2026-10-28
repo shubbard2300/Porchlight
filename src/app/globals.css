@@ -430,3 +430,11 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 .xp-levels li.here span { color: var(--ink); }
 .xp-fine { display: flex; align-items: flex-start; gap: 8px; margin: 0; }
 .xp-fine img { flex: none; margin-top: 1px; }
+
+/* AR porch hunt collection */
+.critter-set { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.critter-set li { display: grid; justify-items: center; gap: 4px; padding: 16px 10px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); text-align: center; }
+.critter-set li:not(.got) img { filter: grayscale(1) brightness(0.35); opacity: 0.5; }
+.critter-set li.got { background: var(--lilac-soft); box-shadow: 3px 3px 0 var(--ink); }
+.catch-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.catch-list li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); }

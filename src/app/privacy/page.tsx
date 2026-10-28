@@ -14,6 +14,7 @@ export default function Privacy() {
         <li><b>Profile details you choose to add:</b> a profile photo, display name, bio, and hometown.</li>
         <li><b>Host details:</b> your property address or location, neighborhood, season, decoration theme, and photos of your display. Location is used to pin your house on the map. We remove GPS and camera data from photos before they are shown publicly.</li>
         <li><b>Contest activity:</b> your likes, comments, visit check-ins (a photo and/or your location at the time of the visit), XP, badges, and invite codes.</li>
+        <li><b>AR porch hunts:</b> which critters you caught and when. The hunt uses your camera and compass only on your device; no video or images are recorded or sent to us.</li>
         <li><b>Alerts (optional):</b> if you turn on push alerts, the delivery address your browser gives us for this device, which alerts you want, and, for &quot;new houses near me,&quot; a spot you choose rounded to about 100 meters. Turn alerts off or forget the spot anytime in your profile.</li>
         <li><b>Email records:</b> a log of the emails we send you (such as sign-in links), so we can fix delivery problems.</li>
         <li><b>Basic technical data:</b> like any website, our hosting provider receives your IP address and browser details when you load a page.</li>

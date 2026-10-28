@@ -85,6 +85,7 @@ model User {
   caravanMembers CaravanMember[]
   potPayments    PotPayment[]
   pushSubs       PushSubscription[]
+  arCatches      ArCatch[]
 
   // Push alerts. The spot is only used to decide which new houses are "near you"; it is never shown.
   alertNearby   Boolean @default(true)
@@ -149,6 +150,7 @@ model House {
   votes             Vote[]
   checkIns          CheckIn[]
   potPayments       PotPayment[]
+  arCatches         ArCatch[]
   /// When the host was last pinged about a like, so a busy night sends one alert per half hour, not one per vote.
   lastLikeAlertAt   DateTime?
 
@@ -394,4 +396,20 @@ model PushSubscription {
   lastUsedAt DateTime?
 
   @@index([userId])
+}
+
+/// A visitor catching the AR critter hiding at a house they checked in at. One per house per person.
+model ArCatch {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  houseId   String
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  season    String
+  /// Critter key from src/lib/hunt.ts.
+  critter   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, houseId])
+  @@index([userId, season])
 }
