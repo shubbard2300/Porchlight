@@ -372,3 +372,10 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 }
 .card-link { text-decoration: none; }
 .card-link:hover { text-decoration: underline; text-decoration-color: var(--amber); }
+.chips label.chip-icon { display: inline-flex; align-items: center; gap: 6px; padding-left: 9px; }
+.tabs .count { font-size: 12px; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: var(--paper-2); border: 1.5px solid currentColor; }
+.tabs a[aria-current='page'] .count { background: transparent; }
+.filter-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.filter-tabs a { flex: none; }
+.chip-link { text-decoration: none; }
+.chip-link:hover { background: var(--paper-2); }

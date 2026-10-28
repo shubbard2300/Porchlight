@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { HouseStatus } from '@prisma/client';
 import { db } from '@/lib/db';
 import { getSeason } from '@/lib/seasons';
+import { getBracket } from '@/lib/brackets';
 import { ReviewControls } from './ReviewControls';
 
 const FILTERS: [HouseStatus, string][] = [['PENDING', 'Waiting'], ['APPROVED', 'Live'], ['REJECTED', 'Not approved']];
@@ -35,7 +36,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
             <p className="small muted">
               {h.lat !== null ? <>Map pin: <a href={`https://www.google.com/maps?q=${h.lat},${h.lng}`} target="_blank" rel="noreferrer">{h.lat.toFixed(5)}, {h.lng!.toFixed(5)}</a> (from {h.photos.find((p) => p.lat !== null)?.locationSource === 'device' ? 'the host’s phone' : 'photo GPS'})</> : 'No map pin yet. Photos had no location.'}
             </p>
-            {h.tags.length > 0 && <div className="row">{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
+            <div className="row"><span className="pill">{getBracket(h.bracket)?.label ?? 'No bracket yet'}</span>{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>
             {h.reviewNote && <p className="small muted">Note: {h.reviewNote}</p>}
             <ReviewControls id={h.id} name={h.name} owner={h.owner.username} status={h.status} />
           </article>

@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { votingOpen } from '@/lib/checkIns';
 import { getSeason } from '@/lib/seasons';
+import { getBracket } from '@/lib/brackets';
+import { seasonStandings } from '@/lib/seasonStandings';
 import { seasonTheme } from '@/lib/theme';
 import { avatarUrl, displayName } from '@/lib/users';
 import { SCORE_CATEGORIES, averageScore } from '@/lib/visits';
@@ -63,6 +65,10 @@ export default async function HousePage({ params, searchParams }: Props) {
   const overall = averageScore({
     creativity: avg._avg.creativity, lighting: avg._avg.lighting, storytelling: avg._avg.storytelling, sound: avg._avg.sound,
   });
+  const bracket = getBracket(house.bracket);
+  const standings = house.status === 'APPROVED' ? await seasonStandings(house.season) : [];
+  const overallPlace = standings.findIndex((h) => h.id === house.id) + 1 || null;
+  const bracketPlace = bracket ? standings.filter((h) => h.bracket === bracket.key).findIndex((h) => h.id === house.id) + 1 || null : null;
   const where = house.showExactAddress ? house.address : `Near ${house.neighborhood ?? 'the neighborhood'}. The exact spot is shared when you check in.`;
 
   return (
@@ -84,6 +90,12 @@ export default async function HousePage({ params, searchParams }: Props) {
           <div className={styles.title}>
             {house.neighborhood && <span className="label">{house.neighborhood}</span>}
             <h1>{house.name}</h1>
+            {(bracket || overallPlace) && (
+              <div className="row" style={{ gap: 8 }}>
+                {bracket && <Link href={`/?season=${house.season}&bracket=${bracket.key}#map`} className="pill chip-link"><Icon3D name={bracket.icon} size={18} />{bracket.label}{bracketPlace ? ` · #${bracketPlace}` : ''}</Link>}
+                {overallPlace && <Link href={`/leaderboard?season=${house.season}`} className="pill chip-link"><Icon3D name="trophy" size={18} />#{overallPlace} overall</Link>}
+              </div>
+            )}
             <p className="muted">{where} · lit {house.litFrom}–{house.litUntil}</p>
             <p className="small muted">Decorated by {displayName(house.owner)}</p>
           </div>

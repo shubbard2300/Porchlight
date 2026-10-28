@@ -73,6 +73,7 @@ export const houseSchema = z.object({
   neighborhood: z.string().trim().max(60).optional().or(z.literal('')),
   showExactAddress: checkbox,
   tags: z.array(z.enum(HOUSE_TAGS)).max(9).default([]),
+  bracket: z.string({ error: 'Pick a bracket.' }).min(1, 'Pick a bracket.'),
   litFrom: z.string().trim().min(1).max(20),
   litUntil: z.string().trim().min(1).max(20),
   description: z.string().trim().min(10, 'Tell visitors what to look for (at least 10 characters).').max(600),

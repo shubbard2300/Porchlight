@@ -39,7 +39,7 @@ export default async function SubmitPage() {
         {!preferred ? <p>No contests are taking entries right now.</p> : (
           <SubmitForm
             defaultSeason={preferred.key}
-            seasons={open.map((s) => ({ key: s.key, label: `${s.name} ${s.year}`, note: phase(s, today) === 'live' ? 'voting now' : `opens ${formatDay(s.opens)}` }))}
+            seasons={open.map((s) => ({ key: s.key, holiday: s.name, label: `${s.name} ${s.year}`, note: phase(s, today) === 'live' ? 'voting now' : `opens ${formatDay(s.opens)}` }))}
             photos={photos}
             prefill={{ name: user.decorationTheme ?? '', address: user.propertyAddress ?? '', neighborhood: user.neighborhood ?? '', description: user.propertyDetails ?? '' }}
           />

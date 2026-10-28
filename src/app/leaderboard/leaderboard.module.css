@@ -1,0 +1,16 @@
+.podiums { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
+.bracket { display: grid; gap: 12px; align-content: start; }
+.bracketHead { display: flex; align-items: center; gap: 10px; }
+.bracketHead h3 { font-size: 19px; }
+.bracketHead p { font-size: 13px; color: var(--text-3); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.entry { display: grid; grid-template-columns: 34px 52px 1fr auto; gap: 12px; align-items: center; padding: 8px 12px 8px 8px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); text-decoration: none; color: var(--ink); }
+.entry:hover { background: var(--paper-2); }
+.place { font-family: var(--font-display); font-weight: 800; font-size: 18px; text-align: center; }
+.thumb { width: 52px; height: 40px; border-radius: 9px; border: 2px solid var(--ink); object-fit: cover; background: linear-gradient(180deg, #1b1850, #3a2a8e); display: grid; place-items: center; }
+.name { display: block; font-weight: 800; line-height: 1.25; }
+.sub { display: block; font-size: 12.5px; color: var(--text-3); }
+.nums { display: grid; justify-items: end; font-size: 13px; font-weight: 800; }
+.nums span { display: inline-flex; align-items: center; gap: 4px; }
+.lead { box-shadow: 4px 4px 0 var(--ink); background: var(--amber-soft); }
+.empty { font-size: 14px; color: var(--text-3); padding: 10px 2px; }

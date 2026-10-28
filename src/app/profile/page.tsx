@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/auth';
 import { contestToday, getSeason, openForSubmissions, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
 import { photoSelect } from '@/lib/housePhotos';
 import { HousePhotoPicker } from '@/components/HousePhotoPicker';
+import { BracketPicker } from './BracketPicker';
 import { avatarUrl, displayName, level } from '@/lib/users';
 import { becomeHost } from '../actions/profile';
 import { AvatarUploader } from './AvatarUploader';
@@ -100,6 +101,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                   <div><b>{h.name}</b><div className="small muted">{s!.name} {s!.year} · {phaseLabel(s!, today).tag}</div>{h.reviewNote && <div className="small muted">Note: {h.reviewNote}</div>}</div>
                   <span className={`pill ${h.status}`}>{h.status === 'PENDING' ? 'In review' : h.status === 'APPROVED' ? 'Live' : 'Not approved'}</span>
                 </div>
+                {phase(s!, today) !== 'final' && <BracketPicker houseId={h.id} holiday={s!.name} initial={h.bracket} />}
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
                 <div className="row spread">
                   <div className="row">

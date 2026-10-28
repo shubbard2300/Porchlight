@@ -109,6 +109,8 @@ model House {
   lng               Float?
   showExactAddress  Boolean      @default(true)
   tags              String[]
+  /// Category bracket key from src/lib/brackets.ts. Null for entries made before brackets existed.
+  bracket           String?
   litFrom           String
   litUntil          String
   description       String
@@ -125,6 +127,7 @@ model House {
   checkIns          CheckIn[]
 
   @@index([season, status])
+  @@index([season, bracket])
 }
 
 /// A photo a host took or chose of their display. Uploaded before the entry exists (houseId null)

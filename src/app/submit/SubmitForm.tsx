@@ -8,13 +8,17 @@ import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { SubmitButton } from '@/components/SubmitButton';
 import { useFormAction } from '@/components/useFormAction';
 import { CONTRIBUTIONS, HOUSE_TAGS } from '@/lib/houseOptions';
+import { bracketsFor } from '@/lib/brackets';
+import { Icon3D } from '@/components/Icon3D';
 
-type Option = { key: string; label: string; note: string };
+type Option = { key: string; holiday: string; label: string; note: string };
 export type Prefill = { name: string; address: string; neighborhood: string; description: string };
 
 export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { seasons: Option[]; defaultSeason: string; prefill: Prefill; photos: HousePhotoView[] }) {
   const { formAction: action, errors: e, value, checked } = useFormAction(submitHouse);
   const [amount, setAmount] = useState(0);
+  const [season, setSeason] = useState(value('season', defaultSeason));
+  const brackets = bracketsFor(seasons.find((s) => s.key === season)?.holiday ?? '');
   return (
     <form action={action} className="stack" noValidate>
       {e.form && <p className="err" role="alert">{e.form}</p>}
@@ -22,8 +26,18 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
         <div className="chips">
           {seasons.map((s) => (
             <span key={s.key}>
-              <input type="radio" id={`season-${s.key}`} name="season" value={s.key} defaultChecked={checked('season', s.key === defaultSeason, s.key)} />
+              <input type="radio" id={`season-${s.key}`} name="season" value={s.key} defaultChecked={checked('season', s.key === defaultSeason, s.key)} onChange={() => setSeason(s.key)} />
               <label htmlFor={`season-${s.key}`}>{s.label} <span className="muted small">{s.note}</span></label>
+            </span>
+          ))}
+        </div>
+      </Field>
+      <Field label="Which bracket are you competing in?" error={e.bracket} hint="You only go head to head with houses in your bracket, and visitors can filter the map by it.">
+        <div className="chips">
+          {brackets.map((b) => (
+            <span key={b.key}>
+              <input type="radio" id={`bracket-${b.key}`} name="bracket" value={b.key} defaultChecked={checked('bracket', false, b.key)} />
+              <label htmlFor={`bracket-${b.key}`} title={b.blurb} className="chip-icon"><Icon3D name={b.icon} size={20} />{b.label}</label>
             </span>
           ))}
         </div>

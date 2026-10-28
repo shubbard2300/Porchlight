@@ -8,9 +8,10 @@ import { absolutePhotoUrl, attachPhotos, deleteHouse, reviewUrl } from '@/lib/ho
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import { submissionAdminEmail, submissionReceivedEmail } from '@/lib/emails';
 import { geocodeAddress } from '@/lib/geocode';
+import { bracketsFor } from '@/lib/brackets';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
-import { contestToday, getSeason, openForSubmissions } from '@/lib/seasons';
+import { contestToday, getSeason, openForSubmissions, phase } from '@/lib/seasons';
 import { fieldErrors, houseSchema } from '@/lib/validation';
 
 export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -24,6 +25,7 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
   if (!season || !openForSubmissions(contestToday()).some((s) => s.key === season.key)) {
     return { errors: { season: 'That contest is closed to new entries. Pick another holiday.' } };
   }
+  if (!bracketsFor(season.name).some((b) => b.key === d.bracket)) return { errors: { bracket: 'Pick a bracket for this holiday.' } };
 
   const house = await db.house.create({
     data: {
@@ -34,6 +36,7 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
       neighborhood: d.neighborhood || null,
       showExactAddress: d.showExactAddress,
       tags: d.tags,
+      bracket: d.bracket,
       litFrom: d.litFrom,
       litUntil: d.litUntil,
       description: d.description,
@@ -86,4 +89,21 @@ export async function deleteMyHouse(id: string) {
   revalidatePath('/profile');
   revalidatePath('/');
   revalidatePath('/admin', 'layout');
+}
+
+/** A host moves one of their entries to another bracket while its contest is still running. */
+export async function setHouseBracket(id: string, bracket: string): Promise<{ error?: string }> {
+  const user = await requireUser('/profile');
+  const house = await db.house.findFirst({ where: { id, ownerId: user.id }, select: { id: true, season: true } });
+  const season = house && getSeason(house.season);
+  if (!house || !season) return { error: 'That entry wasn’t found.' };
+  const p = phase(season, contestToday());
+  if (p !== 'soon' && p !== 'live') return { error: 'This contest has ended, so its brackets are locked.' };
+  if (!bracketsFor(season.name).some((b) => b.key === bracket)) return { error: 'Pick a bracket for this holiday.' };
+  await db.house.update({ where: { id: house.id }, data: { bracket } });
+  revalidatePath('/profile');
+  revalidatePath('/');
+  revalidatePath('/leaderboard');
+  revalidatePath(`/house/${house.id}`);
+  return {};
 }

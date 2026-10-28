@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contactSchema, houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema } from './validation';
+import { contactSchema, houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema, voteSchema } from './validation';
 
 describe('joinSchema', () => {
   const base = { accountType: 'VIEWER', email: '  Sam@Example.COM ', username: 'Sam_Rivera', password: 'lanterns-glow', terms: 'on' };
@@ -34,7 +34,7 @@ describe('joinSchema', () => {
 describe('houseSchema', () => {
   const base = {
     season: 'halloween-2026', name: 'The Hollow', address: '1820 SE Alder Ct', litFrom: '6 pm', litUntil: '10 pm',
-    description: 'A skeleton choir every twenty minutes.', contribution: '25', permission: 'on', tags: ['Fog'],
+    description: 'A skeleton choir every twenty minutes.', contribution: '25', permission: 'on', tags: ['Fog'], bracket: 'spooky',
   };
   it('rejects unknown tags and odd contribution amounts', () => {
     expect(houseSchema.safeParse(base).success).toBe(false);
@@ -88,4 +88,24 @@ describe('contactSchema', () => {
     expect(contactSchema.safeParse({ ...base, topic: 'Spam' }).success).toBe(false);
     expect(contactSchema.safeParse({ ...base, message: 'hi' }).success).toBe(false);
   });
+});
+
+describe('voteSchema', () => {
+  const base = { houseId: 'h1', liked: 'yes', creativity: '9', lighting: '10', storytelling: '7', sound: '6' };
+  it('reads the scorecard and the like', () => {
+    const r = voteSchema.safeParse({ ...base, comment: 'Loved the fog!' });
+    expect(r.success).toBe(true);
+    if (r.success) { expect(r.data.liked).toBe(true); expect(r.data.lighting).toBe(10); }
+  });
+  it('rejects out-of-range scores and unkind comments', () => {
+    expect(voteSchema.safeParse({ ...base, sound: '11' }).success).toBe(false);
+    expect(voteSchema.safeParse({ ...base, comment: 'so tacky' }).success).toBe(false);
+  });
+});
+
+it('requires a bracket on new entries', () => {
+  expect(houseSchema.safeParse({
+    season: 'halloween-2026', name: 'The Hollow', address: '1820 SE Alder Ct', litFrom: '6 pm', litUntil: '10 pm',
+    description: 'A skeleton choir every twenty minutes.', contribution: '0', permission: 'on',
+  }).success).toBe(false);
 });
