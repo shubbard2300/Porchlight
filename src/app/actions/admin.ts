@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { alertNearbyHouse } from '@/lib/alertTriggers';
 import { db } from '@/lib/db';
 import { APPROVAL_XP } from '@/lib/rewards';
 import { requireAdmin } from '@/lib/auth';
@@ -29,6 +31,7 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
   await db.house.update({ where: { id }, data: { status: decision, reviewNote: note, reviewedAt: new Date(), ...spot } });
   if (decision === 'APPROVED' && before.status !== 'APPROVED') {
     await db.user.update({ where: { id: before.ownerId }, data: { xp: { increment: APPROVAL_XP } } });
+    after(() => alertNearbyHouse(id).catch((e) => console.error('[push] nearby alert', e)));
   }
   const season = getSeason(before.season);
   await sendEmail({

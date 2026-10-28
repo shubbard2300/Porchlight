@@ -394,6 +394,10 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 .pot-panel.paid { align-items: center; background: var(--mint-soft); }
 .pot-panel .chips label { padding: 6px 12px; }
 
+/* Push alert preferences */
+.alert-kinds { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.alert-kinds legend { margin-bottom: 6px; }
+
 /* XP: nav chip with a hover card (tap opens the XP popup), and the guide in the popup and on the profile */
 .me-group { display: inline-flex; align-items: center; gap: 2px; }
 .nav a.xp-chip { position: relative; padding: 3px 9px 3px 4px; border-radius: 999px; background: var(--lilac); color: var(--ink); font-size: 12.5px; font-weight: 800; }

@@ -10,6 +10,8 @@ import type { FormState } from '@/lib/forms';
 import { distanceM, formatDistance, insideGeofence } from '@/lib/visits';
 import { recordCheckIn, votableHouse } from '@/lib/checkIns';
 import { activeCaravanId } from '@/lib/caravanServer';
+import { after } from 'next/server';
+import { alertHostLike } from '@/lib/alertTriggers';
 
 export type CheckInResult = { ok: true } | { ok: false; message: string };
 
@@ -54,7 +56,7 @@ export async function castVote(_prev: FormState, fd: FormData): Promise<FormStat
   const xp = boostedXp(VOTE_XP, user.xpBoostUntil);
   const scores = { creativity: d.creativity, lighting: d.lighting, storytelling: d.storytelling, sound: d.sound };
   const [existing, caravanId] = await Promise.all([
-    db.vote.findUnique({ where: { userId_houseId: { userId: user.id, houseId: d.houseId } }, select: { id: true, caravanId: true } }),
+    db.vote.findUnique({ where: { userId_houseId: { userId: user.id, houseId: d.houseId } }, select: { id: true, caravanId: true, liked: true } }),
     activeCaravanId(user.id),
   ]);
   await db.$transaction([
@@ -66,6 +68,7 @@ export async function castVote(_prev: FormState, fd: FormData): Promise<FormStat
     }),
     ...(existing ? [] : [db.user.update({ where: { id: user.id }, data: { xp: { increment: xp } } })]),
   ]);
+  if (d.liked && !existing?.liked) after(() => alertHostLike(d.houseId, user.id).catch((e) => console.error('[push] like alert', e)));
   revalidatePath(`/house/${d.houseId}`);
   revalidatePath('/');
   return { message: existing ? 'Scorecard updated.' : `Scorecard saved. +${xp} XP${xp > VOTE_XP ? ' (pitstop boost!)' : ''}` };

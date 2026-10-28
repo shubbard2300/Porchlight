@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import { LogoMark, Wordmark } from '@/components/LogoMark';
 import { currentUser } from '@/lib/auth';
@@ -6,6 +6,7 @@ import { avatarUrl } from '@/lib/users';
 import { boostActive } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
 import { Modals } from '@/components/Modals';
+import { ServiceWorker } from '@/components/ServiceWorker';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteNav } from '@/components/SiteNav';
 import { logout } from './actions/auth';
@@ -14,7 +15,11 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Porchlight',
   description: 'Find the best holiday houses near you, swipe to rate, and help a neighbor win the pot.',
+  appleWebApp: { capable: true, title: 'Porchlight', statusBarStyle: 'black' },
+  icons: { apple: '/app-icons/apple-touch-icon.png' },
 };
+
+export const viewport: Viewport = { themeColor: '#14123a' };
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +35,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" />
       </head>
       <body>
+        <ServiceWorker />
         <header className="site-head">
           <div className="wrap">
             <Link href="/" className="brand">

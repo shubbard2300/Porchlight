@@ -5,6 +5,7 @@ import { emailDeliveryConfigured } from '@/lib/email';
 import { dollars } from '@/lib/pot';
 import { potTotals, unpaidPledgeCents } from '@/lib/potServer';
 import { stripeConfigured } from '@/lib/stripe';
+import { pushConfigured } from '@/lib/push';
 import { notificationEmail } from '@/lib/settings';
 import { contestToday, phaseLabel, visibleSeasons } from '@/lib/seasons';
 
@@ -30,6 +31,7 @@ export default async function AdminHome() {
       {!to && <p className="notice warn">No notification address is set, so form emails have nowhere to go. <Link href="/admin/settings">Set one in Settings</Link>.</p>}
       {to && !emailDeliveryConfigured() && <p className="notice warn">Emails are recorded in the Form inbox but not delivered yet. Add a <code>RESEND_API_KEY</code> to start sending to {to}.</p>}
       {!stripeConfigured() && <p className="notice warn">Hosts can&apos;t pay their pledges online yet. Add <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code> to switch on Stripe payments. <Link href="/admin/payments">How</Link></p>}
+      {!pushConfigured() && <p className="notice warn">Push alerts are off. Run <code>npx web-push generate-vapid-keys</code> once and add the keys as <code>VAPID_PUBLIC_KEY</code> and <code>VAPID_PRIVATE_KEY</code>, plus a random <code>CRON_SECRET</code> for the last-call alert.</p>}
       <div className="stats">
         <div className="stat"><span className="row" style={{ gap: 8 }}><Icon3D name="people" size={28} /><span className="label">Users</span></span><b className="num">{users}</b><span className="small muted">+{newUsers} this week</span></div>
         <div className="stat"><span className="row" style={{ gap: 8 }}><Icon3D name="clipboard" size={28} /><span className="label">Waiting for review</span></span><b className="num">{pending}</b><Link className="small" href="/admin/submissions">Review</Link></div>
