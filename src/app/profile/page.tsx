@@ -8,6 +8,7 @@ import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { BracketPicker } from './BracketPicker';
 import { avatarUrl, displayName, level } from '@/lib/users';
 import { becomeHost } from '../actions/profile';
+import { XpGuide, XpProgress } from '@/components/XpGuide';
 import { AvatarUploader } from './AvatarUploader';
 import { DeleteEntryButton } from './DeleteEntryButton';
 import { AboutForm, HostForm, PasswordForm } from './ProfileForms';
@@ -57,11 +58,17 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             <div className="row"><span className={`pill ${isHost ? 'PENDING' : 'live'}`}>{isHost ? 'Host / decorator' : 'Viewer / rater'}</span><span className="label">Level {lvl.number} · {lvl.name}</span></div>
             <h1 style={{ fontSize: 32 }}>{displayName(user)}</h1>
             <span className="small muted">@{user.username} · {user.email}</span>
-            <div className="xpbar" aria-label={`${user.xp} XP`}><i style={{ width: `${lvl.next ? Math.min(100, (user.xp / lvl.next[0]) * 100) : 100}%` }} /></div>
-            <span className="small muted num row" style={{ gap: 6 }}><Icon3D name="sparkles" size={20} />{user.xp} XP{lvl.next ? ` · ${lvl.next[0] - user.xp} to ${lvl.next[1]}` : ''}</span>
+            <XpProgress xp={user.xp} />
+            <a href="#about-xp" className="small">How XP works</a>
           </div>
         </div>
         <AvatarUploader src={avatarUrl(user)} initial={user.username[0].toUpperCase()} />
+      </section>
+
+      <section className="panel stack" id="about-xp" style={{ scrollMarginTop: 90 }}>
+        <div className="row" style={{ gap: 10 }}><Icon3D name="sparkles" size={32} /><h2 style={{ fontSize: 20 }}>About XP</h2></div>
+        <p className="small muted">You&apos;re Level {lvl.number}, {lvl.name}, with {user.xp} XP.{lvl.next ? ` ${lvl.next[0] - user.xp} more reaches ${lvl.next[1]}.` : ' That’s the top level. Nice work!'}</p>
+        <XpGuide me={{ xp: user.xp, boostUntil: user.xpBoostUntil }} showProgress={false} />
       </section>
 
       <section className="panel stack">

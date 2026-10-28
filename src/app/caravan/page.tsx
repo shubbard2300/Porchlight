@@ -33,7 +33,7 @@ export default async function CaravanPage({ searchParams }: Props) {
           <div>
             <span className="label">Caravan mode</span>
             <h1 style={{ fontSize: 'clamp(28px, 4.4vw, 40px)' }}>Tour the lights with your squad</h1>
-            <p className="muted">Start a caravan for the night and invite friends with a link or QR code. When squadmates check in at the same porch within {SQUAD_WINDOW_MIN} minutes, each later arrival earns +{SQUAD_BONUS_XP} bonus XP, and your scorecards add up to a Squad Review on every house you visit. Votes still count one per person.</p>
+            <p className="muted">Start a caravan for the night and invite friends with a link or QR code. When squadmates check in at the same porch within {SQUAD_WINDOW_MIN} minutes, each later arrival earns +{SQUAD_BONUS_XP} bonus XP, and your scorecards add up to a Squad Review on every house you visit. Votes still count one per person. <a href="/profile#about-xp" data-modal="xp">How XP works</a></p>
           </div>
         </div>
         {flags.ended && <p className="notice" role="status">Caravan ended. Your squad reviews stay on the houses you visited.</p>}

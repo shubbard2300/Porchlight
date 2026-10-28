@@ -68,7 +68,7 @@ export default async function PitstopPage({ params, searchParams }: Props) {
 
       <section className={`panel stack ${styles.boost}`}>
         <h2 style={{ fontSize: 20 }}><Icon3D name="sparkles" size={28} /> Double XP pitstop</h2>
-        <p>Scan the Porchlight QR at the counter to double every XP you earn for {BOOST_HOURS} hours: check-ins, scorecards, all of it. <b>No purchase necessary.</b> Contest votes never change, so every house still gets one vote per visitor.</p>
+        <p>Scan the Porchlight QR at the counter to double every XP you earn for {BOOST_HOURS} hours: check-ins, scorecards, all of it. <b>No purchase necessary.</b> Contest votes never change, so every house still gets one vote per visitor. <a href="/profile#about-xp" data-modal="xp">How XP works</a></p>
         {boosted && user?.xpBoostUntil && <p className="notice" role="status">Your 2× boost is on until {timeFmt.format(user.xpBoostUntil)}.</p>}
         {!user && <p className="small muted"><Link href={`/login?next=/pitstop/${m.id}`} data-modal="login">Log in</Link> before you scan so the boost lands on your account.</p>}
       </section>

@@ -6,19 +6,22 @@ import { LoginForm } from '@/app/login/LoginForm';
 import { JoinForm } from '@/app/join/[type]/JoinForm';
 import { ContactForm, type ContactDefaults } from './ContactForm';
 import { Icon3D } from './Icon3D';
+import { XpGuide, type XpStanding } from './XpGuide';
+import { SIGNUP_BONUS_XP } from '@/lib/rewards';
 
 /**
- * Popups for logging in, signing up and contacting us.
+ * Popups for logging in, signing up, contacting us and explaining XP.
  *
  * Any link with data-modal opens one instead of navigating, so server components only need an attribute:
  *   <Link href="/login" data-modal="login">   <Link href="/join/host" data-modal="join:host">
- *   <Link href="/contact" data-modal="contact:Accessibility">
+ *   <Link href="/contact" data-modal="contact:Accessibility">   <a href="/profile#about-xp" data-modal="xp">
  * The href stays a real page, which is what loads without JavaScript, in a new tab, or from an email link.
  */
 type Open =
   | { kind: 'login' }
   | { kind: 'join'; as?: 'viewer' | 'host' }
-  | { kind: 'contact'; topic?: string };
+  | { kind: 'contact'; topic?: string }
+  | { kind: 'xp' };
 
 const JOIN = {
   viewer: { type: 'VIEWER' as const, label: 'Viewer / rater', title: 'Find the best lights in town', blurb: 'Sign up and get 100 XP and the Porch Pass badge.' },
@@ -30,10 +33,11 @@ function parse(attr: string): Open | null {
   if (kind === 'login') return { kind };
   if (kind === 'join') return { kind, as: arg === 'viewer' || arg === 'host' ? arg : undefined };
   if (kind === 'contact') return { kind, topic: arg };
+  if (kind === 'xp') return { kind };
   return null;
 }
 
-export function Modals({ signedIn, contact }: { signedIn: boolean; contact: ContactDefaults }) {
+export function Modals({ signedIn, contact, xp }: { signedIn: boolean; contact: ContactDefaults; xp?: XpStanding | null }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState<Open | null>(null);
   // Bumped on every open so each popup starts with a fresh form.
@@ -56,8 +60,8 @@ export function Modals({ signedIn, contact }: { signedIn: boolean; contact: Cont
       if (!(a instanceof HTMLAnchorElement)) return;
       const o = parse(a.dataset.modal ?? '');
       if (!o) return;
-      // Already on that page: just follow the link.
-      if (a.pathname === window.location.pathname && !ref.current?.open) return;
+      // Already on that page: just follow the link. The XP guide is a popup everywhere, even on the profile.
+      if (o.kind !== 'xp' && a.pathname === window.location.pathname && !ref.current?.open) return;
       e.preventDefault();
       e.stopPropagation();
       show(o);
@@ -134,6 +138,16 @@ export function Modals({ signedIn, contact }: { signedIn: boolean; contact: Cont
               </div>
               <JoinForm accountType={join.type} idPrefix="m-" />
               <p className="small muted">Already joined? <a href="/login" data-modal="login">Log in</a></p>
+            </div>
+          )}
+
+          {open.kind === 'xp' && (
+            <div className="stack">
+              <div className="page-head"><Icon3D name="sparkles" size={56} /><div><h2 id="modal-title">How XP works</h2><p className="muted small">Points you earn for getting out and seeing the lights. They level you up, and that&apos;s all they do.</p></div></div>
+              <XpGuide me={xp} />
+              {xp
+                ? <a href="/profile#about-xp" className="btn ghost sm" style={{ justifySelf: 'start' }} onClick={close}>See it on my profile</a>
+                : <p className="small muted"><a href="/join/viewer" data-modal="join:viewer">Join free</a> and start with {SIGNUP_BONUS_XP} XP.</p>}
             </div>
           )}
 
