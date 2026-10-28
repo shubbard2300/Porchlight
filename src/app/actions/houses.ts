@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { absolutePhotoUrl, attachPhotos, deleteHouse, reviewUrl } from '@/lib/housePhotos';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
+import { submissionAdminEmail, submissionReceivedEmail } from '@/lib/emails';
 import { geocodeAddress } from '@/lib/geocode';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
@@ -48,37 +49,28 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
   }
 
   await notifyAdmin(
-    `New ${season.name} submission: ${house.name}`,
-    [
-      `${user.username} <${user.email}> posted a house for ${season.name} ${season.year}.`,
-      '',
-      `Name: ${house.name}`,
-      `Address: ${house.address}${house.neighborhood ? ` (${house.neighborhood})` : ''}`,
-      `Show exact address: ${house.showExactAddress ? 'yes' : 'no'}`,
-      `Lit: ${house.litFrom} to ${house.litUntil}`,
-      `Features: ${house.tags.join(', ') || 'none listed'}`,
-      `Pot pledge: $${d.contribution}`,
-      `Photos: ${placed.photoUrls.length}`,
-      ...placed.photoUrls.map((u) => `  ${absolutePhotoUrl(u)}`),
-      `Map pin: ${placed.lat !== null ? `https://www.google.com/maps?q=${placed.lat},${placed.lng}` : 'none yet'}`,
-      '',
-      house.description,
-      '',
-      `Approve or reject it: ${reviewUrl(house)}`,
-    ].join('\n'),
+    submissionAdminEmail({
+      username: user.username,
+      email: user.email,
+      season: season.name,
+      year: season.year,
+      house: house.name,
+      address: `${house.address}${house.neighborhood ? ` (${house.neighborhood})` : ''}`,
+      showExactAddress: house.showExactAddress,
+      lit: `${house.litFrom} to ${house.litUntil}`,
+      tags: house.tags,
+      pledge: d.contribution,
+      photoUrls: placed.photoUrls.map((u) => absolutePhotoUrl(u)),
+      mapPin: placed.lat !== null ? `https://www.google.com/maps?q=${placed.lat},${placed.lng}` : null,
+      description: house.description,
+      reviewUrl: reviewUrl(house),
+    }),
     'submission',
     user.email,
   );
   await sendEmail({
     to: user.email,
-    subject: `We got ${house.name}`,
-    text: [
-      `Hi ${displayName(user)},`,
-      '',
-      `Thanks for posting ${house.name} for ${season.name} ${season.year}. We review new houses quickly, and you'll get an email once it's live on the map.`,
-      '',
-      `See your entries: ${appUrl('/profile')}`,
-    ].join('\n'),
+    ...submissionReceivedEmail({ name: displayName(user), house: house.name, season: `${season.name} ${season.year}` }, appUrl),
     kind: 'submission-received',
   });
 

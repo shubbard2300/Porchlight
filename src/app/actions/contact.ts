@@ -3,6 +3,7 @@
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { appUrl, notifyAdmin } from '@/lib/email';
+import { contactAdminEmail } from '@/lib/emails';
 import type { FormState } from '@/lib/forms';
 import { contactSchema, fieldErrors } from '@/lib/validation';
 
@@ -23,16 +24,16 @@ export async function sendContact(_prev: FormState, fd: FormData): Promise<FormS
 
   const user = await currentUser();
   const status = await notifyAdmin(
-    `Contact: ${d.topic} from ${d.name}`,
-    [
-      `${d.name} <${d.email}> sent a message through the contact form.`,
-      `Topic: ${d.topic}`,
-      user ? `Signed in as: ${user.username} (${user.accountType === 'HOST' ? 'host' : 'viewer'})` : 'Signed in: no',
-      '',
-      d.message,
-      '',
-      `Reply to this email to answer ${d.name} directly. All messages: ${appUrl('/admin/inbox?kind=contact')}`,
-    ].join('\n'),
+    contactAdminEmail(
+      {
+        name: d.name,
+        email: d.email,
+        topic: d.topic,
+        signedInAs: user ? `${user.username} (${user.accountType === 'HOST' ? 'host' : 'viewer'})` : null,
+        message: d.message,
+      },
+      appUrl,
+    ),
     'contact',
     d.email,
   );

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { notifyAdmin } from '@/lib/email';
+import { newPhotoAdminEmail } from '@/lib/emails';
 import { absolutePhotoUrl, photoSelect, reviewUrl, syncHousePhotos } from '@/lib/housePhotos';
 import { sniffImage } from '@/lib/images';
 import { deletePhotoFiles, storePhotoFile } from '@/lib/photoStorage';
@@ -37,14 +38,7 @@ async function notifyNewPhoto(houseId: string, photoId: string, user: { username
   const house = await db.house.findUniqueOrThrow({ where: { id: houseId }, select: { id: true, name: true, status: true, photoUrls: true } });
   const live = house.status === 'APPROVED';
   await notifyAdmin(
-    `New photo on ${house.name}`,
-    [
-      `${user.username} <${user.email}> added a photo to ${house.name}${live ? ', which is live on the site now' : ''}.`,
-      '',
-      ...house.photoUrls.map((u) => absolutePhotoUrl(u)),
-      '',
-      `${live ? 'Review it (take it down if needed)' : 'Approve or reject it'}: ${reviewUrl(house)}`,
-    ].join('\n'),
+    newPhotoAdminEmail({ username: user.username, email: user.email, house: house.name, live, photoUrls: house.photoUrls.map((u) => absolutePhotoUrl(u)), reviewUrl: reviewUrl(house) }),
     'submission',
     user.email,
   );
