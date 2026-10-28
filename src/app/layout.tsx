@@ -39,6 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href="/#map">Map</Link>
               <Link href="/">Houses</Link>
               <Link href="/route">Plan a route</Link>
+              {user && <Link href="/caravan">Caravan</Link>}
               <Link href="/leaderboard">Leaderboard</Link>
               {user ? (
                 <>

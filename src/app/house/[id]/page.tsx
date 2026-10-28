@@ -12,6 +12,7 @@ import { crowdCounts } from '@/lib/crowdCounts';
 import { seasonTheme } from '@/lib/theme';
 import { avatarUrl, displayName } from '@/lib/users';
 import { SCORE_CATEGORIES, averageScore, formatDistance } from '@/lib/visits';
+import { MIN_SQUAD_REVIEWERS, squadReview } from '@/lib/caravans';
 import { BOOST_HOURS, TIERS, getCategory, nearestPitstop } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
 import { VisitPanel, type VisitState } from '@/components/VisitPanel';
@@ -47,7 +48,7 @@ export default async function HousePage({ params, searchParams }: Props) {
   const season = getSeason(house.season);
   const theme = season ? seasonTheme(season) : null;
   const verified = { houseId: id, verifiedAt: { not: null } };
-  const [likes, visitors, avg, comments, myCheckIn, myVote] = await Promise.all([
+  const [likes, visitors, avg, comments, myCheckIn, myVote, squadVotes] = await Promise.all([
     db.vote.count({ where: { ...verified, liked: true } }),
     db.checkIn.groupBy({ by: ['userId'], where: { houseId: id } }).then((g) => g.length),
     db.vote.aggregate({ where: verified, _avg: { creativity: true, lighting: true, storytelling: true, sound: true }, _count: { creativity: true } }),
@@ -59,7 +60,15 @@ export default async function HousePage({ params, searchParams }: Props) {
     }),
     user ? db.checkIn.findFirst({ where: { userId: user.id, houseId: id }, select: { id: true } }) : null,
     user ? db.vote.findUnique({ where: { userId_houseId: { userId: user.id, houseId: id } } }) : null,
+    db.vote.findMany({
+      where: { ...verified, caravanId: { not: null } },
+      select: { liked: true, comment: true, creativity: true, lighting: true, storytelling: true, sound: true, caravan: { select: { id: true, name: true } } },
+    }),
   ]);
+  const squads = [...Map.groupBy(squadVotes, (v) => v.caravan!.id).values()]
+    .filter((vs) => vs.length >= MIN_SQUAD_REVIEWERS)
+    .map((vs) => ({ caravan: vs[0].caravan!, ...squadReview(vs) }))
+    .sort((a, b) => b.reviewers - a.reviewers);
 
   const state: VisitState = !user ? 'guest'
     : house.ownerId === user.id ? 'own'
@@ -112,6 +121,24 @@ export default async function HousePage({ params, searchParams }: Props) {
             <a className="btn ghost" style={{ justifySelf: 'start' }} href={`https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}`} target="_blank" rel="noopener">
               <Icon3D name="map" size={22} />Directions
             </a>
+          )}
+
+          {squads.length > 0 && (
+            <section id="squad-reviews" className="stack" aria-labelledby="squad-reviews-title" style={{ scrollMarginTop: 16 }}>
+              <h2 id="squad-reviews-title" style={{ fontSize: 22 }}>Squad reviews</h2>
+              <ul className={styles.squads}>
+                {squads.map((q) => (
+                  <li key={q.caravan.id}>
+                    <div className="row spread">
+                      <span className="row" style={{ gap: 8 }}><Icon3D name="people" size={26} /><b>{q.caravan.name}</b></span>
+                      {q.overall !== null && <b className={styles.squadScore}>{q.overall}<span>/10</span></b>}
+                    </div>
+                    <span className="small muted">{q.reviewers} squadmates scored it · {q.likes} loved it{q.favorite ? ` · best at ${q.favorite.toLowerCase()}` : ''}</span>
+                    {q.cheers.slice(0, 3).map((c, i) => <q key={i} className={styles.squadCheer}>{c}</q>)}
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
 
           <section className="stack" aria-labelledby="cheers">

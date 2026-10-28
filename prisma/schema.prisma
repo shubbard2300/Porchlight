@@ -71,16 +71,18 @@ model User {
   decorationTheme String?
   propertyDetails String?
 
-  createdAt    DateTime      @default(now())
-  lastLoginAt  DateTime?
-  houses       House[]
-  housePhotos  HousePhoto[]
-  votes        Vote[]
-  checkIns     CheckIn[]
-  tokens       EmailToken[]
-  pitstopScans PitstopScan[]
+  createdAt      DateTime        @default(now())
+  lastLoginAt    DateTime?
+  houses         House[]
+  housePhotos    HousePhoto[]
+  votes          Vote[]
+  checkIns       CheckIn[]
+  tokens         EmailToken[]
+  pitstopScans   PitstopScan[]
   /// Scanning a merchant's counter QR doubles XP until this time. Contest votes are never boosted.
-  xpBoostUntil DateTime?
+  xpBoostUntil   DateTime?
+  ledCaravans    Caravan[]       @relation("CaravanLeader")
+  caravanMembers CaravanMember[]
 }
 
 /// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
@@ -186,9 +188,13 @@ model CheckIn {
   house     House         @relation(fields: [houseId], references: [id], onDelete: Cascade)
   method    CheckInMethod
   distanceM Int?
+  /// The caravan the visitor was rolling with, if any.
+  caravanId String?
+  caravan   Caravan?      @relation(fields: [caravanId], references: [id], onDelete: SetNull)
   createdAt DateTime      @default(now())
 
   @@index([houseId, createdAt])
+  @@index([caravanId, houseId])
   @@index([userId, houseId])
 }
 
@@ -210,10 +216,14 @@ model Vote {
   lighting     Int?
   storytelling Int?
   sound        Int?
+  /// Set when the voter scored the house while in a caravan; feeds the house's Squad Reviews.
+  caravanId    String?
+  caravan      Caravan?  @relation(fields: [caravanId], references: [id], onDelete: SetNull)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @default(now()) @updatedAt
 
   @@unique([userId, houseId])
+  @@index([caravanId])
 }
 
 model Setting {
@@ -285,4 +295,35 @@ model AnchorBlock {
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// A group touring together for a night. Members join with a code; their check-ins and scorecards
+/// roll up into a Squad Review on each house. Votes still count one per person.
+model Caravan {
+  id        String          @id @default(cuid())
+  name      String
+  /// Short code for the invite link and QR.
+  code      String          @unique
+  leaderId  String
+  leader    User            @relation("CaravanLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  endsAt    DateTime
+  members   CaravanMember[]
+  checkIns  CheckIn[]
+  votes     Vote[]
+
+  @@index([leaderId])
+}
+
+model CaravanMember {
+  id        String    @id @default(cuid())
+  caravanId String
+  caravan   Caravan   @relation(fields: [caravanId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime  @default(now())
+  leftAt    DateTime?
+
+  @@unique([caravanId, userId])
+  @@index([userId])
 }
