@@ -393,3 +393,36 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 .pot-panel { display: flex; gap: 12px; align-items: flex-start; border: var(--edge); border-radius: var(--r-md); padding: 12px 14px; background: var(--amber-soft); }
 .pot-panel.paid { align-items: center; background: var(--mint-soft); }
 .pot-panel .chips label { padding: 6px 12px; }
+
+/* XP: nav chip with a hover card (tap opens the XP popup), and the guide in the popup and on the profile */
+.me-group { display: inline-flex; align-items: center; gap: 2px; }
+.nav a.xp-chip { position: relative; padding: 3px 9px 3px 4px; border-radius: 999px; background: var(--lilac); color: var(--ink); font-size: 12.5px; font-weight: 800; }
+.nav a.xp-chip:hover { background: #cbbcff; }
+.xp-tip { display: none; position: absolute; top: calc(100% + 12px); right: -8px; z-index: 20; width: 270px; padding: 14px 16px; border: var(--edge); border-radius: var(--r-md); background: var(--cream); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); font-size: 13.5px; font-weight: 500; line-height: 1.45; text-align: left; white-space: normal; }
+.xp-tip::before { content: ''; position: absolute; top: -8px; right: 26px; width: 12px; height: 12px; background: var(--cream); border-left: var(--edge); border-top: var(--edge); transform: rotate(45deg); }
+.xp-tip b { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 800; }
+.xp-tip em { display: block; margin-top: 6px; font-style: normal; font-weight: 700; }
+.xp-tip-more { display: block; margin-top: 8px; font-weight: 800; font-size: 12.5px; color: var(--text-3); }
+@media (hover: hover) and (pointer: fine) {
+  .nav a.xp-chip:hover .xp-tip, .nav a.xp-chip:focus-visible .xp-tip { display: block; animation: modal-in 0.14s ease-out; }
+}
+@media (max-width: 760px) {
+  .nav .me-group { display: flex; width: 100%; gap: 8px; }
+  .nav .me-group .me { flex: 1; min-width: 0; }
+  .nav a.xp-chip { width: auto; flex: none; padding: 7px 14px 7px 7px; font-size: 14.5px; }
+}
+.xp-sub { font-size: 16px; }
+.xp-boost-note { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 14px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); font-size: 14px; }
+.xp-boost-note.on { background: var(--amber-soft); }
+.xp-ways { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.xp-ways li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); }
+.xp-ways li > span { display: grid; gap: 1px; }
+.xp-amt { padding: 3px 10px; border-radius: 999px; background: var(--lilac); border: 1.5px solid var(--ink); font-size: 13.5px; white-space: nowrap; }
+.xp-levels { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.xp-levels li { display: grid; padding: 6px 12px; border: 1.5px solid var(--ink); border-radius: var(--r-sm); background: var(--paper); font-size: 13px; line-height: 1.25; }
+.xp-levels li span { color: var(--text-3); font-size: 12px; font-weight: 700; }
+.xp-levels li.done { background: var(--lilac-soft); }
+.xp-levels li.here { background: var(--lilac); box-shadow: 2px 2px 0 var(--ink); }
+.xp-levels li.here span { color: var(--ink); }
+.xp-fine { display: flex; align-items: flex-start; gap: 8px; margin: 0; }
+.xp-fine img { flex: none; margin-top: 1px; }

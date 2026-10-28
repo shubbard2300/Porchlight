@@ -4,9 +4,7 @@ import { averageScore, SCORE_CATEGORIES, type ScoreKey } from './visits';
 /** A caravan lasts one night out. */
 export const CARAVAN_HOURS = 12;
 export const MAX_MEMBERS = 12;
-/** Checking in where a squadmate checked in within this window earns the squad bonus. */
-export const SQUAD_WINDOW_MIN = 30;
-export const SQUAD_BONUS_XP = 5;
+export { SQUAD_BONUS_XP, SQUAD_WINDOW_MIN } from './rewards';
 /** A house needs this many squad scorecards before the squad's review shows on it. */
 export const MIN_SQUAD_REVIEWERS = 2;
 
