@@ -23,8 +23,9 @@
   --amber-soft: #ffe7a8;
   --lilac-soft: #e4dcff;
   --berry-soft: #ffd6de;
-  --font-display: 'Unbounded', 'Avenir Next', system-ui, sans-serif;
+  --font-brand: 'Unbounded', 'Avenir Next', system-ui, sans-serif;
   --font-body: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  /* --font-display, --font-accent and the background texture follow the season: see "Seasons" at the end. */
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
   --r-lg: 24px;
   --r-md: 16px;
@@ -37,6 +38,8 @@
 html, body { margin: 0; }
 body {
   background: var(--cream);
+  isolation: isolate;
+  font-variation-settings: var(--display-axes);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -46,8 +49,8 @@ body {
 }
 a { color: var(--ink); text-decoration-color: var(--amber); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 a:hover { text-decoration-color: var(--pumpkin); }
-h1, h2, h3 { font-family: var(--font-display); font-weight: 800; margin: 0; letter-spacing: -0.025em; line-height: 1.1; text-wrap: balance; }
-h2, h3 { font-weight: 700; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: var(--display-weight); margin: 0; letter-spacing: var(--display-track); line-height: 1.1; text-wrap: balance; }
+h3 { font-family: var(--font-body); font-weight: 800; letter-spacing: -0.01em; }
 p { margin: 0; }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
@@ -68,7 +71,7 @@ main.wrap { padding-block: 32px 72px; }
 /* header */
 .site-head { background: var(--ink); color: var(--on-dark); position: sticky; top: 0; z-index: 10; }
 .site-head .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 12px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.03em; color: var(--on-dark); text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-brand); font-weight: 800; font-size: 22px; letter-spacing: -0.03em; color: var(--on-dark); text-decoration: none; }
 .brand-mark { flex: none; border-radius: 12px; box-shadow: 0 0 0 2px var(--on-dark), 3px 3px 0 2px var(--amber); transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
 .brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
 .brand-mark .logo-halo { animation: logo-halo 3.2s ease-in-out infinite; }
@@ -122,7 +125,7 @@ main.wrap { padding-block: 32px 72px; }
 .hero { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: center; gap: 12px; padding: 36px; border-radius: 32px; border: var(--edge); box-shadow: 6px 6px 0 var(--amber);
   background: radial-gradient(420px 300px at 78% 62%, rgba(255, 176, 0, 0.24), transparent 70%), radial-gradient(360px 240px at 8% 10%, rgba(185, 166, 255, 0.18), transparent 70%), var(--ink); color: var(--on-dark); }
 .hero .muted, .hero .label { color: var(--on-dark-2); }
-.hero h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.02; letter-spacing: -0.035em; }
+.hero h1 { font-size: clamp(36px, 5.6vw, 64px); line-height: 1.02; }
 .hero-copy { display: grid; gap: 16px; align-content: center; min-width: 0; }
 .pot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pot b { font-family: var(--font-display); font-size: 32px; color: var(--amber); letter-spacing: -0.02em; }
@@ -144,7 +147,7 @@ main.wrap { padding-block: 32px 72px; }
 .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
 .step { display: grid; gap: 10px; align-content: start; }
 .step-top { display: flex; justify-content: space-between; align-items: center; }
-.step-top span { font-family: var(--font-display); font-weight: 800; font-size: 34px; color: var(--sand); }
+.step-top span { font-family: var(--font-brand); font-weight: 800; font-size: 34px; color: var(--sand); }
 .step h3 { font-size: 19px; }
 
 /* houses */
@@ -326,11 +329,11 @@ html:has(dialog.modal[open]) { overflow: hidden; }
   animation: stars 5s ease-in-out infinite alternate; }
 .hero > :not(.string-lights) { position: relative; }
 @keyframes stars { from { opacity: .35; } to { opacity: .85; } }
-.glow-text { background: linear-gradient(100deg, var(--amber) 10%, var(--accent, var(--pumpkin)) 55%, var(--candy) 95%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 18px rgba(255, 176, 0, .35)); animation: sheen 6s ease-in-out infinite alternate; }
+.glow-text { font-family: var(--font-accent); font-weight: var(--accent-weight); padding-inline: .04em; background: linear-gradient(100deg, var(--amber) 10%, var(--accent, var(--pumpkin)) 55%, var(--candy) 95%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 18px rgba(255, 176, 0, .35)); animation: sheen 6s ease-in-out infinite alternate; }
 @keyframes sheen { to { background-position: 100% 0; } }
 
 .squiggle { position: relative; padding-bottom: 12px; }
-.squiggle::after { content: ''; position: absolute; left: 0; bottom: 0; width: 120px; height: 10px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10'%3E%3Cpath d='M2 6 Q12 0 22 6 T42 6 T62 6 T82 6 T102 6 T122 6' fill='none' stroke='%23ffb000' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat; }
+.squiggle::after { content: ''; position: absolute; left: 0; bottom: 0; width: 120px; height: 10px; background: var(--season-a); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10'%3E%3Cpath d='M2 6 Q12 0 22 6 T42 6 T62 6 T82 6 T102 6 T122 6' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 10'%3E%3Cpath d='M2 6 Q12 0 22 6 T42 6 T62 6 T82 6 T102 6 T122 6' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat; }
 
 .step { position: relative; transition: transform .2s cubic-bezier(.3,1.5,.5,1), box-shadow .2s; }
 .step:hover { transform: translate(-3px, -4px) rotate(-.6deg); box-shadow: 9px 9px 0 var(--ink); }
@@ -351,7 +354,7 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 .house-card.leader .rank { background: var(--amber); }
 
 .foot-brand { display: flex; align-items: center; gap: 12px; }
-.foot-brand b { font-family: var(--font-display); font-weight: 800; font-size: 20px; letter-spacing: -0.03em; color: var(--on-dark); }
+.foot-brand b { font-family: var(--font-brand); font-weight: 800; font-size: 20px; letter-spacing: -0.03em; color: var(--on-dark); }
 .foot-brand p { margin: 2px 0 0; }
 
 @supports (animation-timeline: view()) {
@@ -442,3 +445,54 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 /* Porch light triggers */
 pre.code { white-space: pre-wrap; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--paper-2); border: 1.5px solid var(--ink); border-radius: var(--r-sm); padding: 12px; margin: 8px 0 0; }
 .panel code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: var(--paper-2); border-radius: 6px; padding: 1px 5px; overflow-wrap: anywhere; }
+
+/* ---------- Seasons: display type and a quiet background texture that follow the holiday ----------
+   <html data-season> is the upcoming holiday; a page about one contest can override it with <main data-season>.
+   Body text stays Plus Jakarta Sans everywhere, and small headings (h3) use it too, so only big type changes. */
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--season-glow), var(--season-tile); }
+:root, :root[data-season='default'], :root:has(main[data-season='default']) {
+  --font-display: 'Bricolage Grotesque', 'Avenir Next', system-ui, sans-serif;
+  --font-accent: var(--font-display);
+  --display-weight: 800;
+  --display-track: -0.03em;
+  --display-axes: normal;
+  --accent-weight: 800;
+  --season-a: var(--amber);
+  --season-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cg fill='%23ffb000' fill-opacity='.22'%3E%3Cpath transform='translate(48 52) rotate(0) scale(1)' d='M0-5C.8-.8.8-.8 5 0C.8.8.8.8 0 5C-.8.8-.8.8-5 0C-.8-.8-.8-.8 0-5Z'/%3E%3Cpath transform='translate(198 170) rotate(0) scale(0.7)' d='M0-5C.8-.8.8-.8 5 0C.8.8.8.8 0 5C-.8.8-.8.8-5 0C-.8-.8-.8-.8 0-5Z'/%3E%3C/g%3E%3Cg fill='%236b3fd6' fill-opacity='.1'%3E%3Ccircle cx='140' cy='70' r='2'/%3E%3Ccircle cx='60' cy='190' r='1.6'/%3E%3Ccircle cx='230' cy='40' r='1.4'/%3E%3Ccircle cx='120' cy='236' r='1.4'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 260px;
+  --season-glow: radial-gradient(900px 520px at 100% 0%, rgba(255, 176, 0, .1), transparent 70%), radial-gradient(760px 480px at 0% 100%, rgba(185, 166, 255, .14), transparent 70%);
+}
+:root[data-season='halloween'], :root:has(main[data-season='halloween']) {
+  --font-display: 'Grenze', Georgia, serif;
+  --font-accent: 'Grenze Gotisch', 'Grenze', Georgia, serif;
+  --display-weight: 800;
+  --display-track: 0;
+  --display-axes: normal;
+  --accent-weight: 800;
+  --season-a: var(--pumpkin);
+  --season-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cg fill='%236b3fd6' fill-opacity='.11'%3E%3Cpath transform='translate(52 60) rotate(-12) scale(1.1)' d='M0 2C-2-1-4-2-5-1C-6-4-9-5-14-3C-11-2-10 1-10 3C-8 1-6 2-5 4C-4 2-2 2 0 5C2 2 4 2 5 4C6 2 8 1 10 3C10 1 11-2 14-3C9-5 6-4 5-1C4-2 2-1 0 2Z'/%3E%3Cpath transform='translate(196 178) rotate(10) scale(0.8)' d='M0 2C-2-1-4-2-5-1C-6-4-9-5-14-3C-11-2-10 1-10 3C-8 1-6 2-5 4C-4 2-2 2 0 5C2 2 4 2 5 4C6 2 8 1 10 3C10 1 11-2 14-3C9-5 6-4 5-1C4-2 2-1 0 2Z'/%3E%3C/g%3E%3Cg fill='%23ff6a1f' fill-opacity='.16'%3E%3Cpath transform='translate(150 40) rotate(0) scale(0.9)' d='M0-5C.8-.8.8-.8 5 0C.8.8.8.8 0 5C-.8.8-.8.8-5 0C-.8-.8-.8-.8 0-5Z'/%3E%3Cpath transform='translate(36 200) rotate(0) scale(0.7)' d='M0-5C.8-.8.8-.8 5 0C.8.8.8.8 0 5C-.8.8-.8.8-5 0C-.8-.8-.8-.8 0-5Z'/%3E%3Cpath transform='translate(250 104) rotate(0) scale(0.6)' d='M0-5C.8-.8.8-.8 5 0C.8.8.8.8 0 5C-.8.8-.8.8-5 0C-.8-.8-.8-.8 0-5Z'/%3E%3C/g%3E%3Cg fill='%236b3fd6' fill-opacity='.1'%3E%3Ccircle cx='110' cy='128' r='1.6'/%3E%3Ccircle cx='232' cy='252' r='1.4'/%3E%3Ccircle cx='90' cy='250' r='1.2'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 280px;
+  --season-glow: radial-gradient(900px 560px at 100% 0%, rgba(255, 106, 31, .12), transparent 70%), radial-gradient(800px 520px at 0% 100%, rgba(107, 63, 214, .12), transparent 70%);
+}
+:root[data-season='christmas'], :root:has(main[data-season='christmas']) {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-accent: 'Berkshire Swash', 'Fraunces', Georgia, serif;
+  --display-weight: 900;
+  --display-track: -0.015em;
+  --display-axes: 'SOFT' 100, 'WONK' 1;
+  --accent-weight: 400;
+  --season-a: var(--berry);
+  --season-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cg fill='none' stroke='%231e9e6a' stroke-opacity='.15' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath transform='translate(56 62) rotate(8) scale(1.15)' d='M0-8V8M-6.9-4 6.9 4M-6.9 4 6.9-4M-2-6.2 0-4.4 2-6.2M-2 6.2 0 4.4 2 6.2M-6.4-1.6-3.8-2.2-4.4-4.8M6.4 1.6 3.8 2.2 4.4 4.8M-6.4 1.6-3.8 2.2-4.4 4.8M6.4-1.6 3.8-2.2 4.4-4.8'/%3E%3Cpath transform='translate(214 190) rotate(-14) scale(0.85)' d='M0-8V8M-6.9-4 6.9 4M-6.9 4 6.9-4M-2-6.2 0-4.4 2-6.2M-2 6.2 0 4.4 2 6.2M-6.4-1.6-3.8-2.2-4.4-4.8M6.4 1.6 3.8 2.2 4.4 4.8M-6.4 1.6-3.8 2.2-4.4 4.8M6.4-1.6 3.8-2.2 4.4-4.8'/%3E%3C/g%3E%3Cg fill='none' stroke='%23e8364f' stroke-opacity='.13' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath transform='translate(176 58) rotate(20) scale(0.6)' d='M0-8V8M-6.9-4 6.9 4M-6.9 4 6.9-4M-2-6.2 0-4.4 2-6.2M-2 6.2 0 4.4 2 6.2M-6.4-1.6-3.8-2.2-4.4-4.8M6.4 1.6 3.8 2.2 4.4 4.8M-6.4 1.6-3.8 2.2-4.4 4.8M6.4-1.6 3.8-2.2 4.4-4.8'/%3E%3Cpath transform='translate(64 236) rotate(0) scale(0.7)' d='M0-8V8M-6.9-4 6.9 4M-6.9 4 6.9-4M-2-6.2 0-4.4 2-6.2M-2 6.2 0 4.4 2 6.2M-6.4-1.6-3.8-2.2-4.4-4.8M6.4 1.6 3.8 2.2 4.4 4.8M-6.4 1.6-3.8 2.2-4.4 4.8M6.4-1.6 3.8-2.2 4.4-4.8'/%3E%3C/g%3E%3Cg fill='%231e9e6a' fill-opacity='.12'%3E%3Ccircle cx='130' cy='140' r='2'/%3E%3Ccircle cx='268' cy='96' r='1.6'/%3E%3Ccircle cx='150' cy='272' r='1.4'/%3E%3Ccircle cx='22' cy='150' r='1.4'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 300px;
+  --season-glow: radial-gradient(900px 560px at 100% 0%, rgba(30, 158, 106, .1), transparent 70%), radial-gradient(800px 520px at 0% 100%, rgba(232, 54, 79, .08), transparent 70%);
+}
+.site-head { box-shadow: inset 0 -3px 0 var(--season-a); }
+
+/* The home hero gets one seasonal touch of its own (keyed off <main>, which always names the contest shown):
+   bats at Halloween, slow snow at Christmas. */
+main[data-season='halloween'] .hero::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='260'%3E%3Cg fill='%23b9a6ff' fill-opacity='.32'%3E%3Cpath transform='translate(300 58) rotate(-10) scale(1.3)' d='M0 2C-2-1-4-2-5-1C-6-4-9-5-14-3C-11-2-10 1-10 3C-8 1-6 2-5 4C-4 2-2 2 0 5C2 2 4 2 5 4C6 2 8 1 10 3C10 1 11-2 14-3C9-5 6-4 5-1C4-2 2-1 0 2Z'/%3E%3Cpath transform='translate(345 92) rotate(8) scale(0.8)' d='M0 2C-2-1-4-2-5-1C-6-4-9-5-14-3C-11-2-10 1-10 3C-8 1-6 2-5 4C-4 2-2 2 0 5C2 2 4 2 5 4C6 2 8 1 10 3C10 1 11-2 14-3C9-5 6-4 5-1C4-2 2-1 0 2Z'/%3E%3Cpath transform='translate(70 200) rotate(-4) scale(0.9)' d='M0 2C-2-1-4-2-5-1C-6-4-9-5-14-3C-11-2-10 1-10 3C-8 1-6 2-5 4C-4 2-2 2 0 5C2 2 4 2 5 4C6 2 8 1 10 3C10 1 11-2 14-3C9-5 6-4 5-1C4-2 2-1 0 2Z'/%3E%3C/g%3E%3C/svg%3E") right top / 420px no-repeat; }
+main[data-season='christmas'] .hero::before {
+  inset: -240px 0 0; opacity: .75;
+  background-image: radial-gradient(2.5px 2.5px at 8% 12%, #fff, transparent), radial-gradient(2px 2px at 22% 48%, #fff, transparent), radial-gradient(3px 3px at 37% 20%, #fff, transparent), radial-gradient(2px 2px at 51% 66%, #fff, transparent), radial-gradient(2.5px 2.5px at 64% 34%, #fff, transparent), radial-gradient(2px 2px at 79% 80%, #fff, transparent), radial-gradient(3px 3px at 91% 14%, #fff, transparent), radial-gradient(2px 2px at 14% 86%, #fff, transparent), radial-gradient(2.5px 2.5px at 44% 92%, #fff, transparent), radial-gradient(2px 2px at 71% 6%, #fff, transparent);
+  background-size: 100% 240px;
+  animation: snowfall 16s linear infinite; }
+@keyframes snowfall { to { transform: translateY(240px); } }
+@media (prefers-reduced-motion: reduce) { :root .hero::before { animation: none; } }

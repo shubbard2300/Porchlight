@@ -91,7 +91,7 @@ export default async function HousePage({ params, searchParams }: Props) {
   const where = house.showExactAddress ? house.address : `Near ${house.neighborhood ?? 'the neighborhood'}. The exact spot is shared when you check in.`;
 
   return (
-    <main className="wrap stack" style={{ gap: 28 }}>
+    <main className="wrap stack" style={{ gap: 28 }} data-season={theme?.look}>
       <Link href={`/?season=${house.season}#map`} className="small">← Back to the {season ? `${season.name} ${season.year}` : ''} map</Link>
       {house.status !== 'APPROVED' && <p className="notice warn">Only you can see this page until the house is approved.</p>}
       <div className={styles.layout}>

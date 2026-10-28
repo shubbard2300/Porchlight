@@ -22,7 +22,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
   const unbracketed = houses.filter((h) => !getBracket(h.bracket));
 
   return (
-    <main className="wrap stack" style={{ gap: 30 }}>
+    <main className="wrap stack" style={{ gap: 30 }} data-season={theme.look}>
       <nav className="tabs" aria-label="Holiday contests">
         {seasons.map((s) => (
           <Link key={s.key} href={`/leaderboard?season=${s.key}`} aria-current={s.key === season.key ? 'page' : undefined}>
