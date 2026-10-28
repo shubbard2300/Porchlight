@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { APPROVAL_XP } from '@/lib/rewards';
 import { requireAdmin } from '@/lib/auth';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
+import { approvedEmail, rejectedEmail, removedEmail, testAdminEmail } from '@/lib/emails';
 import { geocodeAddress } from '@/lib/geocode';
 import type { FormState } from '@/lib/forms';
 import { deleteHouse } from '@/lib/housePhotos';
@@ -31,10 +32,9 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
   await sendEmail({
     to: before.owner.email,
     kind: decision === 'APPROVED' ? 'approved' : 'rejected',
-    subject: decision === 'APPROVED' ? `${before.name} is live on Porchlight` : `About your ${before.name} submission`,
-    text: decision === 'APPROVED'
-      ? [`Hi ${displayName(before.owner)},`, '', `${before.name} is now on the ${season?.name ?? ''} map. You earned ${APPROVAL_XP} XP and the Lamplighter badge.`, note ? `\nNote from the team: ${note}` : '', '', appUrl('/')].join('\n')
-      : [`Hi ${displayName(before.owner)},`, '', `We couldn't publish ${before.name} yet.`, note ? `Reason: ${note}` : '', '', `You can post it again any time: ${appUrl('/submit')}`].join('\n'),
+    ...(decision === 'APPROVED'
+      ? approvedEmail({ name: displayName(before.owner), house: before.name, season: season?.name ?? '', xp: APPROVAL_XP, note }, appUrl)
+      : rejectedEmail({ name: displayName(before.owner), house: before.name, note }, appUrl)),
   });
   revalidatePath('/admin', 'layout');
   revalidatePath('/');
@@ -50,8 +50,7 @@ export async function removeHouse(id: string, rawNote: string) {
   await sendEmail({
     to: house.owner.email,
     kind: 'removed',
-    subject: `${house.name} was removed from Porchlight`,
-    text: [`Hi ${displayName(house.owner)},`, '', `We removed ${house.name} from Porchlight.`, note ? `Reason: ${note}` : '', '', `You can post your house again any time: ${appUrl('/submit')}`].join('\n'),
+    ...removedEmail({ name: displayName(house.owner), house: house.name, note }, appUrl),
   });
   revalidatePath('/admin', 'layout');
   revalidatePath('/');
@@ -88,6 +87,6 @@ export async function saveSettings(_prev: FormState, fd: FormData): Promise<Form
 
 export async function sendTestEmail() {
   await requireAdmin();
-  await notifyAdmin('Porchlight test email', `This is a test from Porchlight. If you can read this, form notifications reach this inbox.\n\n${appUrl('/admin/inbox')}`, 'test');
+  await notifyAdmin(testAdminEmail(appUrl), 'test');
   revalidatePath('/admin', 'layout');
 }

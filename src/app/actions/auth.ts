@@ -8,6 +8,7 @@ import { db } from '@/lib/db';
 import { SIGNUP_BONUS_XP } from '@/lib/rewards';
 import { applyBootstrapAdmin, endSession, isBootstrapAdmin, startSession } from '@/lib/auth';
 import { appUrl, emailDeliveryConfigured, notifyAdmin, sendEmail } from '@/lib/email';
+import { linkEmail, newMemberAdminEmail, welcomeEmail } from '@/lib/emails';
 import { safeNext, type FormState } from '@/lib/forms';
 import { consumeToken, issueToken, linkFor, sentRecently, TOKEN_TTL_MIN } from '@/lib/tokens';
 import { displayName } from '@/lib/users';
@@ -33,15 +34,7 @@ async function sendLink(user: User, purpose: TokenPurpose, next: string): Promis
   const sent = await sendEmail({
     to: user.email,
     kind: verify ? 'verify' : 'login',
-    subject: verify ? 'Confirm your email for Porchlight' : 'Your Porchlight sign-in link',
-    text: [
-      `Hi ${displayName(user)},`,
-      '',
-      verify ? 'Tap the link below to confirm it’s you and open your profile.' : 'Tap the link below to sign in.',
-      link,
-      '',
-      `The link works once and expires in ${verify ? '24 hours' : `${TOKEN_TTL_MIN.LOGIN} minutes`}. If you didn't ask for it, you can ignore this email.`,
-    ].join('\n'),
+    ...linkEmail({ name: displayName(user), verify, link, expires: verify ? '24 hours' : `${TOKEN_TTL_MIN.LOGIN} minutes` }),
   });
 
   // Local development without an email service: show the link on screen so the flow can be tested.
@@ -122,31 +115,24 @@ export async function confirmLink(fd: FormData) {
   if (firstTime) {
     const host = user.accountType === 'HOST';
     await notifyAdmin(
-      `New ${host ? 'host' : 'viewer'}: ${user.username}`,
-      [
-        `${user.username} <${user.email}> verified their email and joined as a ${host ? 'host / decorator' : 'viewer / rater'}.`,
-        host ? `Property location: ${user.propertyAddress ?? 'not given yet'}` : '',
-        `Invited by: ${user.referredBy ? `${user.referredBy.username} <${user.referredBy.email}>` : 'nobody'}`,
-        `Email updates: ${user.marketingOptIn ? 'yes' : 'no'}`,
-        '',
-        `Manage users: ${appUrl('/admin/users')}`,
-      ].filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n'),
+      newMemberAdminEmail(
+        {
+          username: user.username,
+          email: user.email,
+          host,
+          propertyAddress: user.propertyAddress,
+          invitedBy: user.referredBy ? `${user.referredBy.username} <${user.referredBy.email}>` : null,
+          marketingOptIn: user.marketingOptIn,
+        },
+        appUrl,
+      ),
       'signup',
       user.email,
     );
     await sendEmail({
       to: user.email,
       kind: 'welcome',
-      subject: 'Welcome to Porchlight',
-      text: [
-        `Hi ${user.username},`,
-        '',
-        `You're in. Your welcome gift: ${SIGNUP_BONUS_XP} XP and the Porch Pass badge.`,
-        host ? 'Finish your host profile with your property and this season’s decorations, then enter the contest.' : 'Add a profile photo, then head out and find some lights.',
-        `Invite neighbors with your code ${user.referralCode}.`,
-        '',
-        appUrl('/profile'),
-      ].join('\n'),
+      ...welcomeEmail({ username: user.username, host, bonusXp: SIGNUP_BONUS_XP, referralCode: user.referralCode }, appUrl),
     });
   }
 

@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
     "sign-in-link": "tsx scripts/sign-in-link.ts",
+    "email-preview": "tsx scripts/email-preview.ts",
     "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
   "dependencies": {
