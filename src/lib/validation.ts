@@ -4,6 +4,7 @@ import { CONTACT_TOPICS } from './contact';
 import { CONTRIBUTIONS, HOUSE_TAGS } from './houseOptions';
 import { isKind } from './visits';
 import { PITSTOP_CATEGORIES } from './pitstops';
+import { MAX_SPONSOR_DOLLARS } from './pot';
 
 export { CONTRIBUTIONS, HOUSE_TAGS };
 
@@ -171,4 +172,11 @@ export const blockSchema = z.object({
   lng: optionalCoord(-180, 180),
   featured: checkbox,
   active: checkbox,
+});
+
+export const sponsorSchema = z.object({
+  season: z.string().min(1, 'Pick a contest.'),
+  amount: z.coerce.number('Enter an amount.').min(1, 'Enter at least $1.').max(MAX_SPONSOR_DOLLARS, `Keep it under $${MAX_SPONSOR_DOLLARS.toLocaleString('en-US')}.`),
+  merchantId: z.string().optional().or(z.literal('')),
+  sponsorName: z.string().trim().max(80, 'Keep this under 80 characters.').optional().or(z.literal('')),
 });

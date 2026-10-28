@@ -9,6 +9,7 @@ export function AdminNav({ pending }: { pending: number }) {
     ['/admin', 'Overview'],
     ['/admin/submissions', 'Submissions', pending],
     ['/admin/users', 'Users'],
+    ['/admin/payments', 'Prize pot'],
     ['/admin/merchants', 'Pitstops'],
     ['/admin/blocks', 'Anchor blocks'],
     ['/admin/inbox', 'Form inbox'],

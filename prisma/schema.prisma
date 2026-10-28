@@ -83,6 +83,7 @@ model User {
   xpBoostUntil   DateTime?
   ledCaravans    Caravan[]       @relation("CaravanLeader")
   caravanMembers CaravanMember[]
+  potPayments    PotPayment[]
 }
 
 /// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
@@ -137,6 +138,7 @@ model House {
   updatedAt         DateTime     @updatedAt
   votes             Vote[]
   checkIns          CheckIn[]
+  potPayments       PotPayment[]
 
   @@index([season, status])
   @@index([season, bracket])
@@ -248,21 +250,22 @@ model EmailLog {
 
 /// A local business sponsoring the contest. Admins add these until sponsorships can be bought online.
 model Merchant {
-  id        String        @id @default(cuid())
-  name      String
-  category  String
-  tier      PitstopTier   @default(SILVER)
-  address   String
-  lat       Float?
-  lng       Float?
+  id          String        @id @default(cuid())
+  name        String
+  category    String
+  tier        PitstopTier   @default(SILVER)
+  address     String
+  lat         Float?
+  lng         Float?
   /// The deal shown on the map, e.g. "20% off hot cocoa after 5 pm".
-  offer     String
-  hours     String?
-  website   String?
-  active    Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  scans     PitstopScan[]
+  offer       String
+  hours       String?
+  website     String?
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  scans       PitstopScan[]
+  potPayments PotPayment[]
 }
 
 /// A visitor scanning a merchant's counter QR. Starts an XP boost; also tells the merchant how much foot traffic the contest sent.
@@ -326,4 +329,42 @@ model CaravanMember {
 
   @@unique([caravanId, userId])
   @@index([userId])
+}
+
+enum PotSource {
+  HOST
+  SPONSOR
+}
+
+enum PotPaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  EXPIRED
+}
+
+/// Money in a season's prize pot. Hosts pay their optional pledge through Stripe Checkout once their
+/// house is approved; sponsors' additions are recorded by an admin. Only PAID rows count toward the pot.
+model PotPayment {
+  id                    String           @id @default(cuid())
+  season                String
+  source                PotSource        @default(HOST)
+  amountCents           Int
+  status                PotPaymentStatus @default(PENDING)
+  houseId               String?
+  house                 House?           @relation(fields: [houseId], references: [id], onDelete: SetNull)
+  userId                String?
+  user                  User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// For sponsor additions: the pitstop that put in the money, or just a name.
+  merchantId            String?
+  merchant              Merchant?        @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  sponsorName           String?
+  stripeSessionId       String?          @unique
+  stripePaymentIntentId String?          @unique
+  createdAt             DateTime         @default(now())
+  paidAt                DateTime?
+  refundedAt            DateTime?
+
+  @@index([season, status])
+  @@index([houseId])
 }

@@ -3,4 +3,4 @@ export const OWNER_NAME = 'Porchlight LLC';
 export const CONTACT_EMAIL = 'hello@porchlightcontest.com';
 export const SITE_URL = 'https://www.porchlightcontest.com';
 /** Bump this whenever the wording of a legal page changes. */
-export const LEGAL_UPDATED = 'October 27, 2026';
+export const LEGAL_UPDATED = 'October 28, 2026';

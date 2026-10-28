@@ -13,6 +13,8 @@ import { bracketsFor } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
 import { crowdCounts } from '@/lib/crowdCounts';
 import { seasonTheme } from '@/lib/theme';
+import { dollars } from '@/lib/pot';
+import { potTotal, unpaidPledgeCents } from '@/lib/potServer';
 import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
 
 const STEPS: [Icon3DName, string, string][] = [
@@ -20,6 +22,11 @@ const STEPS: [Icon3DName, string, string][] = [
   ['camera', 'Neighbors check in and score', 'Visitors prove they stopped by with their location or the porch QR sign, then score creativity, lighting, story and sound.'],
   ['trophy', 'Most-loved wins the pot', 'Only verified likes count. The top porch takes the prize, and every voter keeps their XP and badges.'],
 ];
+
+const potFrom = (hosts: number, sponsors: number) => [
+  hosts && `${hosts} ${hosts === 1 ? 'host' : 'hosts'}`,
+  sponsors && `${sponsors} ${sponsors === 1 ? 'sponsor' : 'sponsors'}`,
+].filter(Boolean).join(' and ');
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ season?: string; bracket?: string }> }) {
   const today = contestToday();
@@ -30,7 +37,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const p = phase(season, today);
   const label = phaseLabel(season, today);
   const houses = await seasonStandings(season.key);
-  const pot = await db.house.aggregate({ where: { season: season.key, status: 'APPROVED' }, _sum: { contributionCents: true } });
+  const [pot, pledged] = await Promise.all([potTotal(season.key), unpaidPledgeCents(season.key)]);
   const brackets = bracketsFor(season.name).map((b) => ({ ...b, count: houses.filter((h) => h.bracket === b.key).length }));
   const bracket = brackets.find((b) => b.key === query.bracket && b.count > 0);
   // Inside a bracket, ranks are within that bracket: that's the race those houses are in.
@@ -104,8 +111,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           <div className="pot">
             <Icon3D name="money" size={48} />
             <div>
-              <b className="num">${((pot._sum.contributionCents ?? 0) / 100).toLocaleString('en-US')}</b>
-              <div className="muted small">pledged to the pot by {houses.length} {houses.length === 1 ? 'house' : 'houses'}</div>
+              {pot.paidCents > 0 ? (
+                <>
+                  <b className="num">{dollars(pot.paidCents)}</b>
+                  <div className="muted small">
+                    in the pot from {potFrom(pot.hosts, pot.sponsors)}
+                    {pledged > 0 && <> · {dollars(pledged)} more pledged</>} · <Link href="/rules">Official rules</Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <b className="num">{dollars(pledged)}</b>
+                  <div className="muted small">pledged to the pot · free entries welcome · <Link href="/rules">Official rules</Link></div>
+                </>
+              )}
             </div>
           </div>
           {p !== 'final' && (

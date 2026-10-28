@@ -28,10 +28,10 @@ export default function Terms() {
 
       <h2>Contest rules and the prize pot</h2>
       <ul>
-        <li>Each season (such as Halloween or Christmas) runs on the dates shown on the site. Hosts may contribute to that season&apos;s pot when they enter. Contributions are not refundable once a house is approved, except where the law requires or the season is cancelled.</li>
-        <li>The house with the most verified likes when voting closes wins the pot. Ties are split evenly. We may disqualify entries or votes that break these terms, and our decision on results is final.</li>
+        <li>Each season (such as Halloween or Christmas) runs on the dates shown on the site. Entering is free. Once their house is approved, hosts may choose to pay into that season&apos;s pot through Stripe; this never affects voting or results. Contributions are not refundable, except where the law requires, if we remove an entry without a rules violation, or if the season is cancelled.</li>
+        <li>The house with the most verified likes when voting closes wins the pot, with ties decided as the official rules describe. We may disqualify entries or votes that break these terms, and our decision on results is final.</li>
         <li>We will contact the winner by email. The winner may need to confirm their identity and eligibility, and is responsible for any taxes on the prize.</li>
-        <li>Official rules for each season may add details, and they control if they differ from this summary.</li>
+        <li>The <Link href="/rules">official contest rules</Link> add details, and they control if they differ from this summary.</li>
         <li>The contest is open to legal residents of the United States and is void where prohibited or restricted by law.</li>
         <li>Rewards for voters (such as XP and badges) have no cash value.</li>
       </ul>

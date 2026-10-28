@@ -69,7 +69,7 @@ export function submissionReceivedEmail(o: { name: string; house: string; season
   };
 }
 
-export function approvedEmail(o: { name: string; house: string; season: string; xp: number; note: string | null }, url: Link): Email {
+export function approvedEmail(o: { name: string; house: string; season: string; xp: number; note: string | null; pledge?: string | null }, url: Link): Email {
   return {
     subject: `${o.house} is live on Porchlight`,
     content: {
@@ -78,7 +78,10 @@ export function approvedEmail(o: { name: string; house: string; season: string; 
       accent: 'candy',
       heading: `${o.house} is live!`,
       greeting: `Hi ${o.name},`,
-      body: [`${o.house} is now on the ${o.season} map. You earned ${o.xp} XP and the Lamplighter badge.`],
+      body: [
+        `${o.house} is now on the ${o.season} map. You earned ${o.xp} XP and the Lamplighter badge.`,
+        ...(o.pledge ? [`You pledged ${o.pledge} to the prize pot. Whenever you're ready, you can pay it by card from your profile. It's optional, and it never affects votes.`] : []),
+      ],
       ...(o.note && { quote: { label: 'Note from the team', text: o.note } }),
       button: { label: 'See it on the map', url: url('/') },
     },
