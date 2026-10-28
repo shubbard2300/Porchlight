@@ -15,6 +15,7 @@ import { SCORE_CATEGORIES, averageScore, formatDistance } from '@/lib/visits';
 import { MIN_SQUAD_REVIEWERS, squadReview } from '@/lib/caravans';
 import { BOOST_HOURS, TIERS, getCategory, nearestPitstop } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
+import { critterFor } from '@/lib/hunt';
 import { VisitPanel, type VisitState } from '@/components/VisitPanel';
 import styles from './house.module.css';
 
@@ -48,7 +49,7 @@ export default async function HousePage({ params, searchParams }: Props) {
   const season = getSeason(house.season);
   const theme = season ? seasonTheme(season) : null;
   const verified = { houseId: id, verifiedAt: { not: null } };
-  const [likes, visitors, avg, comments, myCheckIn, myVote, squadVotes] = await Promise.all([
+  const [likes, visitors, avg, comments, myCheckIn, myVote, squadVotes, myCatch] = await Promise.all([
     db.vote.count({ where: { ...verified, liked: true } }),
     db.checkIn.groupBy({ by: ['userId'], where: { houseId: id } }).then((g) => g.length),
     db.vote.aggregate({ where: verified, _avg: { creativity: true, lighting: true, storytelling: true, sound: true }, _count: { creativity: true } }),
@@ -64,7 +65,9 @@ export default async function HousePage({ params, searchParams }: Props) {
       where: { ...verified, caravanId: { not: null } },
       select: { liked: true, comment: true, creativity: true, lighting: true, storytelling: true, sound: true, caravan: { select: { id: true, name: true } } },
     }),
+    user ? db.arCatch.findUnique({ where: { userId_houseId: { userId: user.id, houseId: id } }, select: { id: true } }) : null,
   ]);
+  const critter = critterFor(house.id, season?.name);
   const squads = [...Map.groupBy(squadVotes, (v) => v.caravan!.id).values()]
     .filter((vs) => vs.length >= MIN_SQUAD_REVIEWERS)
     .map((vs) => ({ caravan: vs[0].caravan!, ...squadReview(vs) }))
@@ -193,6 +196,21 @@ export default async function HousePage({ params, searchParams }: Props) {
             flash={checkin ? FLASH[checkin] ?? null : null}
             myVote={myVote && { liked: myVote.liked, comment: myVote.comment, creativity: myVote.creativity, lighting: myVote.lighting, storytelling: myVote.storytelling, sound: myVote.sound }}
           />
+          {house.status === 'APPROVED' && votingOpen(house.season) && (
+            <Link href={myCatch ? '/hunt' : `/house/${house.id}/hunt`} className={styles.pitstop}>
+              <span className={styles.pitBadge} style={{ background: 'var(--lilac)' }}><Icon3D name={critter.icon} size={34} /></span>
+              <span className="stack" style={{ gap: 2 }}>
+                <span className={styles.pitLabel}>AR porch hunt{myCatch ? ' · caught' : ''}</span>
+                <b>{critter.name} the {critter.kind} is hiding here</b>
+                <span className="small muted">
+                  {myCatch ? 'Already in your collection. See everyone you’ve caught.'
+                    : state === 'own' ? 'Visitors can catch them with their camera after checking in.'
+                    : myCheckIn ? 'You’re checked in. Open your camera and find them for XP.'
+                    : 'Check in, then open your camera and find them for XP.'}
+                </span>
+              </span>
+            </Link>
+          )}
           {pitstop && (
             <Link href={`/pitstop/${pitstop.id}`} className={styles.pitstop}>
               <span className={styles.pitBadge} style={{ background: TIERS[pitstop.tier].color }}><Icon3D name={getCategory(pitstop.category).icon} size={30} /></span>

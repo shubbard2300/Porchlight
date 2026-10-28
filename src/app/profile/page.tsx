@@ -120,6 +120,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
       <section className="stats">
         <div className="stat"><span className="label">Invite code</span><b className="num" style={{ fontSize: 20, fontFamily: 'var(--font-mono)' }}>{user.referralCode}</b><span className="small muted">You both get XP after their first verified visit</span></div>
+        <div className="stat"><span className="label">Critters caught</span><b className="num">{await db.arCatch.count({ where: { userId: user.id } })}</b><Link className="small" href="/hunt">My collection</Link></div>
         {isHost && <div className="stat"><span className="label">Houses entered</span><b className="num">{houses.length}</b></div>}
       </section>
 
