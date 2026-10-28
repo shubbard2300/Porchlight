@@ -122,16 +122,16 @@ model EmailToken {
 }
 
 model House {
-  id                String       @id @default(cuid())
+  id                String        @id @default(cuid())
   ownerId           String
-  owner             User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner             User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   season            String
   name              String
   address           String
   neighborhood      String?
   lat               Float?
   lng               Float?
-  showExactAddress  Boolean      @default(true)
+  showExactAddress  Boolean       @default(true)
   tags              String[]
   /// Category bracket key from src/lib/brackets.ts. Null for entries made before brackets existed.
   bracket           String?
@@ -141,16 +141,17 @@ model House {
   /// Public URLs of the house photos in display order. Kept in sync with `photos` so cards need no join.
   photoUrls         String[]
   photos            HousePhoto[]
-  contributionCents Int          @default(0)
-  status            HouseStatus  @default(PENDING)
+  contributionCents Int           @default(0)
+  status            HouseStatus   @default(PENDING)
   reviewNote        String?
   reviewedAt        DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   votes             Vote[]
   checkIns          CheckIn[]
   potPayments       PotPayment[]
   arCatches         ArCatch[]
+  porchTrigger      PorchTrigger?
   /// When the host was last pinged about a like, so a busy night sends one alert per half hour, not one per vote.
   lastLikeAlertAt   DateTime?
 
@@ -412,4 +413,23 @@ model ArCatch {
 
   @@unique([userId, houseId])
   @@index([userId, season])
+}
+
+/// A host's smart-light hook: Porchlight POSTs to this URL (IFTTT, Home Assistant, Zapier...) when
+/// visitors check in, like the house or catch its critter, so the lights can flash a greeting.
+model PorchTrigger {
+  id          String    @id @default(cuid())
+  houseId     String    @unique
+  house       House     @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  url         String
+  /// Signs each call (X-Porchlight-Signature) so a receiver can check it came from us.
+  secret      String
+  onCheckIn   Boolean   @default(true)
+  onLike      Boolean   @default(true)
+  onCatch     Boolean   @default(true)
+  enabled     Boolean   @default(true)
+  lastFiredAt DateTime?
+  lastStatus  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

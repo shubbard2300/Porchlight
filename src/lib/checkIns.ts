@@ -9,6 +9,7 @@ import { contestToday, getSeason, phase } from './seasons';
 import { CHECKIN_REPEAT_HOURS } from './visits';
 import { after } from 'next/server';
 import { alertSquadCheckIn } from './alertTriggers';
+import { lightsAfter } from './porchLightServer';
 
 export function votingOpen(seasonKey: string) {
   const s = getSeason(seasonKey);
@@ -48,6 +49,7 @@ export async function recordCheckIn(userId: string, houseId: string, method: Che
     db.checkIn.create({ data: { userId, houseId, method, distanceM, caravanId } }),
     ...(xp ? [db.user.update({ where: { id: userId }, data: { xp: { increment: boostedXp(xp, visitor.xpBoostUntil) } } })] : []),
   ]);
+  lightsAfter(houseId, 'checkin', userId);
   if (caravanId) after(() => alertSquadCheckIn(caravanId, userId, houseId).catch((e) => console.error('[push] squad alert', e)));
   return { first: before === 0, squadBonus: squadmateHere ? SQUAD_BONUS_XP : 0 };
 }

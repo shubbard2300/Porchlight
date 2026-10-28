@@ -142,6 +142,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                     <Link href={`/house/${h.id}/sign`} className="btn sm primary">Print porch QR sign</Link>
                     {h.status === 'APPROVED' && <Link href={`/house/${h.id}`} className="btn sm ghost">View house page</Link>}
                     {h.status === 'APPROVED' && <Link href={`/house/${h.id}/stats`} className="btn sm ghost">My flex stats</Link>}
+                    {h.status === 'APPROVED' && <Link href={`/house/${h.id}/lights`} className="btn sm ghost">Porch lights</Link>}
                   </div>
                   <DeleteEntryButton id={h.id} name={h.name} />
                 </div>

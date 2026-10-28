@@ -8,6 +8,7 @@ import { critterFor } from '@/lib/hunt';
 import { boostedXp } from '@/lib/pitstops';
 import { AR_CATCH_XP } from '@/lib/rewards';
 import { getSeason } from '@/lib/seasons';
+import { lightsAfter } from '@/lib/porchLightServer';
 
 export type CatchResult = { ok: true; xp: number; already: boolean } | { ok: false; error: string };
 
@@ -31,6 +32,7 @@ export async function catchCritter(houseId: string): Promise<CatchResult> {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') return { ok: true, xp: 0, already: true };
     throw err;
   }
+  lightsAfter(houseId, 'catch', user.id);
   // No revalidatePath: it would re-render the hunt page into its "already caught" state before the
   // celebration shows. Every page that lists catches is dynamic, so the next visit is fresh anyway.
   return { ok: true, xp, already: false };
