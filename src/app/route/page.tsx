@@ -8,6 +8,7 @@ import { seasonStandings } from '@/lib/seasonStandings';
 import { contestToday, defaultSeason, getSeason, visibleSeasons } from '@/lib/seasons';
 import { seasonTheme } from '@/lib/theme';
 import { houseValue } from '@/lib/routeWeaver';
+import { placedBlocks } from '@/lib/blockStandings';
 import { Icon3D } from '@/components/Icon3D';
 import { RouteWeaver, type RouteHouse, type RoutePitstop } from './RouteWeaver';
 
@@ -21,13 +22,14 @@ export default async function RoutePage({ searchParams }: { searchParams: Promis
   const requested = getSeason(query.season);
   const season = requested && seasons.includes(requested) ? requested : defaultSeason(today);
   const theme = seasonTheme(season);
-  const [standings, crowd, merchants] = await Promise.all([
+  const [standings, crowd, merchants, blocks] = await Promise.all([
     seasonStandings(season.key),
     crowdCounts({ season: season.key }),
     db.merchant.findMany({
       where: { active: true, lat: { not: null }, lng: { not: null } },
       select: { id: true, name: true, tier: true, offer: true, lat: true, lng: true },
     }),
+    placedBlocks(),
   ]);
 
   const houses: RouteHouse[] = standings.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
@@ -73,7 +75,8 @@ export default async function RoutePage({ searchParams }: { searchParams: Promis
           pitstops={pitstops}
           brackets={brackets.map((b) => ({ key: b.key, label: b.label, icon: b.icon }))}
           seasonIcon={theme.icon}
-          initialFrom={houses.some((h) => h.id === query.from) ? query.from : undefined}
+          blocks={blocks.map((b) => ({ id: b.id, name: b.name, lat: b.lat, lng: b.lng }))}
+          initialFrom={houses.some((h) => h.id === query.from) || blocks.some((b) => `block:${b.id}` === query.from) ? query.from : undefined}
         />
       )}
     </main>

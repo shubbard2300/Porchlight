@@ -85,3 +85,4 @@
 .popTier { justify-self: start; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 8px; color: var(--ink); }
 .popOffer { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
 .legendGift { flex: none; }
+.legend i.legendBlock { border-radius: 4px; border: 2px dashed #c79a1c; background: rgba(255, 211, 107, 0.35); }

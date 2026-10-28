@@ -160,3 +160,15 @@ export const merchantSchema = z.object({
   lng: optionalCoord(-180, 180),
   active: checkbox,
 });
+
+export const blockSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2, 'Give the block a name.').max(60),
+  blurb: z.string().trim().min(10, 'Add a sentence on why it’s worth the trip.').max(240),
+  address: z.string().trim().min(5, 'Add a street or intersection to center the zone on.').max(120),
+  radiusM: z.coerce.number().int('Use whole meters.').min(100, 'Use at least 100 m.').max(2000, 'Keep it under 2,000 m.'),
+  lat: optionalCoord(-90, 90),
+  lng: optionalCoord(-180, 180),
+  featured: checkbox,
+  active: checkbox,
+});

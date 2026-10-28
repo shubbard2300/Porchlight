@@ -3,11 +3,13 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { HeroHouse } from '@/components/HeroHouse';
-import { HouseMap, type MapHouse, type MapPitstop } from '@/components/HouseMap';
+import { HouseCard } from '@/components/HouseCard';
+import { HouseMap, type MapBlock, type MapHouse, type MapPitstop } from '@/components/HouseMap';
+import { housesIn, placedBlocks } from '@/lib/blockStandings';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import { StringLights, Ticker } from '@/components/StringLights';
 import { publicPin } from '@/lib/mapPins';
-import { bracketsFor, getBracket } from '@/lib/brackets';
+import { bracketsFor } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
 import { crowdCounts } from '@/lib/crowdCounts';
 import { seasonTheme } from '@/lib/theme';
@@ -53,6 +55,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     where: { active: true, lat: { not: null }, lng: { not: null } },
     select: { id: true, name: true, category: true, tier: true, offer: true, address: true, lat: true, lng: true },
   })).map((m) => ({ ...m, lat: m.lat!, lng: m.lng! }));
+  const blocks = (await placedBlocks()).map((b) => ({ ...b, inside: housesIn(b, houses) }));
+  const mapBlocks: MapBlock[] = blocks.map(({ inside, ...b }) => ({ ...b, houses: inside.length }));
+  const featured = blocks.filter((b) => b.featured);
   const user = await currentUser();
 
   return (
@@ -77,7 +82,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             ))}
           </nav>
         )}
-        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} blocks={mapBlocks} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
         {pins.length > 1 && (
           <Link href={`/route?season=${season.key}`} className="btn primary" style={{ marginTop: 14 }}><Icon3D name="map" size={22} />Plan my light tour</Link>
         )}
@@ -128,6 +133,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         </section>
       )}
 
+      {featured.length > 0 && (
+        <section className="stack" style={{ gap: 18 }} aria-labelledby="blocks">
+          <h2 id="blocks" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>Anchor blocks: start here</h2>
+          <div className="block-grid">
+            {featured.map((b) => (
+              <Link key={b.id} href={`/block/${b.id}?season=${season.key}`} className="block-card">
+                <span className="label">{b.inside.length} {b.inside.length === 1 ? 'house' : 'houses'} · {b.inside.reduce((n, h) => n + h.likes, 0)} likes</span>
+                <b>{b.name}</b>
+                <span className="small muted">{b.blurb}</span>
+                {b.inside[0] && <span className="small block-lead"><Icon3D name="trophy" size={18} /> Leading: {b.inside[0].name}</span>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {houses.length === 0 ? (
         <div className="empty">
           <Icon3D name="house" size={72} />
@@ -142,22 +163,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             <Link href={`/leaderboard?season=${season.key}`} className="btn sm ghost"><Icon3D name="trophy" size={20} />Full leaderboard</Link>
           </div>
           <div className="grid">
-            {ranked.map((h, i) => (
-              <article key={h.id} className={`house-card reveal${i === 0 ? ' leader' : ''}`}>
-                <div className="house-photo">
-                  {h.photoUrls[0] ? <img className="photo" src={h.photoUrls[0]} alt={`${h.name} at night`} loading="lazy" /> : <Icon3D name={theme.icon} size={96} />}
-                  <span className="rank">{i < 3 ? <Icon3D name={i === 0 ? 'trophy' : 'medal'} size={20} /> : null}#{i + 1}</span>
-                  <span className="likes num" title="Verified likes"><Icon3D name="heart" size={18} />{h.likes}</span>
-                </div>
-                <div className="house-body">
-                  <span className="label">{[getBracket(h.bracket)?.label, h.neighborhood].filter(Boolean).join(' · ') || 'Neighborhood'}</span>
-                  <h3><Link href={`/house/${h.id}`} className="card-link">{h.name}</Link></h3>
-                  <p className="small muted">{h.showExactAddress ? h.address : `Near ${h.neighborhood ?? 'the neighborhood'} (exact spot shown at check-in)`} · lit {h.litFrom}–{h.litUntil}</p>
-                  <p className="small">{h.description}</p>
-                  {h.tags.length > 0 && <div className="row" style={{ gap: 6 }}>{h.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
-                </div>
-              </article>
-            ))}
+            {ranked.map((h, i) => <HouseCard key={h.id} house={h} rank={i + 1} icon={theme.icon} />)}
           </div>
         </section>
       )}
