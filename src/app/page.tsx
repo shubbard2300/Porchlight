@@ -7,6 +7,8 @@ import { HouseMap, type MapHouse } from '@/components/HouseMap';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import { StringLights, Ticker } from '@/components/StringLights';
 import { publicPin } from '@/lib/mapPins';
+import { bracketsFor, getBracket } from '@/lib/brackets';
+import { seasonStandings } from '@/lib/seasonStandings';
 import { seasonTheme } from '@/lib/theme';
 import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
 
@@ -16,20 +18,20 @@ const STEPS: [Icon3DName, string, string][] = [
   ['trophy', 'Most-loved wins the pot', 'Only verified likes count. The top porch takes the prize, and every voter keeps their XP and badges.'],
 ];
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ season?: string; bracket?: string }> }) {
   const today = contestToday();
   const seasons = visibleSeasons(today);
-  const requested = getSeason((await searchParams).season);
+  const query = await searchParams;
+  const requested = getSeason(query.season);
   const season = requested && seasons.includes(requested) ? requested : defaultSeason(today);
   const p = phase(season, today);
   const label = phaseLabel(season, today);
-  const houses = await db.house.findMany({
-    where: { season: season.key, status: 'APPROVED' },
-    include: { _count: { select: { votes: { where: { liked: true, verifiedAt: { not: null } } } } } },
-    orderBy: { createdAt: 'asc' },
-  });
+  const houses = await seasonStandings(season.key);
   const pot = await db.house.aggregate({ where: { season: season.key, status: 'APPROVED' }, _sum: { contributionCents: true } });
-  const ranked = [...houses].sort((a, b) => b._count.votes - a._count.votes);
+  const brackets = bracketsFor(season.name).map((b) => ({ ...b, count: houses.filter((h) => h.bracket === b.key).length }));
+  const bracket = brackets.find((b) => b.key === query.bracket && b.count > 0);
+  // Inside a bracket, ranks are within that bracket: that's the race those houses are in.
+  const ranked = bracket ? houses.filter((h) => h.bracket === bracket.key) : houses;
 
   const theme = seasonTheme(season);
   const pins: MapHouse[] = ranked.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
@@ -40,7 +42,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     ...publicPin({ id: h.id, lat: h.lat, lng: h.lng, showExactAddress: h.showExactAddress }),
     exact: h.showExactAddress,
     photo: h.photoUrls[0] ?? null,
-    likes: h._count.votes,
+    likes: h.likes,
     rank: i + 1,
     lit: `${h.litFrom}–${h.litUntil}`,
   }]);
@@ -57,8 +59,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         ))}
       </nav>
 
-      <section id="map" aria-label={`${season.name} ${season.year} house map`} style={{ scrollMarginTop: 16 }}>
-        <HouseMap key={season.key} houses={pins} icon={theme.icon} seasonLabel={`${season.name} ${season.year}`} unplaced={houses.length - pins.length} />
+      <section id="map" aria-label={`${season.name} ${season.year} house map`} style={{ scrollMarginTop: 16, minWidth: 0 }}>
+        {brackets.some((b) => b.count > 0) && (
+          <nav className="tabs filter-tabs" aria-label="Filter by theme" style={{ marginBottom: 14 }}>
+            <Link href={`/?season=${season.key}#map`} aria-current={!bracket ? 'page' : undefined} scroll={false}><Icon3D name={theme.icon} size={22} />All themes <span className="count">{houses.length}</span></Link>
+            {brackets.filter((b) => b.count > 0).map((b) => (
+              <Link key={b.key} href={`/?season=${season.key}&bracket=${b.key}#map`} aria-current={bracket?.key === b.key ? 'page' : undefined} scroll={false}>
+                <Icon3D name={b.icon} size={22} />{b.label} <span className="count">{b.count}</span>
+              </Link>
+            ))}
+          </nav>
+        )}
+        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} houses={pins} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
       </section>
 
       <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties}>
@@ -115,17 +127,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         </div>
       ) : (
         <section className="stack" style={{ gap: 18 }} aria-labelledby="brightest">
-          <h2 id="brightest" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>{p === 'final' ? 'Final standings' : 'The brightest so far'}</h2>
+          <div className="row spread">
+            <h2 id="brightest" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>{bracket ? bracket.label : p === 'final' ? 'Final standings' : 'The brightest so far'}</h2>
+            <Link href={`/leaderboard?season=${season.key}`} className="btn sm ghost"><Icon3D name="trophy" size={20} />Full leaderboard</Link>
+          </div>
           <div className="grid">
             {ranked.map((h, i) => (
               <article key={h.id} className={`house-card reveal${i === 0 ? ' leader' : ''}`}>
                 <div className="house-photo">
                   {h.photoUrls[0] ? <img className="photo" src={h.photoUrls[0]} alt={`${h.name} at night`} loading="lazy" /> : <Icon3D name={theme.icon} size={96} />}
                   <span className="rank">{i < 3 ? <Icon3D name={i === 0 ? 'trophy' : 'medal'} size={20} /> : null}#{i + 1}</span>
-                  <span className="likes num" title="Verified likes"><Icon3D name="heart" size={18} />{h._count.votes}</span>
+                  <span className="likes num" title="Verified likes"><Icon3D name="heart" size={18} />{h.likes}</span>
                 </div>
                 <div className="house-body">
-                  <span className="label">{h.neighborhood ?? 'Neighborhood'}</span>
+                  <span className="label">{[getBracket(h.bracket)?.label, h.neighborhood].filter(Boolean).join(' · ') || 'Neighborhood'}</span>
                   <h3><Link href={`/house/${h.id}`} className="card-link">{h.name}</Link></h3>
                   <p className="small muted">{h.showExactAddress ? h.address : `Near ${h.neighborhood ?? 'the neighborhood'} (exact spot shown at check-in)`} · lit {h.litFrom}–{h.litUntil}</p>
                   <p className="small">{h.description}</p>

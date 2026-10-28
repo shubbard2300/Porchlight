@@ -37,6 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteNav>
               <Link href="/#map">Map</Link>
               <Link href="/">Houses</Link>
+              <Link href="/leaderboard">Leaderboard</Link>
               {user ? (
                 <>
                   {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
