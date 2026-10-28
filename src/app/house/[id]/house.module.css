@@ -19,3 +19,5 @@
 .comment { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; background: var(--paper); border: var(--edge); border-radius: var(--r-md); padding: 12px 14px; }
 .comment .who { font-weight: 800; font-size: 14px; }
 .ava { width: 36px; height: 36px; border-radius: 11px; border: 2px solid var(--ink); object-fit: cover; display: grid; place-items: center; background: var(--lilac-soft); font-weight: 800; }
+.crowd { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; margin: -8px 2px 0; }
+.crowd i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); flex: none; }

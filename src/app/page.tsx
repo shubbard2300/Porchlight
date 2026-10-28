@@ -9,6 +9,7 @@ import { StringLights, Ticker } from '@/components/StringLights';
 import { publicPin } from '@/lib/mapPins';
 import { bracketsFor, getBracket } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
+import { crowdCounts } from '@/lib/crowdCounts';
 import { seasonTheme } from '@/lib/theme';
 import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
 
@@ -34,6 +35,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const ranked = bracket ? houses.filter((h) => h.bracket === bracket.key) : houses;
 
   const theme = seasonTheme(season);
+  const crowd = await crowdCounts({ season: season.key });
   const pins: MapHouse[] = ranked.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
     id: h.id,
     name: h.name,
@@ -45,6 +47,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     likes: h.likes,
     rank: i + 1,
     lit: `${h.litFrom}–${h.litUntil}`,
+    crowd: crowd[h.id] ?? 0,
   }]);
   const user = await currentUser();
 
@@ -70,7 +73,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             ))}
           </nav>
         )}
-        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} houses={pins} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
       </section>
 
       <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties}>

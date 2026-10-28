@@ -7,6 +7,8 @@ import { votingOpen } from '@/lib/checkIns';
 import { getSeason } from '@/lib/seasons';
 import { getBracket } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
+import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
+import { crowdCounts } from '@/lib/crowdCounts';
 import { seasonTheme } from '@/lib/theme';
 import { avatarUrl, displayName } from '@/lib/users';
 import { SCORE_CATEGORIES, averageScore } from '@/lib/visits';
@@ -66,6 +68,7 @@ export default async function HousePage({ params, searchParams }: Props) {
     creativity: avg._avg.creativity, lighting: avg._avg.lighting, storytelling: avg._avg.storytelling, sound: avg._avg.sound,
   });
   const bracket = getBracket(house.bracket);
+  const here = (await crowdCounts({ houseIds: [house.id] }))[house.id] ?? 0;
   const standings = house.status === 'APPROVED' ? await seasonStandings(house.season) : [];
   const overallPlace = standings.findIndex((h) => h.id === house.id) + 1 || null;
   const bracketPlace = bracket ? standings.filter((h) => h.bracket === bracket.key).findIndex((h) => h.id === house.id) + 1 || null : null;
@@ -130,6 +133,10 @@ export default async function HousePage({ params, searchParams }: Props) {
             <div className="stat"><span className="label">Verified likes</span><b className="num">{likes}</b></div>
             <div className="stat"><span className="label">Visitors</span><b className="num">{visitors}</b></div>
           </div>
+          {house.status === 'APPROVED' && (
+            <p className={styles.crowd}><i style={{ background: CROWD_LEVELS[crowdLevel(here)].color }} />{crowdLine(here)}</p>
+          )}
+          {user && (house.ownerId === user.id || user.role === 'ADMIN') && <Link href={`/house/${house.id}/stats`} className="btn ghost"><Icon3D name="sparkles" size={22} />{house.ownerId === user.id ? 'My flex stats' : 'Host stats'}</Link>}
           <div className="panel stack" style={{ gap: 14 }}>
             <div className="row spread">
               <h2 style={{ fontSize: 20 }}>Scorecard</h2>

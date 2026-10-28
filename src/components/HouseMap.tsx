@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { GeoJSONSource, Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Icon3DName } from './Icon3D';
+import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
 import styles from './HouseMap.module.css';
 
 export type MapHouse = {
@@ -19,7 +20,12 @@ export type MapHouse = {
   likes: number;
   rank: number;
   lit: string;
+  /** Visitors who checked in during the crowd window. */
+  crowd: number;
 };
+
+/** How often an open map refreshes its crowd meter. */
+const CROWD_POLL_MS = 60_000;
 
 /** Free vector tiles from OpenFreeMap: no API key, no usage limits. "fiord" is a dusk-blue style that suits the twilight look. */
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/fiord';
@@ -43,13 +49,14 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       <b class="${styles.popName}">${esc(h.name)}</b>
       <span class="${styles.popMeta}">${esc(where)}</span>
       <span class="${styles.popMeta}">Lit ${esc(h.lit)}</span>
+      <span class="${styles.popCrowd}"><i style="background:${CROWD_LEVELS[crowdLevel(h.crowd)].color}"></i>${esc(crowdLine(h.crowd))}</span>
       <div class="${styles.popFoot}"><span class="${styles.popLikes}"><img src="/icons/3d/heart.webp" alt="" width="16" height="16" />${h.likes} verified ${h.likes === 1 ? 'like' : 'likes'}</span>${directions}</div>
       <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
     </div>
   </div>`;
 }
 
-export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapHouse[]; icon: Icon3DName; seasonLabel: string; unplaced: number }) {
+export function HouseMap({ houses, icon, seasonLabel, unplaced, seasonKey }: { houses: MapHouse[]; icon: Icon3DName; seasonLabel: string; unplaced: number; seasonKey: string }) {
   const el = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -57,6 +64,7 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
     if (!el.current) return;
     let map: MapLibreMap | undefined;
     let cancelled = false;
+    let poll: ReturnType<typeof setInterval> | undefined;
 
     (async () => {
       const [maplibre, style] = await Promise.all([
@@ -64,7 +72,16 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
         fetch(STYLE_URL).then((r) => { if (!r.ok) throw new Error(`map style ${r.status}`); return r.json(); }),
       ]);
       if (cancelled || !el.current) return;
-      const byId = new Map(houses.map((h) => [h.id, h]));
+      const byId = new Map(houses.map((h) => [h.id, { ...h }]));
+      const features = (): GeoJSON.FeatureCollection => ({
+        type: 'FeatureCollection',
+        features: [...byId.values()].map((h) => ({
+          type: 'Feature',
+          id: h.id,
+          properties: { id: h.id, name: h.name, exact: h.exact, rank: h.rank, crowd: crowdLevel(h.crowd) },
+          geometry: { type: 'Point', coordinates: [h.lng, h.lat] },
+        })),
+      });
 
       map = new maplibre.Map({
         container: el.current,
@@ -100,15 +117,7 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
           cluster: true,
           clusterRadius: 44,
           clusterMaxZoom: 13,
-          data: {
-            type: 'FeatureCollection',
-            features: houses.map((h) => ({
-              type: 'Feature',
-              id: h.id,
-              properties: { id: h.id, name: h.name, exact: h.exact, rank: h.rank },
-              geometry: { type: 'Point', coordinates: [h.lng, h.lat] },
-            })),
-          },
+          data: features(),
         });
 
         map.addLayer({
@@ -132,6 +141,14 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
         map.addLayer({
           id: 'pin-glow', type: 'circle', source: 'houses', filter: ['!', ['has', 'point_count']],
           paint: { 'circle-color': '#ffb000', 'circle-opacity': 0.35, 'circle-blur': 0.7, 'circle-radius': 26 },
+        });
+        // Crowd meter: a colored ring around pins where people have checked in recently.
+        map.addLayer({
+          id: 'pin-crowd', type: 'circle', source: 'houses', filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'crowd'], 'quiet']],
+          paint: {
+            'circle-radius': 25, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-width': 5,
+            'circle-stroke-color': ['match', ['get', 'crowd'], 'packed', CROWD_LEVELS.packed.color, 'busy', CROWD_LEVELS.busy.color, CROWD_LEVELS.lively.color],
+          },
         });
         map.addLayer({
           id: 'pins', type: 'circle', source: 'houses', filter: ['!', ['has', 'point_count']],
@@ -182,6 +199,16 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
           const zoom = await (map.getSource('houses') as GeoJSONSource).getClusterExpansionZoom(f.properties.cluster_id);
           map.easeTo({ center: (f.geometry as GeoJSON.Point).coordinates as [number, number], zoom });
         });
+        poll = setInterval(async () => {
+          if (document.hidden || !map) return;
+          try {
+            const counts: Record<string, number> = await (await fetch(`/api/crowd?season=${encodeURIComponent(seasonKey)}`, { cache: 'no-store' })).json();
+            for (const h of byId.values()) h.crowd = counts[h.id] ?? 0;
+            (map.getSource('houses') as GeoJSONSource | undefined)?.setData(features());
+          } catch {
+            // Keep showing the last reading; the next poll tries again.
+          }
+        }, CROWD_POLL_MS);
         map.on('mouseenter', 'clusters', () => { map!.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'clusters', () => { map!.getCanvas().style.cursor = ''; });
       });
@@ -189,9 +216,10 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
 
     return () => {
       cancelled = true;
+      clearInterval(poll);
       map?.remove();
     };
-  }, [houses, icon]);
+  }, [houses, icon, seasonKey]);
 
   return (
     <>
@@ -209,6 +237,13 @@ export function HouseMap({ houses, icon, seasonLabel, unplaced }: { houses: MapH
         )}
         {failed && <div className={styles.emptyNote}>The map couldn&rsquo;t load right now. The house list below has every entry.</div>}
       </div>
+      {houses.length > 0 && (
+        <p className={styles.legend}>
+          <b>Crowd meter</b>
+          {(['lively', 'busy', 'packed'] as const).map((k) => <span key={k}><i style={{ background: CROWD_LEVELS[k].color }} />{CROWD_LEVELS[k].label}</span>)}
+          <span className={styles.legendNote}>Rings show check-ins in the last 30 minutes, updated every minute.</span>
+        </p>
+      )}
       {unplaced > 0 && (
         <p className={styles.unplaced}>{unplaced} more {unplaced === 1 ? 'house is' : 'houses are'} still placing {unplaced === 1 ? 'its pin' : 'their pins'}. You&rsquo;ll find {unplaced === 1 ? 'it' : 'them'} in the list below.</p>
       )}

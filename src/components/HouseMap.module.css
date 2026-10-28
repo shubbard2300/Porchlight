@@ -53,6 +53,8 @@
 .popName { font-family: var(--font-display); font-size: 18px; line-height: 1.2; padding-right: 4px; }
 .popMeta { font-size: 13px; color: var(--text-2); }
 .popFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.popCrowd { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--text-2); }
+.popCrowd i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); flex: none; }
 .popLikes { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; }
 .popLink {
   font-size: 13px; font-weight: 800; text-decoration: none; padding: 4px 12px; border-radius: 999px;
@@ -74,3 +76,9 @@
 @media (max-width: 760px) {
   .frame { height: clamp(360px, 70vh, 560px); border-radius: 22px; }
 }
+
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 12px 4px 0; font-size: 13px; font-weight: 700; color: var(--text-2); }
+.legend b { color: var(--ink); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); }
+.legendNote { font-weight: 500; }
