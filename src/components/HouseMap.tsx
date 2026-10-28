@@ -44,6 +44,7 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       <span class="${styles.popMeta}">${esc(where)}</span>
       <span class="${styles.popMeta}">Lit ${esc(h.lit)}</span>
       <div class="${styles.popFoot}"><span class="${styles.popLikes}"><img src="/icons/3d/heart.webp" alt="" width="16" height="16" />${h.likes} verified ${h.likes === 1 ? 'like' : 'likes'}</span>${directions}</div>
+      <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
     </div>
   </div>`;
 }

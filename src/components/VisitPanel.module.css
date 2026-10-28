@@ -1,0 +1,20 @@
+.panel { display: grid; gap: 16px; }
+.head { display: flex; align-items: center; gap: 12px; }
+.head h2 { font-size: 22px; }
+.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.way { border: var(--edge); border-radius: var(--r-md); padding: 14px 16px; background: var(--paper-2); display: grid; gap: 8px; align-content: start; }
+.way b { font-size: 15.5px; }
+.checked { display: flex; align-items: center; gap: 10px; border: var(--edge); border-radius: var(--r-md); padding: 10px 14px; background: var(--mint-soft); font-weight: 700; }
+.sliders { display: grid; gap: 14px; }
+.slider { display: grid; gap: 4px; }
+.sliderTop { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.sliderTop label { font-weight: 800; font-size: 15px; }
+.sliderTop span { font-size: 13px; color: var(--text-3); }
+.value { font-family: var(--font-display); font-weight: 800; font-size: 20px; min-width: 2ch; text-align: right; }
+.range { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; border-radius: 999px; border: var(--edge); background: linear-gradient(90deg, var(--amber) 0 var(--fill), var(--paper) var(--fill) 100%); cursor: pointer; }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--paper); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.range::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--paper); border: 2.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.comment { width: 100%; min-height: 84px; border: var(--edge); border-radius: var(--r-sm); padding: 10px 12px; background: var(--paper); resize: vertical; }
+.count { font-size: 12.5px; color: var(--text-3); text-align: right; }
+.actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+.love { background: var(--candy); color: #fff; }

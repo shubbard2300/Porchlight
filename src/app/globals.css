@@ -364,3 +364,11 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 }
 @media (max-width: 560px) { .sl-bulb:nth-of-type(2n) { display: none; } }
 .foot-brand svg { flex: none; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255, 244, 228, .35); }
+
+@media print {
+  .site-head, .site-foot { display: none !important; }
+  body { background: #fff; }
+  main.wrap { padding-block: 0; }
+}
+.card-link { text-decoration: none; }
+.card-link:hover { text-decoration: underline; text-decoration-color: var(--amber); }

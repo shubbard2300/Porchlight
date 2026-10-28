@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { CONTACT_TOPICS } from './contact';
 import { CONTRIBUTIONS, HOUSE_TAGS } from './houseOptions';
+import { isKind } from './visits';
 
 export { CONTRIBUTIONS, HOUSE_TAGS };
 
@@ -122,3 +123,21 @@ export function fieldErrors(err: z.ZodError): FieldErrors {
   }
   return out;
 }
+
+const score = z.coerce.number().int().min(1, 'Pick 1 to 10.').max(10, 'Pick 1 to 10.');
+
+export const voteSchema = z.object({
+  houseId: z.string().min(1),
+  liked: z.enum(['yes', 'no']).transform((v) => v === 'yes'),
+  creativity: score,
+  lighting: score,
+  storytelling: score,
+  sound: score,
+  comment: z
+    .string()
+    .trim()
+    .max(280, 'Keep it under 280 characters.')
+    .refine(isKind, 'Comments are for cheering hosts on. Try saying what you loved.')
+    .optional()
+    .or(z.literal('')),
+});
