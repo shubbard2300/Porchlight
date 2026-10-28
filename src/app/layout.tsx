@@ -38,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <SiteNav>
               <Link href="/#map">Map</Link>
               <Link href="/">Houses</Link>
+              <Link href="/route">Plan a route</Link>
               <Link href="/leaderboard">Leaderboard</Link>
               {user ? (
                 <>

@@ -78,6 +78,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </nav>
         )}
         <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+        {pins.length > 1 && (
+          <Link href={`/route?season=${season.key}`} className="btn primary" style={{ marginTop: 14 }}><Icon3D name="map" size={22} />Plan my light tour</Link>
+        )}
       </section>
 
       <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties}>
