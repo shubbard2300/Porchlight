@@ -97,7 +97,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           <div className="steps">
             {STEPS.map(([icon, title, text], i) => (
               <div key={title} className={`panel step step-${i + 1} reveal`}>
-                <div className="step-top"><span className="step-icon"><Icon3D name={icon} size={52} /></span><span aria-hidden="true">0{i + 1}</span></div>
+                <div className="step-top"><span className="step-icon"><Icon3D name={icon} size={52} /></span><span aria-hidden="true" className="step-num">0{i + 1}</span></div>
                 <h3>{title}</h3>
                 <p className="muted">{text}</p>
               </div>

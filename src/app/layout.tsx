@@ -6,6 +6,7 @@ import { avatarUrl } from '@/lib/users';
 import { Icon3D } from '@/components/Icon3D';
 import { Modals } from '@/components/Modals';
 import { SiteFooter } from '@/components/SiteFooter';
+import { SiteNav } from '@/components/SiteNav';
 import { logout } from './actions/auth';
 import './globals.css';
 
@@ -33,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <LogoMark size={42} className="brand-mark" />
               <Wordmark />
             </Link>
-            <nav className="nav" aria-label="Main">
+            <SiteNav>
               <Link href="/#map">Map</Link>
               <Link href="/">Houses</Link>
               {user ? (
@@ -52,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </>
               )}
               <Link href={user ? '/submit' : '/join/host'} data-modal={user ? undefined : 'join:host'} className="cta">Post your house</Link>
-            </nav>
+            </SiteNav>
           </div>
         </header>
         {children}
