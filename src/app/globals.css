@@ -438,3 +438,7 @@ html:has(dialog.modal[open]) { overflow: hidden; }
 .critter-set li.got { background: var(--lilac-soft); box-shadow: 3px 3px 0 var(--ink); }
 .catch-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .catch-list li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); }
+
+/* Porch light triggers */
+pre.code { white-space: pre-wrap; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--paper-2); border: 1.5px solid var(--ink); border-radius: var(--r-sm); padding: 12px; margin: 8px 0 0; }
+.panel code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: var(--paper-2); border-radius: 6px; padding: 1px 5px; overflow-wrap: anywhere; }

@@ -12,6 +12,7 @@ import { recordCheckIn, votableHouse } from '@/lib/checkIns';
 import { activeCaravanId } from '@/lib/caravanServer';
 import { after } from 'next/server';
 import { alertHostLike } from '@/lib/alertTriggers';
+import { lightsAfter } from '@/lib/porchLightServer';
 
 export type CheckInResult = { ok: true } | { ok: false; message: string };
 
@@ -68,7 +69,10 @@ export async function castVote(_prev: FormState, fd: FormData): Promise<FormStat
     }),
     ...(existing ? [] : [db.user.update({ where: { id: user.id }, data: { xp: { increment: xp } } })]),
   ]);
-  if (d.liked && !existing?.liked) after(() => alertHostLike(d.houseId, user.id).catch((e) => console.error('[push] like alert', e)));
+  if (d.liked && !existing?.liked) {
+    after(() => alertHostLike(d.houseId, user.id).catch((e) => console.error('[push] like alert', e)));
+    lightsAfter(d.houseId, 'like', user.id);
+  }
   revalidatePath(`/house/${d.houseId}`);
   revalidatePath('/');
   return { message: existing ? 'Scorecard updated.' : `Scorecard saved. +${xp} XP${xp > VOTE_XP ? ' (pitstop boost!)' : ''}` };
