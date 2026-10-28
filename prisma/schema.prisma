@@ -267,3 +267,22 @@ model PitstopScan {
   @@index([merchantId, createdAt])
   @@index([userId, createdAt])
 }
+
+/// A well-known decorated street or neighborhood the contest is seeded around. Shown as a glowing zone
+/// on the map with its own page, so new visitors know where to start and neighbors know to join in.
+model AnchorBlock {
+  id        String   @id @default(cuid())
+  name      String
+  /// One or two sentences on what makes the block worth the trip.
+  blurb     String
+  /// Where the zone is centered; geocoded unless coordinates are given.
+  address   String
+  lat       Float?
+  lng       Float?
+  radiusM   Int      @default(400)
+  /// Featured blocks are listed on the home page.
+  featured  Boolean  @default(true)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

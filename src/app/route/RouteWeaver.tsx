@@ -19,8 +19,8 @@ const fmtMin = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m
 const houseCount = (stops: { kind: string }[]) => stops.filter((s) => s.kind === 'house').length;
 const fmtKm = (km: number) => (km < 1 ? `${Math.round(km * 1000 / 10) * 10} m` : `${km.toFixed(1)} km`);
 
-export function RouteWeaver({ houses, pitstops, brackets, seasonIcon, initialFrom }: {
-  houses: RouteHouse[]; pitstops: RoutePitstop[]; brackets: { key: string; label: string; icon: Icon3DName }[];
+export function RouteWeaver({ houses, pitstops, blocks, brackets, seasonIcon, initialFrom }: {
+  houses: RouteHouse[]; pitstops: RoutePitstop[]; blocks: (Point & { id: string; name: string })[]; brackets: { key: string; label: string; icon: Icon3DName }[];
   seasonIcon: Icon3DName; initialFrom?: string;
 }) {
   const [from, setFrom] = useState<string>(initialFrom ?? '');
@@ -33,7 +33,8 @@ export function RouteWeaver({ houses, pitstops, brackets, seasonIcon, initialFro
   const [withPitstop, setWithPitstop] = useState(pitstops.length > 0);
 
   const startHouse = houses.find((h) => h.id === from);
-  const start: Point | null = from === 'here' ? here : startHouse ?? null;
+  const startBlock = blocks.find((b) => `block:${b.id}` === from);
+  const start: Point | null = from === 'here' ? here : startHouse ?? startBlock ?? null;
 
   const plan = useMemo(() => {
     if (!start) return null;
@@ -68,10 +69,17 @@ export function RouteWeaver({ houses, pitstops, brackets, seasonIcon, initialFro
           <button type="button" className={`btn ${from === 'here' ? 'primary' : 'ghost'}`} onClick={locate} disabled={locating}>
             <Icon3D name="pin" size={22} />{locating ? 'Finding you…' : from === 'here' ? 'Using my location' : 'Use my location'}
           </button>
-          <label className="small muted" htmlFor="route-from">or start at a house</label>
+          <label className="small muted" htmlFor="route-from">or start at {blocks.length ? 'an anchor block or a house' : 'a house'}</label>
           <select id="route-from" value={from === 'here' ? '' : from} onChange={(e) => setFrom(e.target.value)}>
-            <option value="">Choose a house…</option>
-            {houses.map((h) => <option key={h.id} value={h.id}>{h.name}{h.neighborhood ? ` · ${h.neighborhood}` : ''}</option>)}
+            <option value="">{blocks.length ? 'Choose a block or house…' : 'Choose a house…'}</option>
+            {blocks.length > 0 && (
+              <optgroup label="Anchor blocks">
+                {blocks.map((b) => <option key={b.id} value={`block:${b.id}`}>{b.name}</option>)}
+              </optgroup>
+            )}
+            <optgroup label="Houses">
+              {houses.map((h) => <option key={h.id} value={h.id}>{h.name}{h.neighborhood ? ` · ${h.neighborhood}` : ''}</option>)}
+            </optgroup>
           </select>
           {error && <p className="err small" role="alert">{error}</p>}
           <p className="small muted">Your location stays in your browser. Porchlight never stores it.</p>
@@ -153,7 +161,7 @@ export function RouteWeaver({ houses, pitstops, brackets, seasonIcon, initialFro
             <ol className={styles.stops}>
               <li className={styles.stop}>
                 <span className={`${styles.num} ${styles.home}`}><Icon3D name="pin" size={20} /></span>
-                <div><b>Start</b><span className="small muted">{startHouse ? startHouse.name : 'Your location'}</span></div>
+                <div><b>Start</b><span className="small muted">{startHouse?.name ?? startBlock?.name ?? 'Your location'}</span></div>
               </li>
               {plan.stops.map((s, i) => {
                 const prev: Point = i === 0 ? start! : plan.stops[i - 1];
