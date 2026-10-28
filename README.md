@@ -22,7 +22,9 @@ This repo is the real app. It currently covers:
 
 - **Prize pot payments** (Stripe Checkout over plain `fetch`, `src/lib/stripe.ts`): entering stays free. Once a house is approved, its host can pay their optional pledge ($10, $25 or $50) from their profile. Stripe sends them back to `/pot/<id>/done`, which confirms the payment straight away; the webhook at `/api/stripe/webhook` also records completed, expired and refunded payments. The home page pot counts only paid money (plus a "more pledged" note). Admins see payments, refund them and record sponsor money in **Admin > Prize pot**. Official rules (no purchase necessary) live at `/rules`. Without `STRIPE_SECRET_KEY` the pay buttons stay hidden; see `.env.example` for the webhook setup. Winner payouts are made by hand.
 
-Next up, per the roadmap: a native app for push alerts, AR and smart-light triggers.
+- **Installable app and push alerts**: Porchlight has a web app manifest and a service worker (`public/sw.js`), so it can be added to a phone's home screen. In **Profile > Alerts**, people turn on push alerts for each device and pick which ones they want: new houses within 1 to 10 km of a saved spot (sent when an admin approves a house), likes on their house (at most one every 30 minutes), squadmates checking in, and a last call on the evening of each holiday (Vercel Cron hits `/api/cron/last-call` daily at 02:00 UTC). On iPhone, alerts work once Porchlight is added to the home screen (iOS 16.4+). Alerts are sent with `web-push` (`src/lib/push.ts`, triggers in `src/lib/alertTriggers.ts`) and need a VAPID key pair; see `.env.example`.
+
+Next up: AR porch hunts and porch light triggers.
 
 ## Stack
 

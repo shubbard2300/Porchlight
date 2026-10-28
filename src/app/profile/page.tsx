@@ -12,6 +12,8 @@ import { AvatarUploader } from './AvatarUploader';
 import { DeleteEntryButton } from './DeleteEntryButton';
 import { AboutForm, HostForm, PasswordForm } from './ProfileForms';
 import { PotPanel } from './PotPanel';
+import { AlertSettings } from './AlertSettings';
+import { vapidPublicKey } from '@/lib/push';
 import { stripeConfigured } from '@/lib/stripe';
 
 export const metadata = { title: 'My profile · Porchlight' };
@@ -91,6 +93,17 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
           <form action={becomeHost}><button className="btn ghost">Become a host</button></form>
         </section>
       )}
+
+      <section className="panel stack" id="alerts" style={{ scrollMarginTop: 16 }}>
+        <h2 style={{ fontSize: 20 }}>Alerts</h2>
+        <AlertSettings
+          vapidKey={vapidPublicKey()}
+          initial={{ alertNearby: user.alertNearby, alertHost: user.alertHost, alertSquad: user.alertSquad, alertLastCall: user.alertLastCall }}
+          hasSpot={user.alertLat !== null}
+          radiusKm={user.alertRadiusKm}
+          devices={await db.pushSubscription.count({ where: { userId: user.id } })}
+        />
+      </section>
 
       <section className="panel stack" id="password">
         <h2 style={{ fontSize: 20 }}>Password</h2>

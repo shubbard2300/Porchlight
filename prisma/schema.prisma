@@ -71,7 +71,7 @@ model User {
   decorationTheme String?
   propertyDetails String?
 
-  createdAt      DateTime        @default(now())
+  createdAt      DateTime           @default(now())
   lastLoginAt    DateTime?
   houses         House[]
   housePhotos    HousePhoto[]
@@ -81,9 +81,19 @@ model User {
   pitstopScans   PitstopScan[]
   /// Scanning a merchant's counter QR doubles XP until this time. Contest votes are never boosted.
   xpBoostUntil   DateTime?
-  ledCaravans    Caravan[]       @relation("CaravanLeader")
+  ledCaravans    Caravan[]          @relation("CaravanLeader")
   caravanMembers CaravanMember[]
   potPayments    PotPayment[]
+  pushSubs       PushSubscription[]
+
+  // Push alerts. The spot is only used to decide which new houses are "near you"; it is never shown.
+  alertNearby   Boolean @default(true)
+  alertHost     Boolean @default(true)
+  alertSquad    Boolean @default(true)
+  alertLastCall Boolean @default(true)
+  alertLat      Float?
+  alertLng      Float?
+  alertRadiusKm Int     @default(3)
 }
 
 /// Profile photo, resized in the browser before upload. Kept out of User so user queries stay small.
@@ -139,6 +149,8 @@ model House {
   votes             Vote[]
   checkIns          CheckIn[]
   potPayments       PotPayment[]
+  /// When the host was last pinged about a like, so a busy night sends one alert per half hour, not one per vote.
+  lastLikeAlertAt   DateTime?
 
   @@index([season, status])
   @@index([season, bracket])
@@ -367,4 +379,19 @@ model PotPayment {
 
   @@index([season, status])
   @@index([houseId])
+}
+
+/// A browser or installed app that agreed to receive push alerts for a user.
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
 }
