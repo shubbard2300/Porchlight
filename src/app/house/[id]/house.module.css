@@ -25,3 +25,8 @@
 .pitstop:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
 .pitBadge { width: 52px; height: 52px; border: 2.5px solid var(--ink); border-radius: 16px; display: grid; place-items: center; }
 .pitLabel { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+.squads { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.squads li { display: grid; gap: 6px; padding: 14px 16px; border: var(--edge); border-radius: var(--r-md); background: linear-gradient(160deg, var(--lilac-soft), var(--paper) 70%); }
+.squadScore { font-family: var(--font-display); font-size: 22px; }
+.squadScore span { font-size: 13px; color: var(--text-2); }
+.squadCheer { font-size: 14px; font-style: italic; }

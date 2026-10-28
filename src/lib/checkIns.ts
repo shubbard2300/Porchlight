@@ -1,6 +1,8 @@
 import 'server-only';
 import type { CheckInMethod, House } from '@prisma/client';
 import { db } from './db';
+import { activeCaravanId } from './caravanServer';
+import { SQUAD_BONUS_XP, SQUAD_WINDOW_MIN } from './caravans';
 import { CHECKIN_XP } from './rewards';
 import { boostedXp } from './pitstops';
 import { contestToday, getSeason, phase } from './seasons';
@@ -22,18 +24,27 @@ export async function votableHouse(houseId: string, userId: string): Promise<{ h
 
 /**
  * Records a check-in. Repeat check-ins within a few hours reuse the earlier one so the crowd meter
- * isn't inflated by someone tapping the button twice. The first check-in at a house earns XP.
+ * isn't inflated by someone tapping the button twice. The first check-in at a house earns XP, and
+ * checking in where a caravan squadmate checked in recently adds the squad bonus.
  */
 export async function recordCheckIn(userId: string, houseId: string, method: CheckInMethod, distanceM: number | null) {
   const recent = await db.checkIn.findFirst({
     where: { userId, houseId, createdAt: { gte: new Date(Date.now() - CHECKIN_REPEAT_HOURS * 3600_000) } },
   });
-  if (recent) return { first: false };
-  const before = await db.checkIn.count({ where: { userId, houseId } });
-  const visitor = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { xpBoostUntil: true } });
-  await db.$transaction([
-    db.checkIn.create({ data: { userId, houseId, method, distanceM } }),
-    ...(before === 0 ? [db.user.update({ where: { id: userId }, data: { xp: { increment: boostedXp(CHECKIN_XP, visitor.xpBoostUntil) } } })] : []),
+  if (recent) return { first: false, squadBonus: 0 };
+  const [before, visitor, caravanId] = await Promise.all([
+    db.checkIn.count({ where: { userId, houseId } }),
+    db.user.findUniqueOrThrow({ where: { id: userId }, select: { xpBoostUntil: true } }),
+    activeCaravanId(userId),
   ]);
-  return { first: before === 0 };
+  const squadmateHere = caravanId ? await db.checkIn.findFirst({
+    where: { caravanId, houseId, userId: { not: userId }, createdAt: { gte: new Date(Date.now() - SQUAD_WINDOW_MIN * 60_000) } },
+    select: { id: true },
+  }) : null;
+  const xp = (before === 0 ? CHECKIN_XP : 0) + (squadmateHere ? SQUAD_BONUS_XP : 0);
+  await db.$transaction([
+    db.checkIn.create({ data: { userId, houseId, method, distanceM, caravanId } }),
+    ...(xp ? [db.user.update({ where: { id: userId }, data: { xp: { increment: boostedXp(xp, visitor.xpBoostUntil) } } })] : []),
+  ]);
+  return { first: before === 0, squadBonus: squadmateHere ? SQUAD_BONUS_XP : 0 };
 }
