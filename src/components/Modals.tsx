@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LoginForm } from '@/app/login/LoginForm';
 import { JoinForm } from '@/app/join/[type]/JoinForm';
 import { ContactForm, type ContactDefaults } from './ContactForm';
@@ -16,12 +16,20 @@ import { SIGNUP_BONUS_XP } from '@/lib/rewards';
  *   <Link href="/login" data-modal="login">   <Link href="/join/host" data-modal="join:host">
  *   <Link href="/contact" data-modal="contact:Accessibility">   <a href="/profile#about-xp" data-modal="xp">
  * The href stays a real page, which is what loads without JavaScript, in a new tab, or from an email link.
+ *
+ * Signed-out visitors also get a welcome popup on their first visit (log in, join as a viewer or host,
+ * or go straight to the map). It's remembered in this browser, so it shows once.
  */
 type Open =
   | { kind: 'login' }
   | { kind: 'join'; as?: 'viewer' | 'host' }
   | { kind: 'contact'; topic?: string }
-  | { kind: 'xp' };
+  | { kind: 'xp' }
+  | { kind: 'welcome' };
+
+const WELCOME_KEY = 'pl-welcomed';
+/** Pages where a welcome popup would get in the way: signing in or up, legal reading, admin, QR scan landings. */
+const NO_WELCOME = /^\/(login|join|auth|check-email|admin|terms|privacy|cookies|rules|accessibility|visit|pitstop)(\/|$)/;
 
 const JOIN = {
   viewer: { type: 'VIEWER' as const, label: 'Viewer / rater', title: 'Find the best lights in town', blurb: 'Just an email and a password. You start with 100 XP and the Porch Pass badge.' },
@@ -43,6 +51,7 @@ export function Modals({ signedIn, contact, xp }: { signedIn: boolean; contact: 
   // Bumped on every open so each popup starts with a fresh form.
   const [nonce, setNonce] = useState(0);
   const pathname = usePathname();
+  const router = useRouter();
   const [here, setHere] = useState('');
 
   const show = useCallback((o: Open) => {
@@ -78,6 +87,26 @@ export function Modals({ signedIn, contact, xp }: { signedIn: boolean; contact: 
   // A form that redirects (check your email, profile) or signs the person in is done with the popup.
   useEffect(() => { close(); }, [pathname, signedIn, close]);
 
+  // First visit, signed out: say hello once. Declared after the effect above so that one doesn't close it.
+  useEffect(() => {
+    if (signedIn || NO_WELCOME.test(pathname)) return;
+    try {
+      if (localStorage.getItem(WELCOME_KEY)) return;
+      localStorage.setItem(WELCOME_KEY, '1');
+    } catch {
+      return; // no storage: we couldn't remember the dismissal, so don't risk showing it on every page
+    }
+    show({ kind: 'welcome' });
+    // Only on arrival, not on every navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toMap = () => {
+    close();
+    if (window.location.pathname === '/') document.getElementById('map')?.scrollIntoView({ behavior: 'smooth' });
+    else router.push('/#map');
+  };
+
   const contactDefaults = open?.kind === 'contact' ? { ...contact, topic: open.topic } : contact;
   const join = open?.kind === 'join' && open.as ? JOIN[open.as] : null;
 
@@ -94,6 +123,31 @@ export function Modals({ signedIn, contact, xp }: { signedIn: boolean; contact: 
           <button type="button" className="modal-x" onClick={close} aria-label="Close">
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" /></svg>
           </button>
+
+          {open.kind === 'welcome' && (
+            <div className="stack welcome">
+              <div className="stack" style={{ gap: 6 }}>
+                <span className="label">Welcome to Porchlight</span>
+                <h2 id="modal-title">The neighborhood’s brightest porches, picked by all of us</h2>
+                <p className="muted small">Find decorated houses near you, stop by, and help choose the most-loved porch. Joining is free.</p>
+              </div>
+              <div className="welcome-choices">
+                <button type="button" className="choice" onClick={() => setOpen({ kind: 'join', as: 'viewer' })}>
+                  <Icon3D name="heart" size={44} />
+                  <span className="stack" style={{ gap: 2 }}><b>Join as a viewer</b><span className="small muted">Find, visit and score houses</span></span>
+                </button>
+                <button type="button" className="choice host" onClick={() => setOpen({ kind: 'join', as: 'host' })}>
+                  <Icon3D name="house" size={44} />
+                  <span className="stack" style={{ gap: 2 }}><b>Join as a host</b><span className="small muted">Put your decorated house on the map</span></span>
+                </button>
+                <button type="button" className="choice" onClick={() => setOpen({ kind: 'login' })}>
+                  <Icon3D name="key" size={44} />
+                  <span className="stack" style={{ gap: 2 }}><b>Log in</b><span className="small muted">Welcome back</span></span>
+                </button>
+              </div>
+              <button type="button" className="btn ghost block" onClick={toMap}><Icon3D name="map" size={22} />No thanks, take me to the map</button>
+            </div>
+          )}
 
           {open.kind === 'login' && (
             <div className="stack">
