@@ -23,6 +23,9 @@ export default async function SubmitPage({ searchParams }: { searchParams: Promi
   const today = contestToday();
   // Photos from sign-up or an earlier visit to this form that never became part of a submission.
   const photos = await db.housePhoto.findMany({ where: { ownerId: user.id, houseId: null, createdAt: { gt: new Date(Date.now() - PENDING_PHOTO_MS + 60 * 60 * 1000) } }, orderBy: { createdAt: 'asc' }, select: photoSelect });
+  // Neighborhood names other hosts used, offered as suggestions while typing.
+  const neighborhoods = (await db.house.findMany({ where: { neighborhood: { not: null } }, distinct: ['neighborhood'], select: { neighborhood: true }, orderBy: { neighborhood: 'asc' }, take: 200 }))
+    .map((h) => h.neighborhood!).filter((n) => n.trim());
   const open = openForSubmissions(today);
   const preferred = open.find((s) => s.key === user.hostSeason) ?? open.find((s) => s.key === defaultSeason(today).key) ?? open[0];
   return (
@@ -50,6 +53,7 @@ export default async function SubmitPage({ searchParams }: { searchParams: Promi
             defaultSeason={preferred.key}
             seasons={open.map((s) => ({ key: s.key, holiday: s.name, label: `${s.name} ${s.year}`, note: phase(s, today) === 'live' ? 'voting now' : `opens ${formatDay(s.opens)}` }))}
             photos={photos}
+            neighborhoods={neighborhoods}
             prefill={{ name: user.decorationTheme ?? '', address: user.propertyAddress ?? '', neighborhood: user.neighborhood ?? '', description: user.propertyDetails ?? '' }}
           />
         )}
