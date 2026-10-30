@@ -29,6 +29,8 @@ export type MapHouse = {
   litUntil: string;
   /** Visitors who checked in during the crowd window. */
   crowd: number;
+  /** Set only when the signed-in viewer may edit this house: its host, or staff. */
+  edit?: { href: string; label: string };
 };
 
 /** A sponsor's pin. Shown under the houses so the decorations stay the main event. */
@@ -82,6 +84,7 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       <span class="${styles.popCrowd}"><i style="background:${CROWD_LEVELS[crowdLevel(h.crowd)].color}"></i>${esc(crowdLine(h.crowd))}</span>
       <div class="${styles.popFoot}"><span class="${styles.popLikes}"><img src="/icons/3d/heart.webp" alt="" width="16" height="16" />${h.likes} verified ${h.likes === 1 ? 'like' : 'likes'}</span>${directions}</div>
       <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
+      ${h.edit ? `<a class="${styles.popEdit}" href="${esc(h.edit.href)}"><img src="/icons/3d/house.webp" alt="" width="18" height="18" />${esc(h.edit.label)}</a>` : ''}
     </div>
   </div>`;
 }

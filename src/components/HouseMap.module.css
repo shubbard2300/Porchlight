@@ -64,6 +64,12 @@
   border-radius: 12px; background: var(--amber); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
 }
 
+/* Only the house's host (and staff) see this. */
+.popEdit {
+  margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 800; text-decoration: none;
+  padding: 7px 12px; border-radius: 12px; background: var(--paper); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
+}
+
 /* Hover title */
 .tipWrap { pointer-events: none; }
 .tipWrap :global(.maplibregl-popup-content) {
