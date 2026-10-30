@@ -1,18 +1,27 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /**
- * Low-poly 3D models for every AR prop, built from simple shapes in code so there are no model files
- * to host. Each builder makes a rough shape; `buildProp` then centers it and scales it to fit a
- * 1 x 1 x 1 box, so placement code can treat every prop the same.
+ * 3D models for every AR prop, built from shapes in code so there are no model files to host or
+ * license. They aim for the soft, glossy "clay toy" look of the 3D emoji used across the site.
+ * `buildProp` centers each model and scales it to fit a 1 x 1 x 1 box, so placement code can treat
+ * every prop the same.
  */
 
-type MatOpts = { glow?: number; rough?: number; metal?: number; opacity?: number };
+/** glow: emissive strength. coat: clear lacquer (0-1). sheen: soft fabric/fuzz highlight. */
+type MatOpts = { glow?: number; rough?: number; metal?: number; opacity?: number; coat?: number; sheen?: number; emissive?: number };
 const mat = (color: number, o: MatOpts = {}) =>
-  new THREE.MeshStandardMaterial({
+  new THREE.MeshPhysicalMaterial({
     color,
-    roughness: o.rough ?? 0.55,
+    roughness: o.rough ?? 0.42,
     metalness: o.metal ?? 0,
-    emissive: o.glow ? color : 0x000000,
+    clearcoat: o.coat ?? (o.metal ? 0 : 0.35),
+    clearcoatRoughness: 0.35,
+    sheen: o.sheen ?? 0,
+    sheenColor: new THREE.Color(0xffffff),
+    sheenRoughness: 0.6,
+    emissive: o.glow ? (o.emissive ?? color) : 0x000000,
     emissiveIntensity: o.glow ?? 0,
     transparent: o.opacity !== undefined,
     opacity: o.opacity ?? 1,
@@ -23,14 +32,19 @@ const mesh = (g: THREE.BufferGeometry, m: THREE.Material, x = 0, y = 0, z = 0) =
   me.position.set(x, y, z);
   return me;
 };
-const sphere = (r: number, m: THREE.Material, x = 0, y = 0, z = 0, seg = 20) => mesh(new THREE.SphereGeometry(r, seg, Math.round(seg * 0.75)), m, x, y, z);
-const cyl = (rt: number, rb: number, h: number, m: THREE.Material, x = 0, y = 0, z = 0, seg = 18) => mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m, x, y, z);
-const cone = (r: number, h: number, m: THREE.Material, x = 0, y = 0, z = 0, seg = 18) => mesh(new THREE.ConeGeometry(r, h, seg), m, x, y, z);
+const sphere = (r: number, m: THREE.Material, x = 0, y = 0, z = 0, seg = 40) => mesh(new THREE.SphereGeometry(r, seg, Math.round(seg * 0.75)), m, x, y, z);
+const cyl = (rt: number, rb: number, h: number, m: THREE.Material, x = 0, y = 0, z = 0, seg = 36) => mesh(new THREE.CylinderGeometry(rt, rb, h, seg), m, x, y, z);
+const cone = (r: number, h: number, m: THREE.Material, x = 0, y = 0, z = 0, seg = 36) => mesh(new THREE.ConeGeometry(r, h, seg), m, x, y, z);
 const box = (w: number, h: number, d: number, m: THREE.Material, x = 0, y = 0, z = 0) => mesh(new THREE.BoxGeometry(w, h, d), m, x, y, z);
-const torus = (r: number, t: number, m: THREE.Material, x = 0, y = 0, z = 0, arc = Math.PI * 2) => mesh(new THREE.TorusGeometry(r, t, 10, 28, arc), m, x, y, z);
-const lathe = (pts: [number, number][], m: THREE.Material, seg = 24) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg), m);
+const torus = (r: number, t: number, m: THREE.Material, x = 0, y = 0, z = 0, arc = Math.PI * 2) => mesh(new THREE.TorusGeometry(r, t, 18, 56, arc), m, x, y, z);
+const lathe = (pts: [number, number][], m: THREE.Material, seg = 48, smooth = true) => {
+  const v = pts.map(([x, y]) => new THREE.Vector2(x, y));
+  // A spline through the profile points gives round, toy-like silhouettes instead of facets.
+  const prof = smooth ? new THREE.SplineCurve(v).getPoints(v.length * 8) : v;
+  return new THREE.Mesh(new THREE.LatheGeometry(prof, seg), m);
+};
 const extrude = (shape: THREE.Shape, depth: number, m: THREE.Material, bevel = 0.03) => {
-  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 3, curveSegments: 16 });
+  const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 6, curveSegments: 32 });
   g.center();
   return new THREE.Mesh(g, m);
 };
@@ -92,24 +106,92 @@ function wingShape() {
   return s;
 }
 
-const eyes = (y: number, z: number, gap: number, r: number, color = 0x14123a) => [sphere(r, mat(color, { rough: 0.2 }), -gap, y, z, 12), sphere(r, mat(color, { rough: 0.2 }), gap, y, z, 12)];
+type P3 = [number, number, number];
+/** A smooth round tube through the points (stems, arms, legs, garlands). */
+const tube = (pts: P3[], r: number, m: THREE.Material, closed = false, radial = 14) => {
+  const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), closed);
+  return new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(24, pts.length * 12), r, radial, closed), m);
+};
+/** A tube with rounded ends, so limbs and twigs don't look cut off. */
+const limb = (pts: P3[], r: number, m: THREE.Material) => group(tube(pts, r, m), sphere(r, m, ...pts[0], 16), sphere(r, m, ...pts[pts.length - 1], 16));
+const rbox = (w: number, h: number, d: number, radius: number, m: THREE.Material, x = 0, y = 0, z = 0) => mesh(new RoundedBoxGeometry(w, h, d, 5, radius), m, x, y, z);
 
-const flame = (y: number, s = 1) => group(scl(sphere(0.06, mat(0xffb000, { glow: 1.6 }), 0, y, 0, 12), s, s * 1.8, s), scl(sphere(0.03, mat(0xfff4c2, { glow: 2 }), 0, y - 0.01, 0.02, 10), s, s * 1.6, s));
+/** Moves every vertex with `fn` and recomputes smooth normals across seams. */
+function deform(g: THREE.BufferGeometry, fn: (v: THREE.Vector3) => void) {
+  g.deleteAttribute('normal');
+  g.deleteAttribute('uv');
+  const merged = mergeVertices(g, 1e-5);
+  const p = merged.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) {
+    fn(v.fromBufferAttribute(p, i));
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  merged.computeVertexNormals();
+  return merged;
+}
+
+/** Glossy cartoon eyes with a catch-light, like the site's 3D emoji. */
+const eyes = (y: number, z: number, gap: number, r: number, color = 0x14123a) => [-1, 1].flatMap((s) => [
+  scl(sphere(r, mat(color, { rough: 0.12, coat: 1 }), s * gap, y, z, 20), 0.85, 1.15, 0.6),
+  sphere(r * 0.32, mat(0xffffff, { glow: 0.8 }), s * gap - r * 0.3, y + r * 0.4, z + r * 0.5, 10),
+]);
+
+/** A teardrop flame with a bright core. */
+const flame = (y: number, s = 1) => {
+  const outer = lathe([[0, -0.05], [0.035, -0.035], [0.045, 0.005], [0.03, 0.05], [0.01, 0.09], [0, 0.11]], mat(0xff9a1f, { glow: 2, opacity: 0.92 }), 24);
+  const core = lathe([[0, -0.04], [0.02, -0.025], [0.022, 0.01], [0.01, 0.04], [0, 0.055]], mat(0xfff4c2, { glow: 3 }), 20);
+  const f = group(outer, core);
+  f.position.y = y;
+  return scl(f, s);
+};
 
 const BUILDERS: Record<string, () => THREE.Object3D> = {
   ghost: () => {
-    const body = lathe([[0, 0.56], [0.12, 0.545], [0.21, 0.5], [0.28, 0.42], [0.32, 0.3], [0.34, 0.1], [0.35, -0.15], [0.38, -0.32], [0.43, -0.43], [0.3, -0.4], [0, -0.38]], mat(0xf4f1ff, { glow: 0.25, opacity: 0.92 }));
-    return group(body, ...eyes(0.25, 0.27, 0.11, 0.05), scl(sphere(0.06, mat(0x14123a)), 1, 1.3, 0.6).translateY(0.08).translateZ(0.3), rot(cyl(0.06, 0.08, 0.35, mat(0xf4f1ff, { opacity: 0.92 }), -0.38, 0, 0), 0, 0, 0.9), rot(cyl(0.06, 0.08, 0.35, mat(0xf4f1ff, { opacity: 0.92 }), 0.38, 0, 0), 0, 0, -0.9));
+    const sheet = mat(0xf7f5ff, { glow: 0.22, emissive: 0xdfe4ff, sheen: 0.6, coat: 0.5 });
+    const g = new THREE.LatheGeometry(new THREE.SplineCurve([[0, 0.58], [0.14, 0.56], [0.25, 0.49], [0.31, 0.36], [0.33, 0.15], [0.35, -0.1], [0.38, -0.3], [0.43, -0.42], [0.001, -0.42]].map(([x, y]) => new THREE.Vector2(x, y))).getPoints(80), 96);
+    // A wavy hem, like a sheet drifting.
+    const body = new THREE.Mesh(deform(g, (v) => {
+      if (v.y < -0.22) v.y += Math.sin(Math.atan2(v.z, v.x) * 7) * 0.05 * Math.min(1, (-0.22 - v.y) / 0.15);
+    }), sheet);
+    const arm = (s: number) => limb([[s * 0.28, 0.08, 0.04], [s * 0.42, 0.12, 0.1], [s * 0.5, 0.24, 0.14]], 0.055, sheet);
+    const blush = mat(0xffa3c4, { rough: 0.6 });
+    return group(body, arm(-1), arm(1), ...eyes(0.27, 0.29, 0.1, 0.055), scl(sphere(0.05, mat(0x2a1e4a, { rough: 0.3 }), 0, 0.11, 0.315), 1, 1.35, 0.5), scl(sphere(0.04, blush, -0.19, 0.16, 0.27), 1.3, 0.8, 0.4), scl(sphere(0.04, blush, 0.19, 0.16, 0.27), 1.3, 0.8, 0.4));
   },
   pumpkin: () => {
-    const o = mat(0xff6a1f, { rough: 0.5 });
-    const ribs = Array.from({ length: 8 }, (_, i) => {
-      const a = (i / 8) * Math.PI * 2;
-      return scl(sphere(0.28, o, Math.cos(a) * 0.2, 0, Math.sin(a) * 0.2), 0.75, 0.9, 0.75);
+    const skin = mat(0xff7a1a, { rough: 0.38, coat: 0.6 });
+    const g = deform(new THREE.SphereGeometry(0.42, 120, 80), (v) => {
+      const th = Math.atan2(v.z, v.x);
+      const lat = v.y / 0.42;
+      // Ten deep ribs, squashed, with dimples where the stem and base sit.
+      const rib = 0.86 + 0.14 * Math.pow(Math.abs(Math.sin(th * 5)), 0.6);
+      v.x *= rib;
+      v.z *= rib;
+      v.y *= 0.76 * (1 - 0.22 * Math.pow(Math.abs(lat), 7));
     });
-    const face = mat(0xffd34d, { glow: 1.4 });
-    const tri = (x: number) => rot(cone(0.07, 0.08, face, x, 0.08, 0.42, 3), Math.PI / 2, 0, Math.PI);
-    return group(...ribs, cyl(0.04, 0.05, 0.16, mat(0x3f7a2b), 0, 0.33, 0), tri(-0.13), tri(0.13), rot(torus(0.14, 0.03, face, 0, -0.05, 0.41, Math.PI), 0, 0, Math.PI));
+    const glow = mat(0xffd34d, { glow: 2.2, emissive: 0xffb000 });
+    const tri = (x: number) => {
+      const s = new THREE.Shape();
+      s.moveTo(-0.07, -0.045);
+      s.lineTo(0.07, -0.045);
+      s.lineTo(x > 0 ? -0.01 : 0.01, 0.07);
+      s.closePath();
+      const e = extrude(s, 0.12, glow, 0.012);
+      e.position.set(x, 0.09, 0.34);
+      return rot(e, -0.15, x * 1.4, 0);
+    };
+    const mouth = new THREE.Shape();
+    [[-0.22, 0.04], [-0.1, -0.01], [-0.07, -0.05], [-0.04, -0.015], [0.04, -0.015], [0.07, -0.05], [0.1, -0.01], [0.22, 0.04], [0.15, -0.08], [0.05, -0.115], [0.03, -0.08], [-0.03, -0.08], [-0.05, -0.115], [-0.15, -0.08]].forEach(([x, y], i) => (i ? mouth.lineTo(x, y) : mouth.moveTo(x, y)));
+    mouth.closePath();
+    const m = extrude(mouth, 0.12, glow, 0.012);
+    m.position.set(0, -0.08, 0.35);
+    m.rotation.x = 0.12;
+    const stemMat = mat(0x5a7a2b, { rough: 0.85, coat: 0 });
+    const vine = tube(Array.from({ length: 14 }, (_, i) => [0.06 + Math.cos(i * 0.9) * 0.05 + i * 0.012, 0.3 + Math.sin(i * 0.9) * 0.04, Math.sin(i * 0.9) * 0.05] as P3), 0.008, mat(0x4f8a2b));
+    const leaf = scl(extrude(leafShape(), 0.02, mat(0x3f8a3a, { rough: 0.6 }), 0.01), 0.22);
+    leaf.position.set(-0.1, 0.33, 0.02);
+    leaf.rotation.set(-0.9, 0.3, 0.5);
+    return group(new THREE.Mesh(g, skin), tri(-0.13), tri(0.13), m, limb([[0, 0.26, 0], [0.01, 0.36, 0], [0.05, 0.43, 0.01], [0.1, 0.45, 0.02]], 0.04, stemMat), vine, leaf);
   },
   bat: () => {
     const b = mat(0x3b2d5c, { rough: 0.7 });
@@ -121,15 +203,17 @@ const BUILDERS: Record<string, () => THREE.Object3D> = {
     return group(scl(sphere(0.16, b), 1, 1.2, 1), sphere(0.12, b, 0, 0.2, 0), cone(0.04, 0.1, b, -0.07, 0.33, 0), cone(0.04, 0.1, b, 0.07, 0.33, 0), ...eyes(0.22, 0.1, 0.045, 0.025, 0xffd34d), w1, w2);
   },
   spider: () => {
-    const b = mat(0x1b1730, { rough: 0.4 });
+    const b = mat(0x221c3a, { rough: 0.5, sheen: 1, coat: 0.6 });
     const legs = Array.from({ length: 8 }, (_, i) => {
-      const side = i < 4 ? -1 : 1;
+      const s = i < 4 ? -1 : 1;
       const k = (i % 4) - 1.5;
-      const leg = group(rot(cyl(0.015, 0.015, 0.3, b, side * 0.15, 0.05, 0), 0, 0, side * 1.1), rot(cyl(0.015, 0.012, 0.32, b, side * 0.32, -0.08, 0), 0, 0, side * -0.4));
-      leg.rotation.y = k * 0.35 * side;
-      return leg;
+      const a = k * 0.42;
+      const dir = (r: number, y: number): P3 => [s * Math.cos(a) * r, y, Math.sin(a) * r * 1.3 - 0.02];
+      return limb([dir(0.08, 0), dir(0.22, 0.16), dir(0.36, 0.08), dir(0.46, -0.16)], 0.018, b);
     });
-    return group(sphere(0.18, b, 0, 0, -0.12), sphere(0.11, b, 0, 0, 0.1), ...eyes(0.04, 0.2, 0.04, 0.025, 0xff4d8d), ...legs, cyl(0.004, 0.004, 0.6, mat(0xdddddd), 0, 0.3, -0.12, 6));
+    const mark = scl(sphere(0.05, mat(0xe8364f, { glow: 0.5 }), 0, 0.17, -0.2), 0.7, 0.3, 1.4);
+    const eye = (x: number, y: number, r: number) => sphere(r, mat(0xff4d8d, { glow: 1.2, coat: 1, rough: 0.1 }), x, y, 0.19, 12);
+    return group(scl(sphere(0.2, b, 0, 0.04, -0.2), 1, 0.85, 1.15), sphere(0.12, b, 0, 0.02, 0.08), eye(-0.045, 0.06, 0.026), eye(0.045, 0.06, 0.026), eye(-0.025, 0.1, 0.016), eye(0.025, 0.1, 0.016), mark, ...legs, cyl(0.003, 0.003, 0.6, mat(0xeeeeee, { glow: 0.4 }), 0, 0.5, -0.2, 6));
   },
   web: () => {
     const s = mat(0xe8e6f5, { glow: 0.3, rough: 0.3 });
@@ -138,12 +222,33 @@ const BUILDERS: Record<string, () => THREE.Object3D> = {
     return group(...spokes, ...rings);
   },
   skull: () => {
-    const bone = mat(0xf2ead8, { rough: 0.6 });
-    const dark = mat(0x14123a);
-    return group(scl(sphere(0.3, bone), 1, 0.95, 1), box(0.3, 0.16, 0.24, bone, 0, -0.24, 0.05), scl(sphere(0.07, dark, -0.11, 0.0, 0.26), 1, 1.2, 0.5), scl(sphere(0.07, dark, 0.11, 0.0, 0.26), 1, 1.2, 0.5), rot(cone(0.035, 0.07, dark, 0, -0.1, 0.29, 3), Math.PI / 2, 0, 0), ...[-0.08, -0.03, 0.03, 0.08].map((x) => box(0.035, 0.05, 0.02, mat(0xffffff), x, -0.28, 0.17)));
+    const bone = mat(0xf2ead8, { rough: 0.55, coat: 0.3 });
+    const dark = mat(0x1b1730, { rough: 0.9, coat: 0 });
+    const head = deform(new THREE.SphereGeometry(0.3, 64, 48), (v) => {
+      v.y *= 0.95;
+      if (v.y < -0.05) v.x *= 1 - Math.min(0.25, (-0.05 - v.y) * 1.2);
+    });
+    const socket = (x: number) => scl(sphere(0.075, dark, x, -0.02, 0.24, 24), 1.05, 1.15, 0.55);
+    return group(new THREE.Mesh(head, bone), rbox(0.28, 0.16, 0.22, 0.05, bone, 0, -0.25, 0.06), socket(-0.11), socket(0.11), rot(cone(0.035, 0.07, dark, 0, -0.12, 0.275, 3), Math.PI / 2 - 0.3, 0, Math.PI), ...[-0.075, -0.025, 0.025, 0.075].map((x) => rbox(0.042, 0.06, 0.03, 0.01, mat(0xfffaf0, { coat: 0.8 }), x, -0.27, 0.17)), sphere(0.03, mat(0xff4d8d, { glow: 1.5 }), -0.11, -0.02, 0.27, 12), sphere(0.03, mat(0xff4d8d, { glow: 1.5 }), 0.11, -0.02, 0.27, 12));
   },
   crystal: () => group(sphere(0.32, mat(0xb9a6ff, { glow: 0.6, rough: 0.05, metal: 0.1, opacity: 0.8 }), 0, 0.12, 0), sphere(0.14, mat(0xffffff, { glow: 1.2, opacity: 0.6 }), 0.05, 0.18, 0.1), cyl(0.22, 0.3, 0.14, mat(0x6b3fd6, { metal: 0.6, rough: 0.3 }), 0, -0.25, 0)),
-  candle: () => group(cyl(0.12, 0.13, 0.55, mat(0xfff4e4, { rough: 0.8 }), 0, -0.1, 0), cyl(0.005, 0.005, 0.06, mat(0x222222), 0, 0.2, 0, 6), flame(0.27), cyl(0.2, 0.2, 0.04, mat(0xd8b46a, { metal: 0.7, rough: 0.3 }), 0, -0.38, 0)),
+  candle: () => {
+    const wax = mat(0xfff1dc, { rough: 0.55, sheen: 0.4, coat: 0.3 });
+    const brass = mat(0xd8a84a, { metal: 0.9, rough: 0.22 });
+    const drips = [0, 1.3, 2.4, 3.6, 4.7, 5.6].map((a, i) => {
+      const len = 0.08 + ((i * 37) % 5) * 0.035;
+      const d = mesh(new THREE.CapsuleGeometry(0.022, len, 8, 16), wax, Math.cos(a) * 0.125, 0.16 - len / 2, Math.sin(a) * 0.125);
+      return d;
+    });
+    return group(
+      lathe([[0.001, 0.16], [0.09, 0.15], [0.12, 0.175], [0.125, 0.12], [0.125, -0.2], [0.13, -0.33], [0.001, -0.33]], wax, 64),
+      ...drips,
+      tube([[0, 0.15, 0], [0, 0.2, 0], [0.012, 0.23, 0]], 0.008, mat(0x2a2320, { rough: 0.9, coat: 0 })),
+      flame(0.28, 1.15),
+      lathe([[0.001, -0.37], [0.2, -0.37], [0.25, -0.33], [0.24, -0.31], [0.16, -0.33], [0.001, -0.33]], brass, 64, false),
+      rot(torus(0.06, 0.016, brass, 0.27, -0.33, 0), Math.PI / 2, 0, 0),
+    );
+  },
   owl: () => {
     const brown = mat(0x8a5a3c);
     return group(scl(sphere(0.3, brown), 1, 1.25, 0.9), scl(sphere(0.2, mat(0xe8cfa8), 0, -0.05, 0.12), 1, 1.2, 0.7), sphere(0.1, mat(0xffffff), -0.11, 0.22, 0.2), sphere(0.1, mat(0xffffff), 0.11, 0.22, 0.2), ...eyes(0.22, 0.29, 0.11, 0.05), rot(cone(0.04, 0.09, mat(0xffb000), 0, 0.12, 0.28, 8), Math.PI / 2 + 0.3, 0, 0), cone(0.06, 0.14, brown, -0.17, 0.42, 0), cone(0.06, 0.14, brown, 0.17, 0.42, 0));
@@ -155,24 +260,96 @@ const BUILDERS: Record<string, () => THREE.Object3D> = {
     return extrude(s, 0.18, mat(0xffd96b, { glow: 0.7 }), 0.05);
   },
   snowman: () => {
-    const snow = mat(0xffffff, { rough: 0.9 });
-    return group(sphere(0.3, snow, 0, -0.25, 0), sphere(0.22, snow, 0, 0.1, 0), sphere(0.16, snow, 0, 0.38, 0), ...eyes(0.42, 0.14, 0.05, 0.022), rot(cone(0.03, 0.14, mat(0xff6a1f), 0, 0.38, 0.2, 10), Math.PI / 2, 0, 0), cyl(0.12, 0.12, 0.16, mat(0x14123a), 0, 0.6, 0), cyl(0.18, 0.18, 0.02, mat(0x14123a), 0, 0.53, 0), torus(0.17, 0.04, mat(0xe8364f), 0, 0.26, 0).rotateX(Math.PI / 2));
+    const snow = mat(0xf8fbff, { rough: 0.8, sheen: 0.8, coat: 0.15 });
+    const coal = mat(0x1d1b2a, { rough: 0.5, coat: 0.6 });
+    const twig = mat(0x6b4a2b, { rough: 0.9, coat: 0 });
+    const scarf = mat(0xe8364f, { rough: 0.7, sheen: 1, coat: 0 });
+    const arm = (s: number) => group(limb([[s * 0.2, 0.12, 0], [s * 0.36, 0.22, 0.02], [s * 0.5, 0.34, 0.02]], 0.014, twig), limb([[s * 0.42, 0.27, 0.02], [s * 0.47, 0.36, 0.03]], 0.01, twig), limb([[s * 0.47, 0.32, 0.02], [s * 0.56, 0.33, 0.02]], 0.009, twig));
+    const smile = Array.from({ length: 5 }, (_, i) => {
+      const a = Math.PI * (1.25 + i * 0.125);
+      return sphere(0.013, coal, Math.cos(a) * 0.07, 0.4 + Math.sin(a) * 0.05, 0.145, 10);
+    });
+    return group(
+      sphere(0.3, snow, 0, -0.26, 0, 64), sphere(0.22, snow, 0, 0.1, 0, 64), sphere(0.16, snow, 0, 0.4, 0, 64),
+      ...eyes(0.45, 0.14, 0.05, 0.024), ...smile,
+      rot(lathe([[0.001, 0], [0.03, 0.005], [0.022, 0.07], [0.001, 0.15]], mat(0xff7a1a, { rough: 0.5 }), 24), Math.PI / 2, 0, 0).translateY(0.41).translateZ(0.14),
+      ...[0.17, 0.07, -0.03].map((y) => sphere(0.025, coal, 0, y, 0.215 - Math.abs(y - 0.07) * 0.2, 14)),
+      arm(-1), arm(1),
+      lathe([[0.001, 0.5], [0.2, 0.5], [0.205, 0.52], [0.12, 0.525], [0.115, 0.72], [0.001, 0.72]], coal, 48, false),
+      cyl(0.119, 0.117, 0.05, scarf, 0, 0.555, 0),
+      torus(0.165, 0.045, scarf, 0, 0.26, 0).rotateX(Math.PI / 2 - 0.1),
+      rot(rbox(0.08, 0.24, 0.035, 0.015, scarf, 0.08, 0.15, 0.17), -0.2, 0, 0.25),
+    );
   },
   tree: () => {
-    const g = mat(0x1e9e6a, { rough: 0.7 });
-    const balls = [0xe8364f, 0xffb000, 0x3d7bff, 0xff4d8d, 0xffffff].flatMap((c, i) => [sphere(0.035, mat(c, { glow: 0.8 }), Math.cos(i * 1.3) * 0.25, -0.2 + i * 0.1, Math.sin(i * 1.3) * 0.25 + 0.05, 10)]);
-    return group(cone(0.42, 0.45, g, 0, -0.15, 0), cone(0.33, 0.4, g, 0, 0.08, 0), cone(0.22, 0.35, g, 0, 0.3, 0), cyl(0.07, 0.07, 0.15, mat(0x7a4b2a), 0, -0.44, 0), ...balls, scl(extrude(starShape(), 0.04, mat(0xffd34d, { glow: 1 })), 0.22).translateY(0.52));
+    const needles = mat(0x1f8a5a, { rough: 0.65, sheen: 0.6, coat: 0.2 });
+    const tiers = [0, 1, 2, 3].map((i) => {
+      const r = 0.44 - i * 0.09;
+      const g = deform(new THREE.ConeGeometry(r, 0.34, 72, 6), (v) => {
+        // Scalloped, slightly upturned branch tips.
+        const th = Math.atan2(v.z, v.x);
+        const k = 1 + 0.07 * Math.sin(th * 14) * (0.17 - v.y) / 0.34;
+        v.x *= k;
+        v.z *= k;
+        if (v.y < -0.16) v.y += Math.cos(th * 14) * 0.015;
+      });
+      return mesh(g, needles, 0, -0.22 + i * 0.18, 0);
+    });
+    const radiusAt = (y: number) => Math.max(0.02, (0.44 * (0.5 - y)) / 0.9);
+    const spiral = Array.from({ length: 60 }, (_, i) => {
+      const t = i / 59;
+      const y = -0.36 + t * 0.78;
+      const a = t * Math.PI * 7;
+      const r = radiusAt(y) * 0.86 + 0.015;
+      return [Math.cos(a) * r, y + Math.sin(t * 40) * 0.008, Math.sin(a) * r] as P3;
+    });
+    const garland = tube(spiral, 0.012, mat(0xffd34d, { metal: 0.85, rough: 0.25 }));
+    const lights = spiral.filter((_, i) => i % 3 === 1).map((p, i) => sphere(0.016, mat([0xff4d4d, 0xffd34d, 0x4da3ff, 0x6fe3a1, 0xff8fd8][i % 5], { glow: 2.2 }), p[0] * 1.06, p[1] - 0.012, p[2] * 1.06, 12));
+    const balls = [0, 1, 2].flatMap((tier) => Array.from({ length: 6 - tier }, (_, j) => {
+      const a = (j / (6 - tier)) * Math.PI * 2 + tier * 0.6;
+      const r = (0.44 - tier * 0.09) * 0.93;
+      const y = -0.36 + tier * 0.18;
+      return sphere(0.035, mat([0xe8364f, 0x3d7bff, 0xffc94a, 0xc0c0d0][(j + tier) % 4], { metal: 0.75, rough: 0.15 }), Math.cos(a) * r, y, Math.sin(a) * r, 24);
+    }));
+    const star = scl(extrude(starShape(), 0.06, mat(0xffd34d, { glow: 1.2, metal: 0.5, rough: 0.2 }), 0.02), 0.24);
+    star.position.y = 0.53;
+    return group(...tiers, cyl(0.06, 0.07, 0.14, mat(0x6b4a2b, { rough: 0.9, coat: 0 }), 0, -0.44, 0), lathe([[0.001, -0.53], [0.15, -0.53], [0.13, -0.42], [0.001, -0.42]], mat(0xe8364f, { coat: 0.8 }), 48, false), garland, ...lights, ...balls, star);
   },
-  star: () => extrude(starShape(), 0.16, mat(0xffd34d, { glow: 0.9, metal: 0.3, rough: 0.3 }), 0.05),
+  star: () => extrude(starShape(5, 0.5, 0.24), 0.14, mat(0xffc72e, { glow: 0.45, metal: 0.55, rough: 0.22 }), 0.06),
   gift: () => {
-    const rib = mat(0xffd34d, { metal: 0.3, rough: 0.35 });
-    return group(box(0.6, 0.48, 0.6, mat(0xe8364f)), box(0.66, 0.1, 0.66, mat(0xd42d45), 0, 0.27, 0), box(0.1, 0.5, 0.62, rib), box(0.62, 0.5, 0.1, rib), rot(torus(0.1, 0.035, rib, -0.08, 0.38, 0), 0, 0, 0.6), rot(torus(0.1, 0.035, rib, 0.08, 0.38, 0), 0, 0, -0.6));
+    const paper = mat(0xe03048, { rough: 0.35, coat: 0.9 });
+    const satin = mat(0xffd34d, { metal: 0.45, rough: 0.28, sheen: 0.8 });
+    const loop = (s: number) => {
+      const l = tube([[0, 0, 0], [s * 0.08, 0.07, 0], [s * 0.19, 0.11, 0], [s * 0.24, 0.05, 0], [s * 0.17, 0.0, 0], [s * 0.06, 0.0, 0]], 0.028, satin, true, 16);
+      l.scale.z = 2.4;
+      l.position.y = 0.4;
+      return l;
+    };
+    const tail = (s: number) => rot(rbox(0.07, 0.2, 0.02, 0.008, satin, s * 0.09, 0.32, 0.31), 0.2, 0, s * 0.45);
+    return group(
+      rbox(0.58, 0.44, 0.58, 0.035, paper, 0, -0.04, 0),
+      rbox(0.64, 0.12, 0.64, 0.035, mat(0xc92640, { rough: 0.35, coat: 0.9 }), 0, 0.22, 0),
+      rbox(0.1, 0.57, 0.655, 0.02, satin, 0, 0.01, 0), rbox(0.655, 0.57, 0.1, 0.02, satin, 0, 0.01, 0),
+      loop(-1), loop(1), scl(sphere(0.05, satin, 0, 0.41, 0, 24), 1, 0.9, 1.4), tail(-1), tail(1),
+    );
   },
   deer: () => {
-    const fur = mat(0x9a6640);
-    const leg = (x: number, z: number) => cyl(0.035, 0.03, 0.4, fur, x, -0.3, z);
-    const antler = (x: number) => group(rot(cyl(0.015, 0.02, 0.22, mat(0x6b4a2b), x, 0.45, 0.22), 0, 0, x * 3), rot(cyl(0.012, 0.012, 0.1, mat(0x6b4a2b), x * 1.6, 0.52, 0.22), 0, 0, -x * 6));
-    return group(scl(sphere(0.2, fur), 1.5, 0.8, 0.8), leg(-0.2, 0.08), leg(0.2, 0.08), leg(-0.2, -0.08), leg(0.2, -0.08), rot(cyl(0.06, 0.08, 0.28, fur, 0, 0.18, 0.17), 0.5, 0, 0), sphere(0.11, fur, 0, 0.32, 0.25), sphere(0.04, mat(0xe8364f, { glow: 1.2 }), 0, 0.3, 0.36, 10), antler(-0.06), antler(0.06));
+    const fur = mat(0x9a6640, { rough: 0.6, sheen: 0.7, coat: 0.2 });
+    const cream = mat(0xf2dcc0, { rough: 0.6, sheen: 0.5 });
+    const hoof = mat(0x3a2a20, { coat: 0.6 });
+    const antlerMat = mat(0x7a5a3a, { rough: 0.7 });
+    const leg = (x: number, z: number) => group(limb([[x, -0.08, z], [x * 1.05, -0.28, z + 0.02], [x * 1.05, -0.46, z]], 0.032, fur), sphere(0.036, hoof, x * 1.05, -0.47, z, 14));
+    const antler = (s: number) => group(limb([[s * 0.05, 0.45, 0.2], [s * 0.1, 0.56, 0.18], [s * 0.2, 0.66, 0.16]], 0.016, antlerMat), limb([[s * 0.1, 0.56, 0.18], [s * 0.08, 0.66, 0.2]], 0.012, antlerMat), limb([[s * 0.16, 0.62, 0.17], [s * 0.24, 0.6, 0.2]], 0.011, antlerMat));
+    const ear = (s: number) => rot(scl(sphere(0.05, fur, s * 0.11, 0.44, 0.17, 16), 0.5, 1, 0.3), 0, 0, s * -1);
+    return group(
+      scl(sphere(0.22, fur, 0, 0, 0), 1.45, 0.78, 0.85), scl(sphere(0.15, cream, 0, -0.04, 0.04), 1.6, 0.6, 0.7),
+      leg(-0.18, 0.08), leg(0.18, 0.08), leg(-0.18, -0.08), leg(0.18, -0.08),
+      limb([[0, 0.08, 0.17], [0, 0.22, 0.22], [0, 0.32, 0.22]], 0.07, fur),
+      sphere(0.11, fur, 0, 0.38, 0.24, 32), scl(sphere(0.07, cream, 0, 0.33, 0.32), 1, 0.85, 1.1),
+      sphere(0.036, mat(0xff2a3a, { glow: 1.6, coat: 1, rough: 0.1 }), 0, 0.34, 0.4, 16),
+      ...eyes(0.41, 0.33, 0.045, 0.022), ear(-1), ear(1), antler(-1), antler(1),
+      scl(sphere(0.05, cream, 0, 0.05, -0.32), 0.8, 1.2, 0.8),
+    );
   },
   bell: () => {
     const gold = mat(0xffc94a, { metal: 0.8, rough: 0.25 });
@@ -186,13 +363,27 @@ const BUILDERS: Record<string, () => THREE.Object3D> = {
     }));
   },
   candy: () => {
-    const red = mat(0xe8364f), white = mat(0xffffff);
-    const segs = Array.from({ length: 8 }, (_, i) => cyl(0.06, 0.06, 0.1, i % 2 ? red : white, 0, -0.35 + i * 0.1, 0, 14));
-    const hook = Array.from({ length: 6 }, (_, i) => {
-      const a = (i / 5) * Math.PI;
-      return sphere(0.06, i % 2 ? red : white, -0.12 + Math.cos(a) * 0.12, 0.45 + Math.sin(a) * 0.12, 0, 12);
-    });
-    return group(...segs, ...hook);
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 20; i++) pts.push(new THREE.Vector3(0.12, -0.5 + i * 0.0375, 0));
+    for (let i = 1; i <= 24; i++) {
+      const a = (i / 24) * Math.PI;
+      pts.push(new THREE.Vector3(Math.cos(a) * 0.12, 0.25 + Math.sin(a) * 0.12, 0));
+    }
+    for (let i = 1; i <= 4; i++) pts.push(new THREE.Vector3(-0.12, 0.25 - i * 0.025, 0));
+    const path = new THREE.CatmullRomCurve3(pts);
+    const n = 400;
+    const frames = path.computeFrenetFrames(n, false);
+    // Red stripes spiral around the cane, sitting just proud of the white candy.
+    const stripe = (phase: number, r: number) => {
+      const sp = Array.from({ length: n + 1 }, (_, i) => {
+        const a = (i / n) * Math.PI * 2 * 9 + phase;
+        return path.getPointAt(i / n).add(frames.normals[i].clone().multiplyScalar(Math.cos(a) * 0.05)).add(frames.binormals[i].clone().multiplyScalar(Math.sin(a) * 0.05));
+      });
+      return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(sp), n * 2, r, 10), mat(0xe8203a, { rough: 0.2, coat: 1 }));
+    };
+    const white = mat(0xfffaf5, { rough: 0.2, coat: 1 });
+    const end = pts[pts.length - 1];
+    return group(new THREE.Mesh(new THREE.TubeGeometry(path, 240, 0.065, 32), white), stripe(0, 0.024), stripe(Math.PI, 0.024), stripe(Math.PI / 2, 0.009), stripe(Math.PI * 1.5, 0.009), sphere(0.065, white, 0.12, -0.5, 0, 32), sphere(0.065, white, end.x, end.y, end.z, 32));
   },
   ribbon: () => {
     const r = mat(0xe8364f, { rough: 0.35 });
@@ -241,11 +432,23 @@ const BUILDERS: Record<string, () => THREE.Object3D> = {
     p.rotateZ(inner ? 0.3 : 0.7);
     return p;
   }), sphere(0.07, mat(0xffd34d, { glow: 0.6 }), 0, 0.05, 0), cyl(0.38, 0.38, 0.02, mat(0x1e9e6a), 0, -0.2, 0, 24)),
-  flower: () => group(...Array.from({ length: 22 }, (_, i) => {
-    const phi = Math.acos(1 - (2 * (i + 0.5)) / 22);
-    const th = Math.PI * (1 + Math.sqrt(5)) * i;
-    return sphere(0.13, mat(i % 3 ? 0xff9f1c : 0xffc94a, { rough: 0.8 }), Math.cos(th) * Math.sin(phi) * 0.25, Math.cos(phi) * 0.25, Math.sin(th) * Math.sin(phi) * 0.25, 10);
-  })),
+  flower: () => {
+    // A marigold: rings of ruffled petals, darker and tighter toward the middle.
+    const petals = Array.from({ length: 130 }, (_, i) => {
+      const t = (i + 0.5) / 130;
+      const phi = Math.acos(1 - t * 1.6);
+      const th = Math.PI * (1 + Math.sqrt(5)) * i;
+      const dir = new THREE.Vector3(Math.cos(th) * Math.sin(phi), Math.cos(phi), Math.sin(th) * Math.sin(phi));
+      const c = t < 0.3 ? 0xf06a00 : t < 0.65 ? 0xff8c00 : 0xffaa10;
+      const p = scl(sphere(0.11, mat(c, { rough: 0.5, sheen: 0.3, coat: 0.2 }), 0, 0, 0, 16), 1, 0.16, 0.6);
+      p.position.copy(dir.clone().multiplyScalar(0.25));
+      // Stand each petal on edge, pointing outward, for a ruffled pom-pom.
+      p.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+      p.rotateZ(th);
+      return p;
+    });
+    return rot(group(sphere(0.2, mat(0xd96a00)), ...petals), 0.5, 0, 0);
+  },
   fireworks: () => group(...Array.from({ length: 26 }, (_, i) => {
     const phi = Math.acos(1 - (2 * (i + 0.5)) / 26);
     const th = Math.PI * (1 + Math.sqrt(5)) * i;
@@ -263,15 +466,50 @@ const BUILDERS: Record<string, () => THREE.Object3D> = {
   })),
   firecracker: () => group(cyl(0.12, 0.12, 0.6, mat(0xe8364f)), cyl(0.13, 0.13, 0.05, mat(0xffd34d, { metal: 0.4 }), 0, 0.2, 0), cyl(0.13, 0.13, 0.05, mat(0xffd34d, { metal: 0.4 }), 0, -0.2, 0), rot(cyl(0.01, 0.01, 0.16, mat(0x444444), 0.03, 0.36, 0, 6), 0, 0, -0.3), sphere(0.04, mat(0xffb000, { glow: 2 }), 0.06, 0.44, 0, 10)),
   lantern: () => {
-    const red = mat(0xe8364f, { glow: 0.5 });
-    const gold = mat(0xffc94a, { metal: 0.6, rough: 0.3 });
-    return group(scl(sphere(0.3, red), 1.1, 0.85, 1.1), cyl(0.14, 0.14, 0.06, gold, 0, 0.26, 0), cyl(0.14, 0.14, 0.06, gold, 0, -0.26, 0), ...Array.from({ length: 7 }, (_, i) => cyl(0.006, 0.006, 0.22, mat(0xffc94a), Math.cos(i) * 0.06, -0.4, Math.sin(i) * 0.06, 4)), torus(0.05, 0.012, gold, 0, 0.33, 0));
+    const silk = mat(0xe8203a, { glow: 0.55, emissive: 0xff5a3a, rough: 0.5, sheen: 0.8, coat: 0.2 });
+    const gold = mat(0xffc94a, { metal: 0.85, rough: 0.25 });
+    const body = deform(new THREE.SphereGeometry(0.32, 96, 64), (v) => {
+      const k = 0.92 + 0.08 * Math.pow(Math.abs(Math.cos(Math.atan2(v.z, v.x) * 6)), 0.5);
+      v.x *= k * 1.1;
+      v.z *= k * 1.1;
+      v.y *= 0.82;
+    });
+    const tassel = Array.from({ length: 16 }, (_, i) => {
+      const a = (i / 16) * Math.PI * 2;
+      return cyl(0.005, 0.005, 0.22, mat(0xffc94a, { rough: 0.5 }), Math.cos(a) * 0.04, -0.47, Math.sin(a) * 0.04, 5);
+    });
+    return group(
+      new THREE.Mesh(body, silk),
+      lathe([[0.001, 0.25], [0.15, 0.25], [0.17, 0.28], [0.16, 0.31], [0.001, 0.31]], gold, 48, false),
+      lathe([[0.001, -0.31], [0.16, -0.31], [0.17, -0.28], [0.15, -0.25], [0.001, -0.25]], gold, 48, false),
+      ...Array.from({ length: 6 }, (_, i) => rot(torus(0.302, 0.006, gold, 0, 0, 0, Math.PI), 0, (i / 6) * Math.PI, Math.PI / 2)).map((t) => scl(t, 1.07, 0.84, 1.07)),
+      torus(0.05, 0.012, gold, 0, 0.36, 0), sphere(0.035, gold, 0, -0.34, 0, 20), cyl(0.045, 0.03, 0.05, gold, 0, -0.37, 0), ...tassel,
+    );
   },
   dragon: () => {
-    const red = mat(0xe8364f, { rough: 0.45 });
-    const gold = mat(0xffc94a, { metal: 0.5, rough: 0.3 });
-    const body = Array.from({ length: 9 }, (_, i) => sphere(0.11 - i * 0.006, i % 2 ? red : gold, -0.4 + i * 0.09, Math.sin(i * 0.9) * 0.12 - 0.05, 0, 14));
-    return group(...body, box(0.24, 0.16, 0.2, red, 0.42, 0.08, 0), box(0.12, 0.06, 0.16, gold, 0.55, 0.03, 0), ...eyes(0.16, 0.08, 0.06, 0.03, 0xffffff).map((e) => e.translateX(0.48)), cone(0.025, 0.14, gold, 0.38, 0.22, -0.06, 6), cone(0.025, 0.14, gold, 0.38, 0.22, 0.06, 6), rot(cyl(0.008, 0.004, 0.3, gold, 0.65, 0.08, 0.08, 4), 0, 0, -1.2));
+    const red = mat(0xe8203a, { rough: 0.35, coat: 0.7 });
+    const gold = mat(0xffc94a, { metal: 0.75, rough: 0.25 });
+    const spine = Array.from({ length: 16 }, (_, i) => {
+      const t = i / 15;
+      return [-0.5 + t * 0.85, Math.sin(t * Math.PI * 2.2) * 0.12, Math.cos(t * Math.PI * 1.6) * 0.06] as P3;
+    });
+    const fins = spine.slice(1, -2).map((p, i) => cone(0.025, 0.08, gold, p[0], p[1] + 0.075, p[2], 8));
+    const head = spine[spine.length - 1];
+    const [hx, hy, hz] = head;
+    return group(
+      tube(spine, 0.065, red), sphere(0.06, red, ...spine[0], 20),
+      ...fins,
+      rbox(0.2, 0.15, 0.17, 0.05, red, hx + 0.08, hy + 0.02, hz),
+      rbox(0.13, 0.08, 0.13, 0.035, gold, hx + 0.19, hy - 0.01, hz),
+      sphere(0.012, mat(0x2a1e1e), hx + 0.25, hy + 0.01, hz - 0.03, 8), sphere(0.012, mat(0x2a1e1e), hx + 0.25, hy + 0.01, hz + 0.03, 8),
+      ...[-1, 1].flatMap((s) => [
+        sphere(0.03, mat(0xffffff, { coat: 1 }), hx + 0.12, hy + 0.08, hz + s * 0.06, 16), sphere(0.017, mat(0x14123a, { coat: 1 }), hx + 0.14, hy + 0.085, hz + s * 0.07, 12),
+        limb([[hx + 0.04, hy + 0.08, hz + s * 0.05], [hx - 0.04, hy + 0.17, hz + s * 0.07], [hx - 0.1, hy + 0.2, hz + s * 0.08]], 0.014, gold),
+        tube([[hx + 0.24, hy - 0.03, hz + s * 0.05], [hx + 0.3, hy - 0.06, hz + s * 0.12], [hx + 0.34, hy - 0.02, hz + s * 0.2]], 0.006, gold),
+      ]),
+      ...[spine[4], spine[11]].flatMap((p) => [-1, 1].map((s) => limb([[p[0], p[1] - 0.03, p[2] + s * 0.04], [p[0] + 0.03, p[1] - 0.11, p[2] + s * 0.07]], 0.02, gold))),
+      sphere(0.04, mat(0xffd34d, { glow: 1.6 }), hx + 0.36, hy - 0.08, hz, 16),
+    );
   },
   'envelope-red': () => {
     const red = mat(0xe8364f, { rough: 0.5 });

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Placement } from '../arDecor';
-import { addLights, animate, buildScene } from './scene';
+import { addEnvironment, addLights, animate, buildScene } from './scene';
 
 /**
  * True world-tracked AR: the props are anchored in real space, so visitors can walk around them.
@@ -66,6 +66,7 @@ export async function startWebXr(opts: {
   renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
   renderer.setSize(innerWidth, innerHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.xr.enabled = true;
   renderer.xr.setReferenceSpaceType('local');
   renderer.domElement.style.display = 'none';
@@ -73,6 +74,7 @@ export async function startWebXr(opts: {
   await renderer.xr.setSession(session as unknown as Parameters<typeof renderer.xr.setSession>[0]);
 
   const scene = new THREE.Scene();
+  addEnvironment(renderer, scene);
   addLights(scene);
   const camera = new THREE.PerspectiveCamera();
   const root = buildScene(opts.placements, opts.greeting);

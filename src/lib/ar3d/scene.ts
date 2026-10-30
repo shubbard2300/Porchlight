@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { BASE_SIZE, getDecor, type Placement } from '../arDecor';
 import { buildProp } from './models';
 
@@ -61,10 +62,23 @@ export function buildScene(placements: Placement[], greeting: string | null) {
   return root;
 }
 
-/** Soft night lighting so the models read as solid objects. */
+/**
+ * Studio-style reflections (a soft virtual room) so glossy, metal and glass props catch highlights.
+ * Call once per renderer; it sets the scene's environment map.
+ */
+export function addEnvironment(renderer: THREE.WebGLRenderer, scene: THREE.Scene) {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const room = new RoomEnvironment();
+  scene.environment = pmrem.fromScene(room, 0.04).texture;
+  scene.environmentIntensity = 0.6;
+  room.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
+  pmrem.dispose();
+}
+
+/** Warm key light and a cool fill on top of the environment, so the models read as solid objects. */
 export function addLights(scene: THREE.Object3D) {
-  scene.add(new THREE.HemisphereLight(0xfff4e4, 0x4a4580, 2.4));
-  const key = new THREE.DirectionalLight(0xffffff, 2.4);
+  scene.add(new THREE.HemisphereLight(0xfff4e4, 0x4a4580, 0.6));
+  const key = new THREE.DirectionalLight(0xffffff, 2);
   key.position.set(4, 10, 12);
   scene.add(key);
   const rim = new THREE.DirectionalLight(0xffb000, 0.7);

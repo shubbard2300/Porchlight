@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { H_FOV, V_FOV, type Placement } from '@/lib/arDecor';
-import { addLights, animate, buildScene, FRAME_H } from '@/lib/ar3d/scene';
+import { addEnvironment, addLights, animate, buildScene, FRAME_H } from '@/lib/ar3d/scene';
 
 /**
  * The host's props as real 3D models drawn over a photo or the live camera. The virtual camera uses
@@ -33,11 +33,12 @@ export function ArCanvas3D({ placements, greeting, live, shift, frameHeight, onC
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMapping = THREE.NeutralToneMapping;
     el.appendChild(renderer.domElement);
     onCanvas?.(renderer.domElement);
 
     const scene = new THREE.Scene();
+    addEnvironment(renderer, scene);
     addLights(scene);
     const root = buildScene(placements, greeting);
     scene.add(root);
@@ -75,6 +76,7 @@ export function ArCanvas3D({ placements, greeting, live, shift, frameHeight, onC
       cancelAnimationFrame(raf);
       ro.disconnect();
       onCanvas?.(null);
+      scene.environment?.dispose();
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
         m.geometry?.dispose();
