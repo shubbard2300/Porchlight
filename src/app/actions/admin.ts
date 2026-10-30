@@ -15,7 +15,7 @@ import { deleteHouse } from '@/lib/housePhotos';
 import { uniqueReferralCode, uniqueUsername } from '@/lib/newUser';
 import { deletePhotoFiles } from '@/lib/photoStorage';
 import { deleteBlocked, isAccessLevel, isStaff, levelData, levelLabel, roleChangeBlocked } from '@/lib/roles';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { dollars } from '@/lib/pot';
 import { stripeConfigured } from '@/lib/stripe';
 import { displayName } from '@/lib/users';
@@ -24,6 +24,7 @@ import { issueToken, linkFor } from '@/lib/tokens';
 import { addUserSchema, fieldErrors, settingsSchema } from '@/lib/validation';
 
 export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawNote: string) {
+  const { getSeason } = await seasonCalendar();
   await requireAdmin();
   const decision = choice === 'approve' ? 'APPROVED' : 'REJECTED';
   const note = String(rawNote ?? '').trim().slice(0, 500) || null;

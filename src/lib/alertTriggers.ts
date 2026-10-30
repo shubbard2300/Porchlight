@@ -2,11 +2,13 @@ import 'server-only';
 import { db } from './db';
 import { isNearby, likeAlertDue } from './alerts';
 import { pushConfigured, sendPush } from './push';
-import { getSeason, type Season } from './seasons';
+import { type Season } from './seasons';
+import { seasonCalendar } from './seasonConfig';
 import { displayName } from './users';
 
 /** A house just went live: tell people who asked about new houses near their saved spot. */
 export async function alertNearbyHouse(houseId: string) {
+  const { getSeason } = await seasonCalendar();
   if (!pushConfigured()) return;
   const house = await db.house.findUnique({ where: { id: houseId }, select: { id: true, name: true, ownerId: true, neighborhood: true, lat: true, lng: true, litFrom: true, litUntil: true, season: true } });
   if (!house || house.lat === null) return;

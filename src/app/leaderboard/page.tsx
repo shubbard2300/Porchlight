@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { bracketsFor, getBracket } from '@/lib/brackets';
 import { seasonStandings, type HouseStanding } from '@/lib/seasonStandings';
-import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
+import { contestToday, phase, phaseLabel } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { seasonTheme } from '@/lib/theme';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import styles from './leaderboard.module.css';
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: 'Leaderboard · Porchlight' };
 const PODIUM = 3;
 
 export default async function Leaderboard({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
+  const { visibleSeasons, getSeason, defaultSeason } = await seasonCalendar();
   const today = contestToday();
   const seasons = visibleSeasons(today);
   const requested = getSeason((await searchParams).season);

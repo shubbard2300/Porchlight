@@ -8,7 +8,8 @@ import { forViewer } from '@/lib/mapPins';
 import { crowdCounts } from '@/lib/crowdCounts';
 import { CROWD_LEVELS, crowdLevel } from '@/lib/crowd';
 import { seasonStandings } from '@/lib/seasonStandings';
-import { contestToday, defaultSeason, getSeason, phase, visibleSeasons } from '@/lib/seasons';
+import { contestToday, phase } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { seasonTheme } from '@/lib/theme';
 import { HouseCard } from '@/components/HouseCard';
 import { Icon3D } from '@/components/Icon3D';
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** An anchor block's page: the houses inside its zone, a tour from here, and an invite for neighbors to join. */
 export default async function BlockPage({ params, searchParams }: Props) {
+  const { visibleSeasons, getSeason, defaultSeason } = await seasonCalendar();
   const { id } = await params;
   const [block, user] = await Promise.all([db.anchorBlock.findUnique({ where: { id } }), currentUser()]);
   if (!block || block.lat === null || block.lng === null || (!block.active && !isStaff(user?.role))) notFound();

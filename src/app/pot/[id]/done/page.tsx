@@ -6,13 +6,14 @@ import { requireUser } from '@/lib/auth';
 import { Icon3D } from '@/components/Icon3D';
 import { dollars } from '@/lib/pot';
 import { potTotal, syncCheckoutSession } from '@/lib/potServer';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { getCheckoutSession, stripeConfigured } from '@/lib/stripe';
 
 export const metadata: Metadata = { title: 'Thanks for adding to the pot · Porchlight' };
 
 /** Where Stripe Checkout sends a host back. Confirms with Stripe right away so the host doesn't wait on the webhook. */
 export default async function PotDone({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ session_id?: string }> }) {
+  const { getSeason } = await seasonCalendar();
   const { id } = await params;
   const { session_id } = await searchParams;
   const user = await requireUser(`/pot/${id}/done`);

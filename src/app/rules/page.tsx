@@ -3,14 +3,16 @@ import Link from 'next/link';
 import { LegalPage } from '@/components/LegalPage';
 import { CONTACT_EMAIL, CONTEST_STATE, OWNER_NAME, PRIZE_PLACES, rulesAgreementText, SITE_URL, SPONSOR_ADDRESS } from '@/lib/legal';
 import { POT_AMOUNTS } from '@/lib/pot';
-import { contestToday, formatDay, openForSubmissions, visibleSeasons } from '@/lib/seasons';
+import { contestToday, formatDay } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 
 export const metadata: Metadata = { title: 'Official contest rules · Porchlight', description: 'No purchase necessary. How Porchlight contests, voting and the prize pot work.' };
 
 /** A detail that still has to be filled in before launch, shown so nobody mistakes it for the real thing. */
 const Blank = ({ children }: { children: React.ReactNode }) => <mark className="legal-blank">[{children}]</mark>;
 
-export default function Rules() {
+export default async function Rules() {
+  const { visibleSeasons, openForSubmissions } = await seasonCalendar();
   const today = contestToday();
   const seasons = [...new Set([...visibleSeasons(today), ...openForSubmissions(today)])];
   const site = SITE_URL.replace('https://', '');
@@ -30,9 +32,9 @@ export default function Rules() {
       </ul>
 
       <h2>3. Contest dates</h2>
-      <p>Each holiday is its own contest. Voting opens on the first day shown and closes at 11:59 pm Pacific time on the holiday.</p>
+      <p>Each holiday is its own contest. Entries and voting open at 12:00 am and close at 11:59 pm Pacific time on the days shown. We post any date change here before it takes effect.</p>
       <ul>
-        {seasons.map((s) => <li key={s.key}>{s.name} {s.year}: voting {formatDay(s.opens)} to {formatDay(s.day)}</li>)}
+        {seasons.map((s) => <li key={s.key}>{s.name} {s.year}: entries {formatDay(s.submitOpens)} to {formatDay(s.submitCloses)}, voting {formatDay(s.opens)} to {formatDay(s.closes)}</li>)}
       </ul>
 
       <h2>4. How to enter (free)</h2>
@@ -77,7 +79,7 @@ export default function Rules() {
           <ul>{PRIZE_PLACES.map((p) => <li key={p.place}>{p.place}: {p.amount || <Blank>amount</Blank>}</li>)}</ul>
         </li>
         <li>Prizes are paid from the money in that contest&apos;s pot from hosts and sponsors, as shown on the home page when voting closes, together with any amount Porchlight adds. Pledges that were never paid are not part of the pot.</li>
-        <li>We contact the winners by email within 7 days after the holiday and announce them on Porchlight. Each winner must confirm identity and eligibility, and return a signed IRS Form W-9, within 14 days, or that prize goes to the next eligible house.</li>
+        <li>We contact the winners by email within 7 days after voting closes and announce them on Porchlight. Each winner must confirm identity and eligibility, and return a signed IRS Form W-9, within 14 days, or that prize goes to the next eligible house.</li>
         <li>We pay prizes within 30 days of confirmation. Winners are responsible for all taxes. We report prizes as the law requires, including on IRS Form 1099-MISC when a winner&apos;s prizes from us reach $2,000 or more in a year.</li>
         <li>A house can win only one prize per contest.</li>
         <li>Prizes can&apos;t be transferred or swapped.</li>

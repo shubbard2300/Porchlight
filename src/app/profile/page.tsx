@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { Icon3D } from '@/components/Icon3D';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
-import { contestToday, getSeason, openForSubmissions, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
+import { contestToday, phase, phaseLabel } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { photoSelect } from '@/lib/housePhotos';
 import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { BracketPicker } from './BracketPicker';
@@ -32,6 +33,7 @@ const PAY_NOTES: Record<string, string> = {
 };
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ welcome?: string; submitted?: string; host?: string; pay?: string }> }) {
+  const { getSeason, visibleSeasons, openForSubmissions } = await seasonCalendar();
   const user = await requireUser('/profile');
   const { welcome, submitted, host: becameHost, pay } = await searchParams;
   const isHost = user.accountType === 'HOST';

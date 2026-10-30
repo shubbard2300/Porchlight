@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { isBootstrapAdmin, requireSuperAdmin } from '@/lib/auth';
 import { ACCESS_LEVELS, accessLevel, BLOCKED, levelLabel, type AccessLevel } from '@/lib/roles';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { avatarUrl } from '@/lib/users';
 import { deleteUser, setAccessLevel } from '../../actions/admin';
 import { AddUserForm } from './AddUserForm';
@@ -14,6 +14,7 @@ const NOTES: Record<string, string> = { saved: 'Access updated.', deleted: 'Acco
 
 export default async function Users({ searchParams }: { searchParams: Promise<{ q?: string; type?: string; note?: string }> }) {
   const me = await requireSuperAdmin();
+  const { getSeason } = await seasonCalendar();
   const sp = await searchParams;
   const blocked = sp.note && sp.note in BLOCKED ? BLOCKED[sp.note as keyof typeof BLOCKED] : null;
   const q = (sp.q ?? '').trim();

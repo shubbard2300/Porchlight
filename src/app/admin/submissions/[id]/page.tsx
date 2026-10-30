@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { HouseDetailsForm } from '../../../profile/ProfileForms';
 
 /** Editors and Super Admins fix anyone's submission: name, address, viewing hours and description. */
 export default async function EditSubmission({ params }: { params: Promise<{ id: string }> }) {
+  const { getSeason } = await seasonCalendar();
   await requireAdmin();
   const h = await db.house.findUnique({ where: { id: (await params).id }, include: { owner: { select: { username: true, email: true } } } });
   if (!h) notFound();

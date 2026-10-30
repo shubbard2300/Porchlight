@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { HouseStatus } from '@prisma/client';
 import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { getBracket } from '@/lib/brackets';
 import { ReviewControls } from './ReviewControls';
 
@@ -10,6 +10,7 @@ const FILTERS: [HouseStatus, string][] = [['PENDING', 'Waiting'], ['APPROVED', '
 
 export default async function Submissions({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   await requireAdmin();
+  const { getSeason } = await seasonCalendar();
   const raw = (await searchParams).status;
   const status: HouseStatus = FILTERS.some(([k]) => k === raw) ? (raw as HouseStatus) : 'PENDING';
   const houses = await db.house.findMany({ where: { status }, include: { owner: true, photos: { select: { id: true, url: true, lat: true, lng: true, locationSource: true }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] } }, orderBy: { createdAt: status === 'PENDING' ? 'asc' : 'desc' }, take: 100 });

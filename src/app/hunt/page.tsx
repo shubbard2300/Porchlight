@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { CRITTERS, getCritter } from '@/lib/hunt';
-import { contestToday, defaultSeason, getSeason, visibleSeasons } from '@/lib/seasons';
+import { contestToday } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { Icon3D } from '@/components/Icon3D';
 import { AR_CATCH_XP } from '@/lib/rewards';
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: 'My critter collection · Porchlight'
 
 /** Every AR critter you've caught this season, the set still to find, and how many porches are left. */
 export default async function Collection({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
+  const { visibleSeasons, getSeason, defaultSeason } = await seasonCalendar();
   const user = await requireUser('/hunt');
   const today = contestToday();
   const seasons = visibleSeasons(today);

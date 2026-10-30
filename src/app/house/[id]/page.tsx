@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { forViewer } from '@/lib/mapPins';
 import { votingOpen } from '@/lib/checkIns';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { getBracket } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
 import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
@@ -44,6 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function HousePage({ params, searchParams }: Props) {
+  const { getSeason } = await seasonCalendar();
   const { id } = await params;
   const { checkin } = await searchParams;
   const [house, user] = await Promise.all([load(id), currentUser()]);
@@ -72,6 +73,7 @@ export default async function HousePage({ params, searchParams }: Props) {
     user ? db.arCatch.findUnique({ where: { userId_houseId: { userId: user.id, houseId: id } }, select: { id: true } }) : null,
   ]);
   const critter = critterFor(house.id, season?.name);
+  const open = await votingOpen(house.season);
   const squads = [...Map.groupBy(squadVotes, (v) => v.caravan!.id).values()]
     .filter((vs) => vs.length >= MIN_SQUAD_REVIEWERS)
     .map((vs) => ({ caravan: vs[0].caravan!, ...squadReview(vs) }))
@@ -79,7 +81,7 @@ export default async function HousePage({ params, searchParams }: Props) {
 
   const state: VisitState = !user ? 'guest'
     : house.ownerId === user.id ? 'own'
-    : house.status !== 'APPROVED' || !votingOpen(house.season) ? 'closed'
+    : house.status !== 'APPROVED' || !open ? 'closed'
     : myCheckIn ? 'checked-in' : 'needs-checkin';
   const overall = averageScore({
     creativity: avg._avg.creativity, lighting: avg._avg.lighting, storytelling: avg._avg.storytelling, sound: avg._avg.sound,
@@ -205,7 +207,7 @@ export default async function HousePage({ params, searchParams }: Props) {
             flash={checkin ? FLASH[checkin] ?? null : null}
             myVote={myVote && { liked: myVote.liked, comment: myVote.comment, creativity: myVote.creativity, lighting: myVote.lighting, storytelling: myVote.storytelling, sound: myVote.sound }}
           />
-          {house.status === 'APPROVED' && votingOpen(house.season) && (
+          {house.status === 'APPROVED' && open && (
             <Link href={myCatch ? '/hunt' : `/house/${house.id}/hunt`} className={styles.pitstop}>
               <span className={styles.pitBadge} style={{ background: 'var(--lilac)' }}><Icon3D name={critter.icon} size={34} /></span>
               <span className="stack" style={{ gap: 2 }}>

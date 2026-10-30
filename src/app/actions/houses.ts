@@ -12,11 +12,13 @@ import { CONTEST_STATE, inContestArea, LEGAL_UPDATED } from '@/lib/legal';
 import { bracketsFor } from '@/lib/brackets';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
-import { contestToday, getSeason, openForSubmissions, phase } from '@/lib/seasons';
+import { contestToday, phase } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { fieldErrors, houseEditSchema, houseSchema } from '@/lib/validation';
 import { isStaff } from '@/lib/roles';
 
 export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { getSeason, openForSubmissions } = await seasonCalendar();
   const user = await requireUser('/submit');
   const parsed = houseSchema.safeParse({ ...Object.fromEntries(fd), tags: fd.getAll('tags') });
   if (user.accountType !== 'HOST') return { errors: { form: 'Only hosts can post a house. Become a host from your profile first.' } };
@@ -95,6 +97,7 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
  * Editors and Super Admins can edit anyone's submission from Admin > Submissions; that counts as the review.
  */
 export async function updateMyHouse(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  const { getSeason } = await seasonCalendar();
   const user = await requireUser('/profile');
   const house = await db.house.findFirst({ where: isStaff(user.role) ? { id } : { id, ownerId: user.id } });
   if (!house) return { errors: { form: 'That submission wasn’t found.' } };
@@ -174,6 +177,7 @@ export async function deleteMyHouse(id: string) {
 
 /** A host moves one of their submissions to another bracket while its contest is still running. */
 export async function setHouseBracket(id: string, bracket: string): Promise<{ error?: string }> {
+  const { getSeason } = await seasonCalendar();
   const user = await requireUser('/profile');
   const house = await db.house.findFirst({ where: { id, ownerId: user.id }, select: { id: true, season: true } });
   const season = house && getSeason(house.season);

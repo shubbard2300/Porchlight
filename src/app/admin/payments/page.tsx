@@ -6,7 +6,8 @@ import { appUrl } from '@/lib/email';
 import { dollars } from '@/lib/pot';
 import { potTotal, unpaidPledgeCents } from '@/lib/potServer';
 import { seasonStandings } from '@/lib/seasonStandings';
-import { contestToday, defaultSeason, getSeason, openForSubmissions, phase, SEASONS, visibleSeasons } from '@/lib/seasons';
+import { contestToday, phase } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { stripeConfigured } from '@/lib/stripe';
 import { PaymentAction } from './PaymentAction';
 import { SponsorForm } from './SponsorForm';
@@ -16,6 +17,7 @@ const WEBHOOK_EVENTS = ['checkout.session.completed', 'checkout.session.async_pa
 
 export default async function Payments({ searchParams }: { searchParams: Promise<{ season?: string; refund?: string }> }) {
   await requireSuperAdmin();
+  const { visibleSeasons, openForSubmissions, all: SEASONS, getSeason, defaultSeason } = await seasonCalendar();
   const today = contestToday();
   const { season: key, refund } = await searchParams;
   const seasons = SEASONS.filter((s) => visibleSeasons(today).includes(s) || openForSubmissions(today).includes(s));

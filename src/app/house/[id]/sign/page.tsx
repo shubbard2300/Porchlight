@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { porchUrl } from '@/lib/porchCode';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { seasonTheme } from '@/lib/theme';
 import { Icon3D } from '@/components/Icon3D';
 import { LogoMark, Wordmark } from '@/components/LogoMark';
@@ -17,6 +17,7 @@ export const metadata: Metadata = { title: 'Porch sign · Porchlight' };
 
 /** A printable sign for the host's porch. Its QR code checks visitors in, so only the host and admins can see it. */
 export default async function PorchSign({ params }: { params: Promise<{ id: string }> }) {
+  const { getSeason } = await seasonCalendar();
   const { id } = await params;
   const user = await requireUser(`/house/${id}/sign`);
   const house = await db.house.findUnique({ where: { id }, select: { id: true, name: true, ownerId: true, season: true, status: true } });
