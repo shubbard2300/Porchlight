@@ -5,14 +5,15 @@ import { activeCaravanId } from './caravanServer';
 import { SQUAD_BONUS_XP, SQUAD_WINDOW_MIN } from './caravans';
 import { CHECKIN_XP } from './rewards';
 import { boostedXp } from './pitstops';
-import { contestToday, getSeason, phase } from './seasons';
+import { contestToday, phase } from './seasons';
+import { seasonCalendar } from './seasonConfig';
 import { CHECKIN_REPEAT_HOURS } from './visits';
 import { after } from 'next/server';
 import { alertSquadCheckIn } from './alertTriggers';
 import { lightsAfter } from './porchLightServer';
 
-export function votingOpen(seasonKey: string) {
-  const s = getSeason(seasonKey);
+export async function votingOpen(seasonKey: string) {
+  const s = (await seasonCalendar()).getSeason(seasonKey);
   return Boolean(s && phase(s, contestToday()) === 'live');
 }
 
@@ -21,7 +22,7 @@ export async function votableHouse(houseId: string, userId: string): Promise<{ h
   const house = await db.house.findUnique({ where: { id: houseId } });
   if (!house || house.status !== 'APPROVED') return { code: 'missing', error: 'That house isn’t in the contest.' };
   if (house.ownerId === userId) return { code: 'own', error: 'This is your own house, so you can’t vote for it. Share your porch sign instead!' };
-  if (!votingOpen(house.season)) return { code: 'closed', error: 'Voting for this contest isn’t open right now.' };
+  if (!(await votingOpen(house.season))) return { code: 'closed', error: 'Voting for this contest isn’t open right now.' };
   return { house };
 }
 

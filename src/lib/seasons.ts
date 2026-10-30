@@ -1,34 +1,45 @@
+import { getHoliday, HOLIDAYS, shiftDays, SUBMISSION_LEAD_DAYS, type HolidayKey } from './holidays';
+
 /**
  * Holiday contests and the rules for when each one is visible.
  *
+ * - Which holidays run, and each contest's dates, come from Admin > Contest dates (a SeasonConfig),
+ *   on top of the usual dates in holidays.ts.
  * - The app defaults to the upcoming holiday.
- * - Voting runs from `opens` through the end of the holiday (`day`).
- * - Viewers can still see final results for GRACE_DAYS after the holiday.
+ * - Hosts can enter a house from `submitOpens` through `submitCloses`.
+ * - Voting runs from `opens` through `closes` (usually the holiday itself, `day`).
+ * - Viewers can still see final results for GRACE_DAYS after voting closes.
  * - After that the contest is expired for viewers and lives on only in each poster's archive.
  *
  * All dates are calendar dates in CONTEST_TIME_ZONE, compared as YYYY-MM-DD strings.
  */
 export const CONTEST_TIME_ZONE = 'America/Los_Angeles';
 export const GRACE_DAYS = 7;
+/** The first contest year. Houses keep their season key forever, so every year since stays resolvable. */
+export const FIRST_YEAR = 2026;
 
-export type Season = {
+export type SeasonDates = { submitOpens: string; submitCloses: string; opens: string; closes: string };
+
+export type Season = SeasonDates & {
   key: string;
+  holiday: HolidayKey;
   name: string;
   year: number;
-  opens: string;
+  /** The holiday itself. */
   day: string;
   color: string;
+  /** Turned on by an admin. Off contests stay readable for old entries but are hidden and closed. */
+  enabled: boolean;
+};
+
+/** What an admin saved. Anything missing falls back to the usual dates and on/off defaults. */
+export type SeasonConfig = {
+  enabled?: Partial<Record<HolidayKey, boolean>>;
+  /** Date changes for one contest, by season key such as "christmas-2026". */
+  dates?: Record<string, Partial<SeasonDates>>;
 };
 
 export type Phase = 'soon' | 'live' | 'final' | 'expired';
-
-export const SEASONS: Season[] = [
-  { key: 'halloween-2026', name: 'Halloween', year: 2026, opens: '2026-10-01', day: '2026-10-31', color: '#FF6A1F' },
-  { key: 'christmas-2026', name: 'Christmas', year: 2026, opens: '2026-11-01', day: '2026-12-25', color: '#E8364F' },
-  { key: 'july4-2027', name: 'Fourth of July', year: 2027, opens: '2027-06-01', day: '2027-07-04', color: '#3D7BFF' },
-  { key: 'halloween-2027', name: 'Halloween', year: 2027, opens: '2027-10-01', day: '2027-10-31', color: '#FF6A1F' },
-  { key: 'christmas-2027', name: 'Christmas', year: 2027, opens: '2027-11-01', day: '2027-12-25', color: '#E8364F' },
-];
 
 /** Today's date in the contest time zone, as YYYY-MM-DD. */
 export function contestToday(now: Date = new Date()): string {
@@ -37,47 +48,89 @@ export function contestToday(now: Date = new Date()): string {
   }).format(now);
 }
 
-export function addDays(ymd: string, days: number): string {
-  const d = new Date(`${ymd}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
+export const addDays = shiftDays;
+
+export const isYmd = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T12:00:00Z`));
+
+/** The usual dates for one holiday in one year, before any admin changes. */
+export function usualDates(key: HolidayKey, year: number): (SeasonDates & { day: string }) | null {
+  const h = getHoliday(key)!;
+  const day = h.date(year);
+  if (!day) return null;
+  const opens = h.votingOpens(day, year);
+  const closes = shiftDays(day, h.extraDays ?? 0);
+  return { day, opens, closes, submitOpens: shiftDays(opens, -SUBMISSION_LEAD_DAYS), submitCloses: closes };
 }
 
-export const viewableUntil = (s: Season) => addDays(s.day, GRACE_DAYS);
+/** Every contest from FIRST_YEAR through next year, on or off, sorted by when voting closes. */
+export function buildSeasons(config: SeasonConfig = {}, today: string = contestToday()): Season[] {
+  const lastYear = Math.max(Number(today.slice(0, 4)) + 1, FIRST_YEAR + 1);
+  const anyOn = HOLIDAYS.some((h) => config.enabled?.[h.key] ?? h.onByDefault);
+  const list: Season[] = [];
+  for (let year = FIRST_YEAR; year <= lastYear; year++) {
+    for (const h of HOLIDAYS) {
+      const usual = usualDates(h.key, year);
+      if (!usual) continue;
+      const key = `${h.key}-${year}`;
+      const saved = config.dates?.[key] ?? {};
+      const pick = (f: keyof SeasonDates) => (isYmd(saved[f]) ? saved[f]! : usual[f]);
+      list.push({
+        key, holiday: h.key, name: h.name, year, day: usual.day, color: h.color,
+        submitOpens: pick('submitOpens'), submitCloses: pick('submitCloses'), opens: pick('opens'), closes: pick('closes'),
+        // With everything switched off the site would have no contest at all, so the defaults come back.
+        enabled: anyOn ? (config.enabled?.[h.key] ?? h.onByDefault) : h.onByDefault,
+      });
+    }
+  }
+  return list.sort((a, b) => a.closes.localeCompare(b.closes) || a.opens.localeCompare(b.opens));
+}
+
+export const viewableUntil = (s: Season) => addDays(s.closes, GRACE_DAYS);
 
 export function phase(s: Season, today: string): Phase {
   if (today < s.opens) return 'soon';
-  if (today <= s.day) return 'live';
+  if (today <= s.closes) return 'live';
   if (today <= viewableUntil(s)) return 'final';
   return 'expired';
 }
 
-export function getSeason(key: string | null | undefined): Season | undefined {
-  return SEASONS.find((s) => s.key === key);
+/** Problems with a set of dates, by field, in words an admin can act on. */
+export function dateProblems(d: Partial<SeasonDates>): Partial<Record<keyof SeasonDates, string>> {
+  const out: Partial<Record<keyof SeasonDates, string>> = {};
+  for (const f of ['submitOpens', 'submitCloses', 'opens', 'closes'] as const) if (!isYmd(d[f])) out[f] = 'Pick a date.';
+  if (Object.keys(out).length) return out;
+  if (d.submitCloses! < d.submitOpens!) out.submitCloses = 'Entries have to close after they open.';
+  if (d.closes! < d.opens!) out.closes = 'Voting has to close after it opens.';
+  if (d.submitCloses! > d.closes!) out.submitCloses = 'Entries can’t stay open after voting closes.';
+  return out;
 }
 
-/** The upcoming holiday: the first contest whose holiday is today or later. */
-export function defaultSeason(today: string): Season {
-  return SEASONS.find((s) => s.day >= today) ?? SEASONS[SEASONS.length - 1];
+/**
+ * Season lookups over one list of contests. Server code gets one from `seasonCalendar()` in
+ * seasonConfig.ts, so every page in a request agrees on the same admin settings.
+ */
+export function calendar(all: Season[]) {
+  const live = all.filter((s) => s.enabled);
+  /** Any contest, on or off, so old entries keep their holiday. */
+  const getSeason = (key: string | null | undefined) => all.find((s) => s.key === key);
+  /** The upcoming holiday: the first turned-on contest whose voting hasn't closed yet. */
+  const defaultSeason = (today: string): Season =>
+    live.find((s) => s.closes >= today) ?? live[live.length - 1] ?? all[all.length - 1];
+  const nextAfter = (s: Season) => live[live.indexOf(s) + 1];
+  /** What viewers can pick from: the default, any contest in its results week, and the one after the default. */
+  const visibleSeasons = (today: string): Season[] => {
+    const def = defaultSeason(today);
+    const next = nextAfter(def);
+    const finals = live.filter((s) => phase(s, today) === 'final');
+    return [...new Set([def, ...finals, ...(next ? [next] : [])])];
+  };
+  /** Contests that accept new house submissions today. */
+  const openForSubmissions = (today: string): Season[] =>
+    live.filter((s) => s.submitOpens <= today && today <= s.submitCloses);
+  return { all, getSeason, defaultSeason, visibleSeasons, openForSubmissions };
 }
 
-/** What viewers can pick from: the default, any contest in its results week, and the one after the default. */
-export function visibleSeasons(today: string): Season[] {
-  const def = defaultSeason(today);
-  const next = SEASONS[SEASONS.indexOf(def) + 1];
-  const finals = SEASONS.filter((s) => phase(s, today) === 'final');
-  return [...new Set([def, ...finals, ...(next ? [next] : [])])];
-}
-
-/** Contests that accept new house submissions. */
-export function openForSubmissions(today: string): Season[] {
-  const def = defaultSeason(today);
-  const next = SEASONS[SEASONS.indexOf(def) + 1];
-  return [def, ...(next ? [next] : [])].filter((s) => {
-    const p = phase(s, today);
-    return p === 'soon' || p === 'live';
-  });
-}
+export type SeasonCalendar = ReturnType<typeof calendar>;
 
 export function formatDay(ymd: string): string {
   return new Date(`${ymd}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -85,8 +138,8 @@ export function formatDay(ymd: string): string {
 
 export function phaseLabel(s: Season, today: string): { tag: string; line: string } {
   switch (phase(s, today)) {
-    case 'soon': return { tag: 'Submissions open', line: `Voting opens ${formatDay(s.opens)}` };
-    case 'live': return { tag: 'Voting live', line: `Closes ${formatDay(s.day)} at midnight` };
+    case 'soon': return { tag: today >= s.submitOpens && today <= s.submitCloses ? 'Submissions open' : 'Coming soon', line: `Voting opens ${formatDay(s.opens)}` };
+    case 'live': return { tag: 'Voting live', line: `Closes ${formatDay(s.closes)} at midnight` };
     case 'final': return { tag: 'Final results', line: `Viewable until ${formatDay(viewableUntil(s))}` };
     default: return { tag: 'Archived', line: 'In posters’ archives' };
   }

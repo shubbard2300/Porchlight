@@ -7,13 +7,14 @@ import { votableHouse } from '@/lib/checkIns';
 import { critterFor } from '@/lib/hunt';
 import { boostedXp } from '@/lib/pitstops';
 import { AR_CATCH_XP } from '@/lib/rewards';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { lightsAfter } from '@/lib/porchLightServer';
 
 export type CatchResult = { ok: true; xp: number; already: boolean } | { ok: false; error: string };
 
 /** Records catching a house's AR critter. Only people who checked in at the house can catch it. */
 export async function catchCritter(houseId: string): Promise<CatchResult> {
+  const { getSeason } = await seasonCalendar();
   const user = await currentUser();
   if (!user) return { ok: false, error: 'Log in to catch critters.' };
   const found = await votableHouse(houseId, user.id);

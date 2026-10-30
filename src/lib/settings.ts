@@ -1,6 +1,6 @@
 import { db } from './db';
 
-export const SETTING_KEYS = ['notificationEmail', 'emailFrom', 'replyTo'] as const;
+export const SETTING_KEYS = ['notificationEmail', 'emailFrom', 'replyTo', 'contestSeasons'] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 export async function getSetting(key: SettingKey): Promise<string | null> {

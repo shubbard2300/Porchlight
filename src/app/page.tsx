@@ -18,7 +18,8 @@ import { communityCounts, myContribution } from '@/lib/communityCounts';
 import { seasonTheme } from '@/lib/theme';
 import { dollars } from '@/lib/pot';
 import { potTotal, unpaidPledgeCents } from '@/lib/potServer';
-import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
+import { contestToday, phase, phaseLabel } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 
 const STEPS: [Icon3DName, string, string][] = [
   ['house', 'Add your porch to the map', 'Snap your display at night and drop your pin. Every porch makes the map brighter for everyone.'],
@@ -32,6 +33,7 @@ const potFrom = (hosts: number, sponsors: number) => [
 ].filter(Boolean).join(' and ');
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ season?: string; bracket?: string }> }) {
+  const { visibleSeasons, getSeason, defaultSeason } = await seasonCalendar();
   const today = contestToday();
   const seasons = visibleSeasons(today);
   const query = await searchParams;

@@ -7,9 +7,11 @@ import { potTotals, unpaidPledgeCents } from '@/lib/potServer';
 import { stripeConfigured } from '@/lib/stripe';
 import { pushConfigured } from '@/lib/push';
 import { notificationEmail } from '@/lib/settings';
-import { contestToday, phaseLabel, visibleSeasons } from '@/lib/seasons';
+import { contestToday, phaseLabel } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 
 export default async function AdminHome() {
+  const { visibleSeasons } = await seasonCalendar();
   const today = contestToday();
   const [users, newUsers, pending, recentMail, to] = await Promise.all([
     db.user.count(),

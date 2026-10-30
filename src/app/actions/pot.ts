@@ -9,12 +9,14 @@ import type { FormState } from '@/lib/forms';
 import { LEGAL_UPDATED } from '@/lib/legal';
 import { canPay, POT_AMOUNTS } from '@/lib/pot';
 import { markRefunded } from '@/lib/potServer';
-import { contestToday, getSeason, phase } from '@/lib/seasons';
+import { contestToday, phase } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { createCheckoutSession, refundPaymentIntent, stripeConfigured } from '@/lib/stripe';
 import { fieldErrors, sponsorSchema } from '@/lib/validation';
 
 /** Sends a host to Stripe Checkout to pay their pledge into their house's season pot. */
 export async function payPledge(houseId: string, fd: FormData) {
+  const { getSeason } = await seasonCalendar();
   const user = await requireUser('/profile');
   const back = (why: string) => redirect(`/profile?pay=${why}#pot-${houseId}`);
   const amount = Number(fd.get('amount'));
@@ -69,6 +71,7 @@ export async function refundPayment(id: string) {
 
 /** Records money a sponsor added to a season's pot outside Stripe (a check, an invoice). */
 export async function addSponsor(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { getSeason } = await seasonCalendar();
   await requireAdmin();
   const parsed = sponsorSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };

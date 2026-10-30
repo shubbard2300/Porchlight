@@ -6,7 +6,8 @@ import { crowdCounts } from '@/lib/crowdCounts';
 import { currentUser } from '@/lib/auth';
 import { forViewer, publicPin } from '@/lib/mapPins';
 import { seasonStandings } from '@/lib/seasonStandings';
-import { contestToday, defaultSeason, getSeason, visibleSeasons } from '@/lib/seasons';
+import { contestToday } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { seasonTheme } from '@/lib/theme';
 import { houseValue } from '@/lib/routeWeaver';
 import { placedBlocks } from '@/lib/blockStandings';
@@ -17,6 +18,7 @@ export const metadata: Metadata = { title: 'Route Weaver · Porchlight' };
 
 /** Plans a loop of the best houses for the time a visitor has, then hands it to their maps app. */
 export default async function RoutePage({ searchParams }: { searchParams: Promise<{ season?: string; from?: string }> }) {
+  const { visibleSeasons, getSeason, defaultSeason } = await seasonCalendar();
   const today = contestToday();
   const seasons = visibleSeasons(today);
   const query = await searchParams;

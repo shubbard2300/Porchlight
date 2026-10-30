@@ -3,12 +3,14 @@ import { Icon3D } from '@/components/Icon3D';
 import { requireUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { PENDING_PHOTO_MS, photoSelect } from '@/lib/housePhotos';
-import { contestToday, defaultSeason, formatDay, openForSubmissions, phase } from '@/lib/seasons';
+import { contestToday, formatDay, phase } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { becomeHost } from '../actions/profile';
 import { SubmitForm } from './SubmitForm';
 import { Tip } from '@/components/Tip';
 
 export default async function SubmitPage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
+  const { openForSubmissions, defaultSeason } = await seasonCalendar();
   const user = await requireUser('/submit');
   if (user.accountType !== 'HOST') {
     return (

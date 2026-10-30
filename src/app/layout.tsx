@@ -11,7 +11,8 @@ import { Modals } from '@/components/Modals';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteNav } from '@/components/SiteNav';
-import { contestToday, defaultSeason } from '@/lib/seasons';
+import { contestToday } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { seasonTheme } from '@/lib/theme';
 import { pendingTour } from '@/lib/tours';
 import { logout } from './actions/auth';
@@ -37,6 +38,7 @@ const FONTS = 'https://fonts.googleapis.com/css2?' + [
 ].map((f) => `family=${f}`).join('&') + '&display=swap';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { defaultSeason } = await seasonCalendar();
   const user = await currentUser();
   const boosted = boostActive(user?.xpBoostUntil);
   const tour = user && pendingTour(user);

@@ -2,13 +2,14 @@ import Link from 'next/link';
 import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { avatarUrl } from '@/lib/users';
 import { deleteUser, setRole } from '../../actions/admin';
 
 const TYPES: [string, string][] = [['all', 'Everyone'], ['VIEWER', 'Viewers'], ['HOST', 'Hosts'], ['unverified', 'Not verified']];
 
 export default async function Users({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {
+  const { getSeason } = await seasonCalendar();
   const me = await requireAdmin();
   const sp = await searchParams;
   const q = (sp.q ?? '').trim();

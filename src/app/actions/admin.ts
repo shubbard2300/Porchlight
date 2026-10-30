@@ -12,7 +12,7 @@ import { geocodeAddress } from '@/lib/geocode';
 import type { FormState } from '@/lib/forms';
 import { deleteHouse } from '@/lib/housePhotos';
 import { deletePhotoFiles } from '@/lib/photoStorage';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { dollars } from '@/lib/pot';
 import { stripeConfigured } from '@/lib/stripe';
 import { displayName } from '@/lib/users';
@@ -20,6 +20,7 @@ import { setSetting } from '@/lib/settings';
 import { fieldErrors, settingsSchema } from '@/lib/validation';
 
 export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawNote: string) {
+  const { getSeason } = await seasonCalendar();
   await requireAdmin();
   const decision = choice === 'approve' ? 'APPROVED' : 'REJECTED';
   const note = String(rawNote ?? '').trim().slice(0, 500) || null;

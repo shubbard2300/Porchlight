@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import type { FormState } from '@/lib/forms';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { sniffImage } from '@/lib/images';
 import bcrypt from 'bcryptjs';
 import { fieldErrors, hostProfileSchema, newPasswordSchema, profileSchema } from '@/lib/validation';
@@ -45,6 +45,7 @@ export async function setPassword(_prev: FormState, fd: FormData): Promise<FormS
 }
 
 export async function saveHostProfile(_prev: FormState, fd: FormData): Promise<FormState> {
+  const { getSeason } = await seasonCalendar();
   const user = await requireUser('/profile');
   if (user.accountType !== 'HOST') return { errors: { form: 'Switch to a host account first.' } };
   const parsed = hostProfileSchema.safeParse(Object.fromEntries(fd));

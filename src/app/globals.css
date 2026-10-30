@@ -206,6 +206,29 @@ table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
 th, td { text-align: left; padding: 11px 13px; border-bottom: 1.5px solid var(--sand); vertical-align: top; }
 th { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); background: var(--paper-2); border-bottom: var(--edge); }
 tr:last-child td { border-bottom: 0; }
+/* admin: contest dates */
+.contest-list { display: grid; gap: 16px; }
+.contest-card { display: grid; gap: 14px; padding: 18px 20px; background: var(--paper); border: var(--edge); border-left: 10px solid var(--contest); border-radius: var(--r-lg); box-shadow: 4px 4px 0 var(--ink); }
+.contest-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.contest-head input[type='checkbox'] { width: 24px; height: 24px; accent-color: var(--ink); flex: none; cursor: pointer; }
+.contest-name { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 180px; cursor: pointer; }
+.contest-name > span { display: grid; gap: 1px; }
+.contest-name b { font-size: 17px; }
+.contest-off { display: none; background: var(--sand); }
+.contest-dates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.contest-dates .field { align-content: start; }
+.contest-dates .field { margin: 0; }
+.contest-dates input { width: 100%; min-width: 0; }
+.contest-warn { display: none; margin: 0; color: #8a4b00; }
+.contest-reset { justify-self: start; }
+.contest-card:has(.contest-head input:not(:checked)) { border-left-color: var(--sand); background: var(--paper-2); box-shadow: 2px 2px 0 var(--ink); }
+.contest-card:has(.contest-head input:not(:checked)) .contest-dates,
+.contest-card:has(.contest-head input:not(:checked)) .contest-reset { opacity: 0.45; }
+.contest-card:has(.contest-head input:not(:checked)) .contest-status { display: none; }
+.contest-card:has(.contest-head input:not(:checked)) .contest-off,
+.contest-card:has(.contest-head input:not(:checked)) .contest-warn { display: inline-flex; }
+.contest-save { position: sticky; bottom: 16px; display: flex; justify-content: flex-end; }
+@media (max-width: 760px) { .contest-dates { grid-template-columns: repeat(2, minmax(0, 1fr)); } .contest-card { padding: 16px; } .contest-save .btn { width: 100%; } }
 details summary { cursor: pointer; color: var(--text-2); font-weight: 700; }
 pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var(--paper-2); border: 1.5px solid var(--ink); border-radius: var(--r-sm); padding: 12px; margin: 8px 0 0; }
 

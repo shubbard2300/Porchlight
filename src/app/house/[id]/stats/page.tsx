@@ -8,7 +8,7 @@ import { crowdLine } from '@/lib/crowd';
 import { crowdCounts } from '@/lib/crowdCounts';
 import { checkInsByHour, hourLabel, milesTraveledTo } from '@/lib/hostStats';
 import { seasonStandings } from '@/lib/seasonStandings';
-import { getSeason } from '@/lib/seasons';
+import { seasonCalendar } from '@/lib/seasonConfig';
 import { SCORE_CATEGORIES } from '@/lib/visits';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import styles from './stats.module.css';
@@ -20,6 +20,7 @@ const CHART_HOURS = [16, 17, 18, 19, 20, 21, 22, 23, 0, 1];
 
 /** The host's "Flex" dashboard: how their display is doing, from check-ins and scorecards. */
 export default async function HouseStats({ params }: { params: Promise<{ id: string }> }) {
+  const { getSeason } = await seasonCalendar();
   const { id } = await params;
   const user = await requireUser(`/house/${id}/stats`);
   const house = await db.house.findUnique({ where: { id } });
