@@ -9,7 +9,7 @@ import { HouseMap, type MapBlock, type MapHouse, type MapPitstop } from '@/compo
 import { housesIn, placedBlocks } from '@/lib/blockStandings';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import { StringLights, Ticker } from '@/components/StringLights';
-import { publicPin } from '@/lib/mapPins';
+import { forViewer, publicPin } from '@/lib/mapPins';
 import { bracketsFor } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
 import { crowdCounts } from '@/lib/crowdCounts';
@@ -38,7 +38,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const season = requested && seasons.includes(requested) ? requested : defaultSeason(today);
   const p = phase(season, today);
   const label = phaseLabel(season, today);
-  const houses = await seasonStandings(season.key);
+  const signedIn = !!(await currentUser());
+  const houses = (await seasonStandings(season.key)).map((h) => forViewer(h, signedIn));
   const [pot, pledged] = await Promise.all([potTotal(season.key), unpaidPledgeCents(season.key)]);
   const brackets = bracketsFor(season.name).map((b) => ({ ...b, count: houses.filter((h) => h.bracket === b.key).length }));
   const bracket = brackets.find((b) => b.key === query.bracket && b.count > 0);

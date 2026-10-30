@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { housesIn } from '@/lib/blockStandings';
+import { forViewer } from '@/lib/mapPins';
 import { crowdCounts } from '@/lib/crowdCounts';
 import { CROWD_LEVELS, crowdLevel } from '@/lib/crowd';
 import { seasonStandings } from '@/lib/seasonStandings';
@@ -29,7 +30,7 @@ export default async function BlockPage({ params, searchParams }: Props) {
   const requested = getSeason((await searchParams).season);
   const season = requested && seasons.includes(requested) ? requested : defaultSeason(today);
   const theme = seasonTheme(season);
-  const houses = housesIn({ ...block, lat: block.lat, lng: block.lng }, await seasonStandings(season.key));
+  const houses = housesIn({ ...block, lat: block.lat, lng: block.lng }, await seasonStandings(season.key)).map((h) => forViewer(h, !!user));
   const crowd = await crowdCounts({ houseIds: houses.map((h) => h.id) });
   const here = houses.reduce((n, h) => n + (crowd[h.id] ?? 0), 0);
   const likes = houses.reduce((n, h) => n + h.likes, 0);

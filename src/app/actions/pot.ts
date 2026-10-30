@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { requireAdmin, requireUser } from '@/lib/auth';
 import { appUrl } from '@/lib/email';
 import type { FormState } from '@/lib/forms';
+import { LEGAL_UPDATED } from '@/lib/legal';
 import { canPay, POT_AMOUNTS } from '@/lib/pot';
 import { markRefunded } from '@/lib/potServer';
 import { contestToday, getSeason, phase } from '@/lib/seasons';
@@ -18,6 +19,7 @@ export async function payPledge(houseId: string, fd: FormData) {
   const back = (why: string) => redirect(`/profile?pay=${why}#entry-${houseId}`);
   const amount = Number(fd.get('amount'));
   if (!(POT_AMOUNTS as readonly number[]).includes(amount)) back('amount');
+  if (fd.get('agreeRules') !== 'on') back('agree');
   if (!stripeConfigured()) back('off');
   const house = await db.house.findUnique({ where: { id: houseId }, include: { potPayments: { where: { status: 'PAID' }, select: { id: true } } } });
   const season = getSeason(house?.season);
@@ -27,7 +29,7 @@ export async function payPledge(houseId: string, fd: FormData) {
   // An earlier checkout for this house that was cancelled or left open is abandoned now. If it does get
   // paid after all, Stripe's webhook moves it to PAID anyway.
   await db.potPayment.updateMany({ where: { houseId, status: 'PENDING' }, data: { status: 'EXPIRED' } });
-  const payment = await db.potPayment.create({ data: { season: season!.key, source: 'HOST', amountCents: amount * 100, houseId, userId: user.id } });
+  const payment = await db.potPayment.create({ data: { season: season!.key, source: 'HOST', amountCents: amount * 100, houseId, userId: user.id, rulesAcceptedAt: new Date(), rulesVersion: LEGAL_UPDATED } });
   let url: string | null = null;
   try {
     const session = await createCheckoutSession({
