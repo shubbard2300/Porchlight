@@ -49,6 +49,20 @@ export async function reviewHouse(id: string, choice: 'approve' | 'reject', rawN
   revalidatePath('/');
 }
 
+/** Looks the address up again for a house that has no map pin yet. */
+export async function placeHousePin(id: string): Promise<{ ok: boolean }> {
+  await requireAdmin();
+  const house = await db.house.findUnique({ where: { id }, select: { address: true, lat: true } });
+  if (!house) return { ok: false };
+  if (house.lat !== null) return { ok: true };
+  const spot = await geocodeAddress(house.address);
+  if (!spot) return { ok: false };
+  await db.house.update({ where: { id }, data: spot });
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/');
+  return { ok: true };
+}
+
 /** Removes any entry for good. The host gets an email, with the note if the admin wrote one. */
 export async function removeHouse(id: string, rawNote: string) {
   await requireAdmin();

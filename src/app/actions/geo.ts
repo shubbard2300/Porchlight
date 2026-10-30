@@ -1,7 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { reverseGeocode } from '@/lib/geocode';
+import { lookupAddress, reverseGeocode } from '@/lib/geocode';
 import { photoLocationSchema } from '@/lib/validation';
 
 export type AddressGuess = {
@@ -26,4 +26,11 @@ export async function suggestAddress(where: { lat: number; lng: number; source: 
   if (!city) return null;
   const region = h.get('x-vercel-ip-country-region');
   return { address: [decodeURIComponent(city), region].filter(Boolean).join(', '), neighborhood: null, source: 'ip' };
+}
+
+/** The neighborhood a typed address is in, to fill in the entry form's Neighborhood field. */
+export async function neighborhoodFor(address: string): Promise<string | null> {
+  const q = address.trim().slice(0, 120);
+  if (q.length < 6) return null;
+  return (await lookupAddress(q))?.neighborhood ?? null;
 }

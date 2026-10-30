@@ -1,15 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { suggestAddress, type AddressGuess } from '../../actions/geo';
+import type { AddressGuess } from '../../actions/geo';
+import { AddressGuessCard, useAddressGuess } from '@/components/AddressGuess';
 import { Icon3D } from '@/components/Icon3D';
 import { readPhotoMeta } from '@/lib/exif';
 import { deviceLocation, toUploadJpeg, type Coords } from '@/lib/photoPrep';
 
 /** The resized photo plus what the server stores with it. Sent with the sign-up form. */
 export type SignupPhoto = { blob: Blob; width: number; height: number; takenAt?: string; where?: Coords & { source: 'photo' | 'device' } };
-
-type Guess = { state: 'idle' } | { state: 'looking' } | { state: 'found'; guess: AddressGuess } | { state: 'none' } | { state: 'done' };
 
 /**
  * The optional first step of host sign-up: a photo of the house, then its address. The address is suggested
@@ -30,16 +29,14 @@ export function HostPhotoStart({ photo, onPhoto, idPrefix, initialAddress = '', 
   const [readError, setReadError] = useState<string>();
   const [address, setAddress] = useState(initialAddress);
   const [neighborhood, setNeighborhood] = useState('');
-  const [guess, setGuess] = useState<Guess>({ state: initialAddress ? 'done' : 'idle' });
+  const { guess, lookUp: suggest, clear } = useAddressGuess();
   const [showAddress, setShowAddress] = useState(Boolean(initialAddress));
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   const lookUp = async (where: SignupPhoto['where'] | null) => {
     setShowAddress(true);
-    setGuess({ state: 'looking' });
-    const g = await suggestAddress(where ?? null).catch(() => null);
-    setGuess(g ? { state: 'found', guess: g } : { state: 'none' });
+    await suggest(where ?? null);
   };
 
   const pick = async (file: File | undefined, fromCamera: boolean) => {
@@ -66,7 +63,6 @@ export function HostPhotoStart({ photo, onPhoto, idPrefix, initialAddress = '', 
   const useHere = async () => {
     const c = await deviceLocation();
     if (!c) {
-      setGuess({ state: 'none' });
       setReadError('We could not get your location. Allow location for this site, or type your address.');
       return;
     }
@@ -76,13 +72,13 @@ export function HostPhotoStart({ photo, onPhoto, idPrefix, initialAddress = '', 
   const accept = (g: AddressGuess) => {
     setAddress(g.source === 'ip' ? `, ${g.address}` : g.address);
     setNeighborhood(g.neighborhood ?? '');
-    setGuess({ state: 'done' });
+    clear();
     // A town from the IP is only a start: put the cursor in front of it for the street.
     if (g.source === 'ip') requestAnimationFrame(() => { addressInput.current?.focus(); addressInput.current?.setSelectionRange(0, 0); });
   };
 
   const typeIt = () => {
-    setGuess({ state: 'done' });
+    clear();
     requestAnimationFrame(() => addressInput.current?.focus());
   };
 
@@ -111,20 +107,7 @@ export function HostPhotoStart({ photo, onPhoto, idPrefix, initialAddress = '', 
       )}
       {(readError || error) && <span className="err" role="alert">{readError ?? error}</span>}
 
-      {guess.state === 'looking' && <p className="addr-guess small" aria-live="polite"><span className="addr-spin" aria-hidden="true" /> Finding your address…</p>}
-      {guess.state === 'found' && (
-        <div className="addr-guess" role="status">
-          <Icon3D name="pin" size={30} />
-          <div className="stack" style={{ gap: 2 }}>
-            <span className="small muted">{guess.guess.source === 'ip' ? 'Looks like you’re near' : 'Is this your house?'}</span>
-            <b>{guess.guess.address}</b>
-          </div>
-          <div className="row">
-            <button type="button" className="btn primary sm" onClick={() => accept(guess.guess)}>{guess.guess.source === 'ip' ? 'Use it as a start' : 'Yes, that’s it'}</button>
-            <button type="button" className="btn ghost sm" onClick={typeIt}>No, I&apos;ll type it</button>
-          </div>
-        </div>
-      )}
+      <AddressGuessCard guess={guess} onAccept={accept} onReject={typeIt} />
 
       {showAddress ? (
         <div className="field" hidden={guess.state === 'found' || guess.state === 'looking'}>
