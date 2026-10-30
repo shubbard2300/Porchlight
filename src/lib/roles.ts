@@ -6,8 +6,8 @@ import type { AccountType, Role } from '@prisma/client';
 export type AccessLevel = 'SUPER_ADMIN' | 'EDITOR' | 'AUTHOR' | 'VIEWER';
 
 export const ACCESS_LEVELS: { key: AccessLevel; label: string; blurb: string }[] = [
-  { key: 'SUPER_ADMIN', label: 'Super Admin', blurb: 'Everything: users, roles, settings, contest dates, prize pot and all content.' },
-  { key: 'EDITOR', label: 'Editor', blurb: 'Reviews, edits and removes anyone’s submissions, pitstops and blocks. No users or settings.' },
+  { key: 'SUPER_ADMIN', label: 'Super Admin', blurb: 'Everything: users, roles, settings, prize pot and all content.' },
+  { key: 'EDITOR', label: 'Editor', blurb: 'Reviews, edits and removes anyone’s submissions, pitstops and blocks, and sets contest dates. No users or settings.' },
   { key: 'AUTHOR', label: 'Author', blurb: 'A host. Posts, edits and deletes only their own submissions.' },
   { key: 'VIEWER', label: 'Viewer', blurb: 'Browses the map, checks in and votes.' },
 ];

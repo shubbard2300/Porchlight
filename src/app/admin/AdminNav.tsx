@@ -12,7 +12,7 @@ export function AdminNav({ pending, superAdmin }: { pending: number; superAdmin:
     ['/admin/users', 'Users', undefined, true],
     ['/admin/payments', 'Prize pot', undefined, true],
     ['/admin/users', 'Users'],
-    ['/admin/contests', 'Contest dates', undefined, true],
+    ['/admin/contests', 'Contest dates'],
     ['/admin/payments', 'Prize pot'],
     ['/admin/merchants', 'Pitstops'],
     ['/admin/blocks', 'Anchor blocks'],
