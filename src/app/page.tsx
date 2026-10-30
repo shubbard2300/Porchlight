@@ -94,7 +94,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   return (
     <main className="wrap stack home" data-season={theme.look}>
       <Ticker items={['Built by neighbors', 'Every visit counts', 'Check in by location or porch QR', 'The community picks its favorites', 'Shared goals unlock for everyone', 'Free to join and vote']} />
-      <nav className="tabs" aria-label="Holiday contests">
+      <nav className="tabs season-tabs" aria-label="Holiday contests">
         {seasons.map((s) => (
           <Link key={s.key} href={`/?season=${s.key}`} aria-current={s.key === season.key ? 'page' : undefined}>
             <Icon3D name={seasonTheme(s).icon} size={24} />{s.name} {s.year}
@@ -104,11 +104,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
 
       <section id="map" aria-label={`${season.name} ${season.year} house map`} style={{ scrollMarginTop: 16, minWidth: 0 }}>
         {brackets.some((b) => b.count > 0) && (
-          <nav className="tabs filter-tabs" aria-label="Filter by theme" style={{ marginBottom: 14 }}>
-            <Link href={`/?season=${season.key}#map`} aria-current={!bracket ? 'page' : undefined} scroll={false}><Icon3D name={theme.icon} size={22} />All themes <span className="count">{houses.length}</span></Link>
+          <nav className="tabs filter-tabs theme-tabs" aria-label="Filter by theme" style={{ marginBottom: 10 }}>
+            <Link href={`/?season=${season.key}#map`} aria-current={!bracket ? 'page' : undefined} scroll={false}><Icon3D name={theme.icon} size={18} />All themes <span className="count">{houses.length}</span></Link>
             {brackets.filter((b) => b.count > 0).map((b) => (
               <Link key={b.key} href={`/?season=${season.key}&bracket=${b.key}#map`} aria-current={bracket?.key === b.key ? 'page' : undefined} scroll={false}>
-                <Icon3D name={b.icon} size={22} />{b.label} <span className="count">{b.count}</span>
+                <Icon3D name={b.icon} size={18} />{b.label} <span className="count">{b.count}</span>
               </Link>
             ))}
           </nav>
