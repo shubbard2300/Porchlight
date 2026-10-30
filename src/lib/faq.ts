@@ -96,7 +96,7 @@ export const FAQ: FaqTopic[] = [
   {
     key: 'privacy', label: 'Privacy', icon: 'key', items: [
       { id: 'address', q: 'Will my exact address be public?', a: [
-        'Only if you choose. When you add your house you decide whether to show your exact address or an approximate pin that puts visitors on the right block without pointing at your door.',
+        'Never to the public. When you add your house you choose between an approximate pin, which puts visitors on the right block without pointing at your door, or your exact address. Even then, only signed-in members see it; everyone else sees the approximate pin.',
       ] },
       { id: 'visitor-location', q: 'Do you track my location when I check in?', a: [
         'We use your location only at the moment you check in, to confirm you’re near the house. We store how far away you were, not where you were standing.',
