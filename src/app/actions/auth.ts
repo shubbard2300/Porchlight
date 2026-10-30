@@ -1,7 +1,7 @@
 'use server';
 
 import bcrypt from 'bcryptjs';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomInt } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import type { TokenPurpose, User } from '@prisma/client';
 import { db } from '@/lib/db';
@@ -11,8 +11,9 @@ import { appUrl, emailDeliveryConfigured, notifyAdmin, sendEmail } from '@/lib/e
 import { linkEmail, newMemberAdminEmail, welcomeEmail } from '@/lib/emails';
 import { safeNext, type FormState } from '@/lib/forms';
 import { consumeToken, issueToken, linkFor, sentRecently, TOKEN_TTL_MIN } from '@/lib/tokens';
-import { displayName } from '@/lib/users';
-import { emailOnlySchema, fieldErrors, joinSchema, loginSchema } from '@/lib/validation';
+import { MAX_PHOTO_BYTES, savePhoto } from '@/lib/housePhotos';
+import { displayName, numberedUsername, usernameFromEmail } from '@/lib/users';
+import { emailOnlySchema, fieldErrors, joinSchema, loginSchema, photoMetaSchema } from '@/lib/validation';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -43,15 +44,37 @@ async function sendLink(user: User, purpose: TokenPurpose, next: string): Promis
   redirect(sent.status === 'failed' ? `${checkEmail}&failed=${encodeURIComponent(sent.code ?? 'error')}` : checkEmail);
 }
 
+/** Where a new member lands after confirming their email: hosts on the entry form, viewers on the map. */
+const welcomePath = (accountType: 'VIEWER' | 'HOST') => (accountType === 'HOST' ? '/submit?welcome=1' : '/?welcome=1#map');
+
+/** The email's name if it's free, otherwise that name with a short number on the end. */
+async function uniqueUsername(email: string) {
+  const base = usernameFromEmail(email);
+  if (!(await db.user.findUnique({ where: { username: base }, select: { id: true } }))) return base;
+  for (;;) {
+    const name = numberedUsername(base, 1000 + randomInt(9000));
+    if (!(await db.user.findUnique({ where: { username: name }, select: { id: true } }))) return name;
+  }
+}
+
+/** A house photo picked on the host sign-up form. It waits, unattached, for the host's first entry. */
+async function saveSignupPhoto(userId: string, fd: FormData): Promise<{ error?: string }> {
+  const file = fd.get('photo');
+  if (!(file instanceof File) || file.size === 0) return {};
+  const meta = photoMetaSchema.safeParse(Object.fromEntries([...fd].filter(([k]) => ['width', 'height', 'lat', 'lng', 'locationSource', 'takenAt'].includes(k))));
+  if (!meta.success) return { error: 'We could not read that photo. Remove it and try again, or add it after you sign up.' };
+  const { houseId: _, ...m } = meta.data;
+  return savePhoto(userId, file, m);
+}
+
 export async function join(_prev: FormState, fd: FormData): Promise<FormState> {
-  const parsed = joinSchema.safeParse(Object.fromEntries(fd));
+  const parsed = joinSchema.safeParse(Object.fromEntries([...fd].filter(([, v]) => typeof v === 'string')));
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
   const d = parsed.data;
+  const photo = fd.get('photo');
+  if (photo instanceof File && photo.size > MAX_PHOTO_BYTES) return { errors: { photo: 'That photo is too large. Try one under 3 MB.' } };
 
   const existing = await db.user.findUnique({ where: { email: d.email } });
-  const taken = await db.user.findUnique({ where: { username: d.username } });
-  if (taken && taken.id !== existing?.id) return { errors: { username: 'That username is taken. Try another.' } };
-
   // Already verified: treat this as a sign-in rather than revealing that the account exists.
   if (existing?.emailVerifiedAt) return sendLink(existing, 'LOGIN', '/profile');
 
@@ -59,19 +82,25 @@ export async function join(_prev: FormState, fd: FormData): Promise<FormState> {
   if (d.referralCode && !referrer) return { errors: { referralCode: "We couldn't find that invite code. Check it or leave it blank." } };
 
   const profile = {
-    username: d.username,
     passwordHash: await bcrypt.hash(d.password, BCRYPT_ROUNDS),
     accountType: d.accountType,
     propertyAddress: d.propertyAddress || null,
+    neighborhood: d.accountType === 'HOST' ? (String(fd.get('neighborhood') ?? '').trim().slice(0, 60) || null) : null,
     marketingOptIn: d.marketingOptIn,
+    // Pressing "Create my account" under the agreement line is the acceptance.
+    termsAcceptedAt: new Date(),
     referredById: referrer?.id,
   };
   const user = existing
     ? await db.user.update({ where: { id: existing.id }, data: profile })
     : await db.user.create({
-        data: { ...profile, email: d.email, xp: SIGNUP_BONUS_XP, referralCode: await uniqueReferralCode(), role: isBootstrapAdmin(d.email) ? 'ADMIN' : 'USER' },
+        data: { ...profile, email: d.email, username: await uniqueUsername(d.email), xp: SIGNUP_BONUS_XP, referralCode: await uniqueReferralCode(), role: isBootstrapAdmin(d.email) ? 'ADMIN' : 'USER' },
       });
-  return sendLink(user, 'VERIFY', '/profile?welcome=1');
+  if (d.accountType === 'HOST') {
+    const saved = await saveSignupPhoto(user.id, fd);
+    if (saved.error) return { errors: { photo: saved.error } };
+  }
+  return sendLink(user, 'VERIFY', welcomePath(user.accountType));
 }
 
 export async function login(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -83,7 +112,7 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
     return { errors: { form: 'That email and password don\u2019t match. Try again, or get a sign-in link by email.' } };
   }
   // Right password but the email was never confirmed: send the confirmation link again.
-  if (!user.emailVerifiedAt) return sendLink(user, 'VERIFY', '/profile?welcome=1');
+  if (!user.emailVerifiedAt) return sendLink(user, 'VERIFY', welcomePath(user.accountType));
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   const signedIn = await applyBootstrapAdmin(user);
   await startSession({ userId: signedIn.id, role: signedIn.role });
@@ -97,7 +126,7 @@ export async function requestLoginLink(_prev: FormState, fd: FormData): Promise<
   const next = safeNext(fd.get('next')) ?? '/profile';
   // Same screen whether or not the account exists, so emails can't be probed.
   if (!user) redirect(`/check-email?email=${encodeURIComponent(parsed.data.email)}`);
-  return sendLink(user, user.emailVerifiedAt ? 'LOGIN' : 'VERIFY', user.emailVerifiedAt ? next : '/profile?welcome=1');
+  return sendLink(user, user.emailVerifiedAt ? 'LOGIN' : 'VERIFY', user.emailVerifiedAt ? next : welcomePath(user.accountType));
 }
 
 /** Runs when the person presses Continue on the link page. A POST, so email scanners that prefetch links can't use them up. */

@@ -1,39 +1,60 @@
 'use client';
 
+import { useState } from 'react';
 import { join } from '../../actions/auth';
 import { Field } from '@/components/Field';
 import { SubmitButton } from '@/components/SubmitButton';
 import { useFormAction } from '@/components/useFormAction';
+import { HostPhotoStart, type SignupPhoto } from './HostPhotoStart';
 
+/** Sign-up asks for an email and a password. Hosts can also start with a photo of their house. */
 export function JoinForm({ accountType, invite, idPrefix = '' }: { accountType: 'VIEWER' | 'HOST'; invite?: string; idPrefix?: string }) {
-  const { formAction: action, errors: e, value, checked } = useFormAction(join);
+  const { formAction, errors: e, value } = useFormAction(join);
   const host = accountType === 'HOST';
+  const [photo, setPhoto] = useState<SignupPhoto | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showInvite, setShowInvite] = useState(Boolean(invite || e.referralCode));
+
+  // The photo lives in state rather than a file input, so it survives a failed attempt (React resets forms after an action).
+  const action = (fd: FormData) => {
+    if (host && photo) {
+      fd.set('photo', photo.blob, 'house.jpg');
+      fd.set('width', String(photo.width));
+      fd.set('height', String(photo.height));
+      if (photo.takenAt) fd.set('takenAt', photo.takenAt);
+      if (photo.where) {
+        fd.set('lat', String(photo.where.lat));
+        fd.set('lng', String(photo.where.lng));
+        fd.set('locationSource', photo.where.source);
+      }
+    }
+    return formAction(fd);
+  };
+
   return (
     <form action={action} className="stack" noValidate>
       <input type="hidden" name="accountType" value={accountType} />
-      <Field label="Email" htmlFor={`${idPrefix}email`} error={e.email} hint="We'll send a link to confirm it's you.">
-        <input id={`${idPrefix}email`} name="email" type="email" autoComplete="email" required defaultValue={value('email')} />
+      {host && <HostPhotoStart photo={photo} onPhoto={setPhoto} idPrefix={idPrefix} initialAddress={value('propertyAddress')} error={e.photo ?? e.propertyAddress} />}
+      <Field label="Email" htmlFor={`${idPrefix}email`} error={e.email}>
+        <input id={`${idPrefix}email`} name="email" type="email" autoComplete="email" inputMode="email" required defaultValue={value('email')} placeholder="you@example.com" />
       </Field>
-      <Field label="Choose a username" htmlFor={`${idPrefix}username`} error={e.username} hint="3 to 20 letters, numbers or underscores. This is how others see you.">
-        <input id={`${idPrefix}username`} name="username" type="text" autoComplete="username" required defaultValue={value('username')} placeholder={host ? 'hollow_at_alder' : 'lightseeker'} />
+      <Field label="Password" htmlFor={`${idPrefix}password`} error={e.password} hint="At least 8 characters.">
+        <span className="pw">
+          <input id={`${idPrefix}password`} name="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} />
+          <button type="button" className="pw-toggle" onClick={() => setShowPassword((s) => !s)} aria-pressed={showPassword} aria-controls={`${idPrefix}password`}>{showPassword ? 'Hide' : 'Show'}</button>
+        </span>
       </Field>
-      <Field label="Create a password" htmlFor={`${idPrefix}password`} error={e.password} hint="At least 8 characters.">
-        <input id={`${idPrefix}password`} name="password" type="password" autoComplete="new-password" required minLength={8} />
-      </Field>
-      {host && (
-        <Field label="Property location (optional)" htmlFor={`${idPrefix}propertyAddress`} error={e.propertyAddress} hint="You can add or change this on your profile.">
-          <input id={`${idPrefix}propertyAddress`} name="propertyAddress" type="text" autoComplete="street-address" defaultValue={value('propertyAddress')} placeholder="1820 SE Alder Ct, Portland, OR" />
+      {showInvite ? (
+        <Field label="Invite code" htmlFor={`${idPrefix}referralCode`} error={e.referralCode}>
+          <input id={`${idPrefix}referralCode`} name="referralCode" type="text" defaultValue={value('referralCode', invite)} placeholder="PORCH-7Q4K" />
         </Field>
+      ) : (
+        <button type="button" className="linkish small" onClick={() => setShowInvite(true)}>Have an invite code?</button>
       )}
-      <Field label="Invite code (optional)" htmlFor={`${idPrefix}referralCode`} error={e.referralCode}>
-        <input id={`${idPrefix}referralCode`} name="referralCode" type="text" defaultValue={value('referralCode', invite)} placeholder="PORCH-7Q4K" />
-      </Field>
-      <label className="check" htmlFor={`${idPrefix}marketingOptIn`}><input type="checkbox" id={`${idPrefix}marketingOptIn`} name="marketingOptIn" defaultChecked={checked('marketingOptIn')} /><span>Email me when a new holiday contest opens.</span></label>
-      <div className="field">
-        <label className="check" htmlFor={`${idPrefix}terms`}><input type="checkbox" id={`${idPrefix}terms`} name="terms" defaultChecked={checked('terms')} /><span>I&apos;m 18 or older and I accept the <a href="/terms" target="_blank" rel="noopener">Terms and contest rules</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
-        {e.terms && <span className="err" role="alert">{e.terms}</span>}
-      </div>
-      <SubmitButton pendingText="Sending your link…">Send my confirmation link</SubmitButton>
+      <SubmitButton pendingText={photo ? 'Uploading your photo…' : 'Creating your account…'}>Create my account</SubmitButton>
+      <p className="hint" style={{ margin: 0 }}>
+        By creating an account you confirm you&apos;re 18 or older and agree to the <a href="/terms" target="_blank" rel="noopener">Terms</a>, <a href="/rules" target="_blank" rel="noopener">Official Rules</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>. We&apos;ll email a link to confirm it&apos;s you.
+      </p>
     </form>
   );
 }

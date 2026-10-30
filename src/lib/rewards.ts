@@ -14,10 +14,13 @@ export const SQUAD_WINDOW_MIN = 30;
 export const SQUAD_BONUS_XP = 5;
 /** Catching the AR critter at a house, once per house. */
 export const AR_CATCH_XP = 15;
+/** Finishing the short welcome tour, once per tour (viewer, and host). */
+export const TOUR_XP = 10;
 
 /** Every way to earn XP, in the order the XP guide lists them. */
 export const XP_SOURCES: { xp: number; icon: Icon3DName; title: string; detail: string }[] = [
   { xp: SIGNUP_BONUS_XP, icon: 'party', title: 'Join Porchlight', detail: 'A welcome bonus once you confirm your email.' },
+  { xp: TOUR_XP, icon: 'sparkles', title: 'Take the welcome tour', detail: 'Four quick cards on how it works, right after you join. Hosts get their own tour too.' },
   { xp: CHECKIN_XP, icon: 'pin', title: 'Check in at a house', detail: 'Your first check-in at each porch, by location or the porch QR sign.' },
   { xp: VOTE_XP, icon: 'star', title: 'Fill in a scorecard', detail: 'Your first scorecard at each house you checked in at.' },
   { xp: PITSTOP_XP, icon: 'gift', title: 'Scan a pitstop QR', detail: `Your first scan at each sponsor's counter. It also turns on ${BOOST_HOURS} hours of double XP.` },
