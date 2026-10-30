@@ -7,7 +7,8 @@ import { requireUser } from '@/lib/auth';
 import { absolutePhotoUrl, attachPhotos, deleteHouse, reviewUrl } from '@/lib/housePhotos';
 import { appUrl, notifyAdmin, sendEmail } from '@/lib/email';
 import { submissionAdminEmail, submissionReceivedEmail } from '@/lib/emails';
-import { geocodeAddress } from '@/lib/geocode';
+import { lookupAddress } from '@/lib/geocode';
+import { CONTEST_STATE, inContestArea, LEGAL_UPDATED } from '@/lib/legal';
 import { bracketsFor } from '@/lib/brackets';
 import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
@@ -26,6 +27,11 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
     return { errors: { season: 'That contest is closed to new entries. Pick another holiday.' } };
   }
   if (!bracketsFor(season.name).some((b) => b.key === d.bracket)) return { errors: { bracket: 'Pick a bracket for this holiday.' } };
+  // The rules limit entries to homes in the contest state. If the lookup can't tell, the admin review catches it.
+  const found = await lookupAddress(d.address);
+  if (!inContestArea(found?.state ?? null)) {
+    return { errors: { address: `Porchlight contests are open to homes in ${CONTEST_STATE!.name} only right now. Check the address, or come back when we reach your state.` } };
+  }
 
   const house = await db.house.create({
     data: {
@@ -41,13 +47,15 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
       litUntil: d.litUntil,
       description: d.description,
       contributionCents: d.contribution * 100,
+      rulesAcceptedAt: new Date(),
+      rulesVersion: LEGAL_UPDATED,
     },
   });
   await attachPhotos(user.id, house.id, fd.getAll('photoIds').map(String));
   let placed = await db.house.findUniqueOrThrow({ where: { id: house.id }, select: { photoUrls: true, lat: true, lng: true } });
   if (placed.lat === null) {
     // No photo carried a location, so pin the house from its address.
-    const spot = await geocodeAddress(house.address);
+    const spot = found && { lat: found.lat, lng: found.lng };
     if (spot) placed = await db.house.update({ where: { id: house.id }, data: spot, select: { photoUrls: true, lat: true, lng: true } });
   }
 

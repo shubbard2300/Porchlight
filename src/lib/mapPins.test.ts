@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { publicPin } from './mapPins';
+import { forViewer, publicPin } from './mapPins';
 
 describe('publicPin', () => {
   it('keeps the exact spot when the host shows their address', () => {
@@ -19,5 +19,14 @@ describe('publicPin', () => {
     const a = publicPin({ id: 'one', lat: 45.5231, lng: -122.6765, showExactAddress: false });
     const b = publicPin({ id: 'two', lat: 45.5232, lng: -122.6766, showExactAddress: false });
     expect(a).not.toEqual(b);
+  });
+});
+
+describe('forViewer', () => {
+  const h = { id: 'h1', lat: 45.5, lng: -122.6, showExactAddress: true };
+  it('hides exact addresses from logged-out visitors', () => {
+    expect(forViewer(h, false).showExactAddress).toBe(false);
+    expect(forViewer(h, true).showExactAddress).toBe(true);
+    expect(forViewer({ ...h, showExactAddress: false }, true).showExactAddress).toBe(false);
   });
 });

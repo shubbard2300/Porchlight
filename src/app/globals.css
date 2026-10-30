@@ -291,6 +291,8 @@ body > main { flex: 1 0 auto; width: 100%; }
 .legal table { border-collapse: collapse; width: 100%; font-size: 15px; }
 .legal th, .legal td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--sand); vertical-align: top; }
 .legal-contact { margin-top: 18px; }
+.legal-blank { background: #fff1c2; color: #7a5200; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+.legal-quote { padding: 12px 16px; border-left: 4px solid var(--sand); background: rgba(233, 221, 200, 0.35); border-radius: var(--r-sm); }
 
 /* popups: log in, sign up, contact */
 .modal { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: var(--edge); border-radius: var(--r-lg); background: var(--cream); color: var(--ink); box-shadow: 6px 6px 0 var(--ink); overflow: auto; overscroll-behavior: contain; }
