@@ -72,13 +72,6 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
         </div>
 
         <div className="acc-group">
-          <details className="acc" id="about-xp">
-            <summary>
-              <Icon3D name="sparkles" size={30} />
-              <span className="acc-title"><b>About XP</b><XpSummary xp={user.xp} /></span>
-            </summary>
-            <div className="acc-body"><XpGuide me={{ xp: user.xp, boostUntil: user.xpBoostUntil }} showProgress={false} /></div>
-          </details>
           <details className="acc" id="about-you">
             <summary>
               <Icon3D name="person" size={30} />
@@ -109,6 +102,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 devices={await db.pushSubscription.count({ where: { userId: user.id } })}
               />
             </div>
+          </details>
+          <details className="acc" id="about-xp">
+            <summary>
+              <Icon3D name="sparkles" size={30} />
+              <span className="acc-title"><b>About XP</b><XpSummary xp={user.xp} /></span>
+            </summary>
+            <div className="acc-body"><XpGuide me={{ xp: user.xp, boostUntil: user.xpBoostUntil }} showProgress={false} /></div>
           </details>
         </div>
       </section>
