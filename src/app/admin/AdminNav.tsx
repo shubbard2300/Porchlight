@@ -9,7 +9,7 @@ export function AdminNav({ pending, superAdmin }: { pending: number; superAdmin:
   const all: [string, string, number?, boolean?][] = [
     ['/admin', 'Overview'],
     ['/admin/submissions', 'Submissions', pending],
-    ['/admin/users', 'Users', undefined, true],
+    ['/admin/users', 'Users'],
     ['/admin/contests', 'Contest dates'],
     ['/admin/payments', 'Prize pot', undefined, true],
     ['/admin/merchants', 'Pitstops'],
