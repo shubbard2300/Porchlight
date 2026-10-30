@@ -2,25 +2,27 @@ import type React from 'react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
+import { CommunityBoard } from '@/components/CommunityBoard';
 import { HeroHouse } from '@/components/HeroHouse';
 import { HouseCard } from '@/components/HouseCard';
 import { HouseMap, type MapBlock, type MapHouse, type MapPitstop } from '@/components/HouseMap';
 import { housesIn, placedBlocks } from '@/lib/blockStandings';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import { StringLights, Ticker } from '@/components/StringLights';
-import { publicPin } from '@/lib/mapPins';
+import { forViewer, publicPin } from '@/lib/mapPins';
 import { bracketsFor } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
 import { crowdCounts } from '@/lib/crowdCounts';
+import { communityCounts, myContribution } from '@/lib/communityCounts';
 import { seasonTheme } from '@/lib/theme';
 import { dollars } from '@/lib/pot';
 import { potTotal, unpaidPledgeCents } from '@/lib/potServer';
 import { contestToday, defaultSeason, getSeason, phase, phaseLabel, visibleSeasons } from '@/lib/seasons';
 
 const STEPS: [Icon3DName, string, string][] = [
-  ['house', 'Post your house', 'Snap your display at night, drop your pin, and you are on the map for the season.'],
-  ['camera', 'Neighbors check in and score', 'Visitors prove they stopped by with their location or the porch QR sign, then score creativity, lighting, story and sound.'],
-  ['trophy', 'Most-loved wins the pot', 'Only verified likes count. The top porch takes the prize, and every voter keeps their XP and badges.'],
+  ['house', 'Add your porch to the map', 'Snap your display at night and drop your pin. Every porch makes the map brighter for everyone.'],
+  ['camera', 'Visit, check in and vote', 'Stop by in person, check in with your location or the porch QR sign, and score what you love. Every visit counts toward shared goals.'],
+  ['people', 'Celebrate together', 'The community picks its favorites, milestones unlock for everyone who took part, and every voter keeps their XP and badges.'],
 ];
 
 const potFrom = (hosts: number, sponsors: number) => [
@@ -36,7 +38,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const season = requested && seasons.includes(requested) ? requested : defaultSeason(today);
   const p = phase(season, today);
   const label = phaseLabel(season, today);
-  const houses = await seasonStandings(season.key);
+  const signedIn = !!(await currentUser());
+  const houses = (await seasonStandings(season.key)).map((h) => forViewer(h, signedIn));
   const [pot, pledged] = await Promise.all([potTotal(season.key), unpaidPledgeCents(season.key)]);
   const brackets = bracketsFor(season.name).map((b) => ({ ...b, count: houses.filter((h) => h.bracket === b.key).length }));
   const bracket = brackets.find((b) => b.key === query.bracket && b.count > 0);
@@ -66,10 +69,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const mapBlocks: MapBlock[] = blocks.map(({ inside, ...b }) => ({ ...b, houses: inside.length }));
   const featured = blocks.filter((b) => b.featured);
   const user = await currentUser();
+  const [community, mine] = await Promise.all([communityCounts(season.key), user ? myContribution(user.id, season.key) : null]);
 
   return (
-    <main className="wrap stack" style={{ gap: 32 }} data-season={theme.look}>
-      <Ticker items={['Verified likes only', 'Check in by location or porch QR', 'Most-loved porch wins the pot', 'Earn XP and badges for every visit', 'Free to vote']} />
+    <main className="wrap stack home" data-season={theme.look}>
+      <Ticker items={['Built by neighbors', 'Every visit counts', 'Check in by location or porch QR', 'The community picks its favorites', 'Shared goals unlock for everyone', 'Free to join and vote']} />
       <nav className="tabs" aria-label="Holiday contests">
         {seasons.map((s) => (
           <Link key={s.key} href={`/?season=${s.key}`} aria-current={s.key === season.key ? 'page' : undefined}>
@@ -104,9 +108,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </div>
           <h1><span className="glow-text">{season.name}</span> {season.year}{p === 'final' ? ': final results' : ''}</h1>
           <p className="muted" style={{ maxWidth: 560, fontSize: 17 }}>
-            {p === 'soon' && 'Houses are signing up now. Post yours early so neighbors can plan their route.'}
-            {p === 'live' && `Visit houses, prove you were there, and like your favorites. The ${theme.superlative} house with the most verified likes at midnight on ${theme.day} wins the pot.`}
-            {p === 'final' && 'Voting is closed. These results stay up for one week, then move to each poster’s archive.'}
+            {p === 'soon' && 'We’re building this year’s light map together. Add your porch early so neighbors can plan their route.'}
+            {p === 'live' && `This map is made by all of us. Add your porch, visit your neighbors in person, and help the community choose its ${theme.superlative.toLowerCase()} house by ${theme.day}.`}
+            {p === 'final' && 'Voting is closed. Thank you for lighting it up together. These results stay up for one week, then move to each host’s archive.'}
           </p>
           <div className="pot">
             <Icon3D name="money" size={48} />
@@ -115,31 +119,33 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
                 <>
                   <b className="num">{dollars(pot.paidCents)}</b>
                   <div className="muted small">
-                    in the pot from {potFrom(pot.hosts, pot.sponsors)}
+                    in the community pot from {potFrom(pot.hosts, pot.sponsors)}
                     {pledged > 0 && <> · {dollars(pledged)} more pledged</>} · <Link href="/rules">Official rules</Link>
                   </div>
                 </>
               ) : (
                 <>
                   <b className="num">{dollars(pledged)}</b>
-                  <div className="muted small">pledged to the pot · free submissions welcome · <Link href="/rules">Official rules</Link></div>
+                  <div className="muted small">pledged to the community pot · free to enter · <Link href="/rules">Official rules</Link></div>
                 </>
               )}
             </div>
           </div>
           {p !== 'final' && (
             <div className="row" style={{ gap: 14 }}>
-              <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Post your house</Link>
-              {!user && <Link href="/join/viewer" data-modal="join:viewer" className="btn ghost">Join to vote</Link>}
+              <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Add your porch</Link>
+              {!user && <Link href="/join/viewer" data-modal="join:viewer" className="btn ghost">Join the vote</Link>}
             </div>
           )}
         </div>
         <HeroHouse theme={theme} />
       </section>
 
+      <CommunityBoard counts={community} mine={mine} seasonName={season.name} signedIn={Boolean(user)} />
+
       {p !== 'final' && (
         <section className="stack" style={{ gap: 18 }} aria-labelledby="how">
-          <h2 id="how" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>Three steps. One very bright street.</h2>
+          <h2 id="how" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>Three steps. One very bright neighborhood.</h2>
           <div className="steps">
             {STEPS.map(([icon, title, text], i) => (
               <div key={title} className={`panel step step-${i + 1} reveal`}>
@@ -172,13 +178,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         <div className="empty">
           <Icon3D name="house" size={72} />
           <h2>No {season.name} houses yet</h2>
-          <p className="muted">Be the first pin on the map.</p>
-          <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Post your house</Link>
+          <p className="muted">Light the first porch and the rest of the street will follow.</p>
+          <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Add your porch</Link>
         </div>
       ) : (
         <section className="stack" style={{ gap: 18 }} aria-labelledby="brightest">
           <div className="row spread">
-            <h2 id="brightest" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>{bracket ? bracket.label : p === 'final' ? 'Final standings' : 'The brightest so far'}</h2>
+            <h2 id="brightest" className="squiggle" style={{ fontSize: 'clamp(24px, 3.4vw, 34px)' }}>{bracket ? bracket.label : p === 'final' ? 'The community’s favorites' : 'Neighborhood favorites so far'}</h2>
             <Link href={`/leaderboard?season=${season.key}`} className="btn sm ghost"><Icon3D name="trophy" size={20} />Full leaderboard</Link>
           </div>
           <div className="grid">

@@ -142,6 +142,9 @@ model House {
   photoUrls         String[]
   photos            HousePhoto[]
   contributionCents Int           @default(0)
+  /// When the host ticked the official rules agreement on the submit form, and which version of the rules it was.
+  rulesAcceptedAt   DateTime?
+  rulesVersion      String?
   status            HouseStatus   @default(PENDING)
   reviewNote        String?
   reviewedAt        DateTime?
@@ -376,6 +379,9 @@ model PotPayment {
   sponsorName           String?
   stripeSessionId       String?          @unique
   stripePaymentIntentId String?          @unique
+  /// When the payer ticked the official rules agreement before checkout, and which version of the rules it was.
+  rulesAcceptedAt       DateTime?
+  rulesVersion          String?
   createdAt             DateTime         @default(now())
   paidAt                DateTime?
   refundedAt            DateTime?

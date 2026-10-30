@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Icon3D } from '@/components/Icon3D';
 import { SubmitButton } from '@/components/SubmitButton';
+import { rulesAgreementText } from '@/lib/legal';
 import { canPay, dollars, POT_AMOUNTS, suggestedAmount } from '@/lib/pot';
 import type { Phase } from '@/lib/seasons';
 import { payPledge } from '../actions/pot';
@@ -40,6 +41,7 @@ export function PotPanel({ houseId, status, phase, pledgeCents, paid, online }: 
           <b>{pledgeCents > 0 ? `Pay your ${dollars(pledgeCents)} pledge` : 'Add to the prize pot'}</b>
           <div className="small muted">Optional. Free submissions compete for the same prize, and paying never changes your ranking. <Link href="/rules">Official rules</Link></div>
         </div>
+        <label className="check small" htmlFor={`agree-${houseId}`}><input type="checkbox" id={`agree-${houseId}`} name="agreeRules" required /><span>{rulesAgreementText()}</span></label>
         <div className="row" style={{ gap: 10 }}>
           <div className="chips" role="radiogroup" aria-label="Amount">
             {POT_AMOUNTS.map((a) => (

@@ -10,10 +10,11 @@ export function SiteFooter() {
           <LogoMark size={36} />
           <div>
             <b><Wordmark /></b>
-            <p>© {new Date().getFullYear()} {OWNER_NAME}. Leave the light on.</p>
+            <p>© {new Date().getFullYear()} {OWNER_NAME}. Built by neighbors. Leave the light on.</p>
           </div>
         </div>
-        <nav aria-label="Legal">
+        <nav aria-label="Help and legal">
+          <Link href="/faq">FAQ</Link>
           <Link href="/rules">Contest rules</Link>
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>

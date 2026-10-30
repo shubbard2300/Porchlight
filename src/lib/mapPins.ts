@@ -20,3 +20,11 @@ export function publicPin(h: { id: string; lat: number; lng: number; showExactAd
     lng: Number((snap(h.lng) + (hash(h.id, 2) * 2 - 1) * NUDGE).toFixed(4)),
   };
 }
+
+/**
+ * Exact addresses are for signed-in members only: logged-out visitors and search engines always get the
+ * neighborhood and the approximate pin, even when the host chose to show their address.
+ */
+export function forViewer<T extends { showExactAddress: boolean }>(h: T, signedIn: boolean): T {
+  return h.showExactAddress && !signedIn ? { ...h, showExactAddress: false } : h;
+}

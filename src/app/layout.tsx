@@ -5,6 +5,7 @@ import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
 import { boostActive } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
+import { BottomTabs } from '@/components/BottomTabs';
 import { Modals } from '@/components/Modals';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -16,7 +17,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Porchlight',
-  description: 'Find the best holiday houses near you, swipe to rate, and help a neighbor win the pot.',
+  description: 'The holiday light map your neighborhood builds together. Add your porch, visit in person, and help pick the community’s favorites.',
   appleWebApp: { capable: true, title: 'Porchlight', statusBarStyle: 'black' },
   icons: { apple: '/app-icons/apple-touch-icon.png' },
 };
@@ -57,10 +58,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <SiteNav>
               <Link href="/#map">Map</Link>
-              <Link href="/">Houses</Link>
               <Link href="/route">Plan a route</Link>
               {user && <Link href="/caravan">Caravan</Link>}
               <Link href="/leaderboard">Leaderboard</Link>
+              <Link href="/faq" className="nav-faq">FAQ</Link>
               {user ? (
                 <>
                   {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
@@ -87,12 +88,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Link href="/join" data-modal="join">Sign up</Link>
                 </>
               )}
-              <Link href={user ? '/submit' : '/join/host'} data-modal={user ? undefined : 'join:host'} className="cta">Post your house</Link>
+              <Link href={user ? '/submit' : '/join/host'} data-modal={user ? undefined : 'join:host'} className="cta">Add your porch</Link>
             </SiteNav>
           </div>
         </header>
         {children}
         <SiteFooter />
+        <BottomTabs signedIn={Boolean(user)} />
         <Modals signedIn={Boolean(user)} contact={{ name: user ? (user.displayName ?? user.username) : undefined, email: user?.email }} xp={user ? { xp: user.xp, boostUntil: user.xpBoostUntil?.toISOString() ?? null } : null} />
       </body>
     </html>
