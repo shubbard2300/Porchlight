@@ -21,6 +21,7 @@ import { VisitPanel, type VisitState } from '@/components/VisitPanel';
 import { CHECKIN_XP } from '@/lib/rewards';
 import { Tip } from '@/components/Tip';
 import styles from './house.module.css';
+import { isStaff } from '@/lib/roles';
 
 const FLASH: Record<string, string> = {
   'qr-first': 'Checked in with the porch sign and earned XP! Now fill in your scorecard.',
@@ -47,7 +48,7 @@ export default async function HousePage({ params, searchParams }: Props) {
   const { id } = await params;
   const { checkin } = await searchParams;
   const [house, user] = await Promise.all([load(id), currentUser()]);
-  const canPreview = user && house && (house.ownerId === user.id || user.role === 'ADMIN');
+  const canPreview = user && house && (house.ownerId === user.id || isStaff(user.role));
   if (!house || (house.status !== 'APPROVED' && !canPreview)) notFound();
 
   const season = getSeason(house.season);
@@ -180,7 +181,7 @@ export default async function HousePage({ params, searchParams }: Props) {
             <p className={styles.crowd}><i style={{ background: CROWD_LEVELS[crowdLevel(here)].color }} />{crowdLine(here)}</p>
           )}
           {house.status === 'APPROVED' && house.lat !== null && <Link href={`/route?season=${house.season}&from=${house.id}`} className="btn ghost"><Icon3D name="map" size={22} />Plan a tour from here</Link>}
-          {user && (house.ownerId === user.id || user.role === 'ADMIN') && <Link href={`/house/${house.id}/stats`} className="btn ghost"><Icon3D name="sparkles" size={22} />{house.ownerId === user.id ? 'My flex stats' : 'Host stats'}</Link>}
+          {user && (house.ownerId === user.id || isStaff(user.role)) && <Link href={`/house/${house.id}/stats`} className="btn ghost"><Icon3D name="sparkles" size={22} />{house.ownerId === user.id ? 'My flex stats' : 'Host stats'}</Link>}
           <div className="panel stack" style={{ gap: 14 }}>
             <div className="row spread">
               <h2 style={{ fontSize: 20 }}>Scorecard</h2>

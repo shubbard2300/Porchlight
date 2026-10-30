@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { TIERS } from '@/lib/pitstops';
 import { deleteMerchant } from '../../../actions/merchants';
 import { MerchantForm } from '../MerchantForm';
 
 export default async function EditMerchant({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
+  await requireAdmin();
   const { id } = await params;
   const { saved } = await searchParams;
   const m = await db.merchant.findUnique({ where: { id } });

@@ -18,7 +18,13 @@ function locationLabel(p: HousePhotoView) {
  * phone's location for photos taken right now. With houseId, photos save straight to that submission;
  * without it (the submit form) they are held and sent with the form as `inputName` values.
  */
-export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId?: string; initial?: HousePhotoView[]; inputName?: string }) {
+export function HousePhotoPicker({ houseId, initial = [], inputName, onLocated }: {
+  houseId?: string;
+  initial?: HousePhotoView[];
+  inputName?: string;
+  /** Called after a photo is added or given a location, so a form can suggest the address. */
+  onLocated?: (p: HousePhotoView) => void;
+}) {
   const camera = useRef<HTMLInputElement>(null);
   const library = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState(initial);
@@ -52,7 +58,10 @@ export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId
         }
         const res = await uploadHousePhoto(fd);
         if (res.error) setError(res.error);
-        else if (res.photo) setPhotos((ps) => [...ps, res.photo!]);
+        else if (res.photo) {
+          setPhotos((ps) => [...ps, res.photo!]);
+          onLocated?.(res.photo);
+        }
       } catch {
         setError("We couldn't read that photo. Try a JPEG or PNG, or take a new one.");
       }
@@ -69,7 +78,10 @@ export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId
     } else {
       const res = await setHousePhotoLocation(id, c.lat, c.lng);
       if (res.error) setError(res.error);
-      else if (res.photo) setPhotos((ps) => ps.map((p) => (p.id === id ? res.photo! : p)));
+      else if (res.photo) {
+        setPhotos((ps) => ps.map((p) => (p.id === id ? res.photo! : p)));
+        onLocated?.(res.photo);
+      }
     }
     setLocating(undefined);
   };

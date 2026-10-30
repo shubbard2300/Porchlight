@@ -19,6 +19,7 @@ import { seasonTheme } from '@/lib/theme';
 import { dollars } from '@/lib/pot';
 import { potTotal, unpaidPledgeCents } from '@/lib/potServer';
 import { contestToday, phase, phaseLabel } from '@/lib/seasons';
+import { isStaff } from '@/lib/roles';
 import { seasonCalendar } from '@/lib/seasonConfig';
 
 const STEPS: [Icon3DName, string, string][] = [
@@ -78,7 +79,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const unplaced = ranked.filter((h) => h.lat === null || h.lng === null);
   // Pins still on their way: admins get a shortcut to sort them out, hosts hear where their own house stands, everyone else sees nothing.
   let notice: MapNotice | null = null;
-  if (user?.role === 'ADMIN') {
+  if (isStaff(user?.role)) {
     const waiting = await db.house.count({ where: { season: season.key, status: 'PENDING' } });
     notice = { for: 'admin', waiting, unplaced: unplaced.length, firstUnplacedId: unplaced[0]?.id ?? null };
   } else if (user) {

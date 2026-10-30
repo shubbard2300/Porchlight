@@ -3,7 +3,7 @@ import { renderEmail } from './emailLayout';
 import type { Email } from './emails';
 import { emailFrom, notificationEmail, replyTo } from './settings';
 
-export type EmailKind = 'signup' | 'verify' | 'login' | 'welcome' | 'submission' | 'submission-received' | 'approved' | 'rejected' | 'removed' | 'contact' | 'test';
+export type EmailKind = 'signup' | 'verify' | 'login' | 'welcome' | 'submission' | 'submission-received' | 'approved' | 'rejected' | 'removed' | 'contact' | 'invite' | 'test';
 
 export const emailDeliveryConfigured = () => Boolean(process.env.RESEND_API_KEY);
 /** Preview deployments link to their own branch URL so emailed links work before the PR is merged. */

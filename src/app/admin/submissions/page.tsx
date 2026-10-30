@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { HouseStatus } from '@prisma/client';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { seasonCalendar } from '@/lib/seasonConfig';
 import { getBracket } from '@/lib/brackets';
@@ -8,6 +9,7 @@ import { ReviewControls } from './ReviewControls';
 const FILTERS: [HouseStatus, string][] = [['PENDING', 'Waiting'], ['APPROVED', 'Live'], ['REJECTED', 'Not approved']];
 
 export default async function Submissions({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  await requireAdmin();
   const { getSeason } = await seasonCalendar();
   const raw = (await searchParams).status;
   const status: HouseStatus = FILTERS.some(([k]) => k === raw) ? (raw as HouseStatus) : 'PENDING';
@@ -23,7 +25,7 @@ export default async function Submissions({ searchParams }: { searchParams: Prom
           <article key={h.id} id={`h-${h.id}`} className="panel stack" style={{ gap: 10, scrollMarginTop: 90 }}>
             <div className="row spread">
               <div><h2 style={{ fontSize: 20 }}>{h.name}</h2><span className="small muted">{s ? `${s.name} ${s.year}` : h.season} · posted {h.createdAt.toLocaleDateString('en-US')} by @{h.owner.username} &lt;{h.owner.email}&gt;</span></div>
-              <span className={`pill ${h.status}`}>{h.status.toLowerCase()}</span>
+              <div className="row" style={{ gap: 8 }}><Link className="btn ghost sm" href={`/admin/submissions/${h.id}`}>Edit</Link><span className={`pill ${h.status}`}>{h.status.toLowerCase()}</span></div>
             </div>
             <p className="small">{h.address}{h.neighborhood ? ` · ${h.neighborhood}` : ''} · {h.showExactAddress ? 'exact address public' : 'address hidden until check-in'} · lit {h.litFrom}–{h.litUntil} · pledge ${h.contributionCents / 100}</p>
             <p>{h.description}</p>

@@ -1,22 +1,28 @@
 import Link from 'next/link';
 import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { isBootstrapAdmin, requireSuperAdmin } from '@/lib/auth';
+import { ACCESS_LEVELS, accessLevel, BLOCKED, levelLabel, type AccessLevel } from '@/lib/roles';
 import { seasonCalendar } from '@/lib/seasonConfig';
 import { avatarUrl } from '@/lib/users';
-import { deleteUser, setRole } from '../../actions/admin';
+import { deleteUser, setAccessLevel } from '../../actions/admin';
+import { AddUserForm } from './AddUserForm';
 
-const TYPES: [string, string][] = [['all', 'Everyone'], ['VIEWER', 'Viewers'], ['HOST', 'Hosts'], ['unverified', 'Not verified']];
+const TYPES: [string, string][] = [['all', 'Everyone'], ['staff', 'Admins and editors'], ['VIEWER', 'Viewers'], ['HOST', 'Authors'], ['unverified', 'Not verified']];
+const LEVEL_PILL: Record<AccessLevel, string> = { SUPER_ADMIN: 'ADMIN', EDITOR: 'ADMIN', AUTHOR: 'PENDING', VIEWER: 'live' };
+const NOTES: Record<string, string> = { saved: 'Access updated.', deleted: 'Account deleted.' };
 
-export default async function Users({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {
+export default async function Users({ searchParams }: { searchParams: Promise<{ q?: string; type?: string; note?: string }> }) {
+  const me = await requireSuperAdmin();
   const { getSeason } = await seasonCalendar();
-  const me = await requireAdmin();
   const sp = await searchParams;
+  const blocked = sp.note && sp.note in BLOCKED ? BLOCKED[sp.note as keyof typeof BLOCKED] : null;
   const q = (sp.q ?? '').trim();
   const type = TYPES.some(([k]) => k === sp.type) ? sp.type! : 'all';
   const where: Prisma.UserWhereInput = {
     ...(q ? { OR: [{ email: { contains: q, mode: 'insensitive' } }, { username: { contains: q, mode: 'insensitive' } }, { displayName: { contains: q, mode: 'insensitive' } }] } : {}),
-    ...(type === 'VIEWER' || type === 'HOST' ? { accountType: type } : {}),
+    ...(type === 'VIEWER' || type === 'HOST' ? { accountType: type, role: 'USER' as const } : {}),
+    ...(type === 'staff' ? { role: { in: ['ADMIN' as const, 'EDITOR' as const] } } : {}),
     ...(type === 'unverified' ? { emailVerifiedAt: null } : {}),
   };
   const [users, total] = await Promise.all([
@@ -30,6 +36,19 @@ export default async function Users({ searchParams }: { searchParams: Promise<{ 
         <h1 style={{ fontSize: 30 }}>Users <span className="muted num" style={{ fontSize: 18 }}>{total}</span></h1>
         <a className="btn ghost sm" href={`/admin/users/export${q ? `?q=${encodeURIComponent(q)}` : ''}`}>Download CSV</a>
       </div>
+      {blocked && <p className="notice warn" role="alert">{blocked}</p>}
+      {sp.note && NOTES[sp.note] && <p className="notice" role="status">{NOTES[sp.note]}</p>}
+      <section className="panel stack" aria-labelledby="add-user">
+        <h2 id="add-user" style={{ fontSize: 20 }}>Add a user</h2>
+        <AddUserForm />
+        <details>
+          <summary className="small">What each access level can do</summary>
+          <ul className="small" style={{ marginTop: 8, paddingLeft: 18 }}>
+            {ACCESS_LEVELS.map((l) => <li key={l.key}><b>{l.label}:</b> {l.blurb}</li>)}
+          </ul>
+          <p className="small muted">The site owner accounts (set in ADMIN_EMAILS) always stay Super Admin, and there is always at least one Super Admin.</p>
+        </details>
+      </section>
       <nav className="tabs">{TYPES.map(([k, l]) => <Link key={k} href={qs(k)} aria-current={k === type ? 'page' : undefined}>{l}</Link>)}</nav>
       <form className="row" role="search">
         <input type="hidden" name="type" value={type} />
@@ -38,10 +57,12 @@ export default async function Users({ searchParams }: { searchParams: Promise<{ 
       </form>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>User</th><th>Email</th><th>Type</th><th>Status</th><th>XP</th><th>Houses</th><th>Joined</th><th></th></tr></thead>
+          <thead><tr><th>User</th><th>Email</th><th>Access</th><th>Status</th><th>XP</th><th>Houses</th><th>Joined</th><th></th></tr></thead>
           <tbody>
             {users.map((u) => {
               const s = getSeason(u.hostSeason);
+              const level = accessLevel(u);
+              const owner = isBootstrapAdmin(u.email);
               return (
                 <tr key={u.id}>
                   <td>
@@ -53,25 +74,26 @@ export default async function Users({ searchParams }: { searchParams: Promise<{ 
                   </td>
                   <td>{u.email}{u.hometown && <div className="small muted">{u.hometown}</div>}</td>
                   <td>
-                    <span className={`pill ${u.accountType === 'HOST' ? 'PENDING' : 'live'}`}>{u.accountType === 'HOST' ? 'host' : 'viewer'}</span>
+                    <span className={`pill ${LEVEL_PILL[level]}`}>{levelLabel(level)}</span>{owner && <> <span className="pill">owner</span></>}
                     {u.accountType === 'HOST' && (u.propertyAddress || s) && <div className="small muted" style={{ minWidth: 180 }}>{[u.propertyAddress, s && `${s.name} ${s.year}`, u.decorationTheme].filter(Boolean).join(' · ')}</div>}
                   </td>
                   <td>
                     {u.emailVerifiedAt ? <span className="pill sent">verified</span> : <span className="pill skipped">not verified</span>}
-                    {u.role === 'ADMIN' && <> <span className="pill ADMIN">admin</span></>}
                   </td>
                   <td className="num">{u.xp}</td>
                   <td className="num">{u._count.houses}</td>
                   <td className="num">{u.createdAt.toLocaleDateString('en-US')}</td>
                   <td>
-                    {u.id === me.id ? <span className="small muted">you</span> : (
+                    {u.id === me.id ? <span className="small muted">you</span> : owner ? <span className="small muted">always Super Admin</span> : (
                       <details>
                         <summary>Manage</summary>
                         <div className="stack" style={{ gap: 8, marginTop: 8, minWidth: 180 }}>
-                          <form action={setRole}>
+                          <form action={setAccessLevel} className="stack" style={{ gap: 6 }}>
                             <input type="hidden" name="id" value={u.id} />
-                            <input type="hidden" name="role" value={u.role === 'ADMIN' ? 'USER' : 'ADMIN'} />
-                            <button className="btn ghost sm">{u.role === 'ADMIN' ? 'Remove admin' : 'Make admin'}</button>
+                            <select name="level" defaultValue={level} aria-label={`Access level for @${u.username}`}>
+                              {ACCESS_LEVELS.map((l) => <option key={l.key} value={l.key} disabled={l.key === 'VIEWER' && u._count.houses > 0}>{l.label}</option>)}
+                            </select>
+                            <button className="btn ghost sm">Save access</button>
                           </form>
                           <form action={deleteUser} className="stack" style={{ gap: 6 }}>
                             <input type="hidden" name="id" value={u.id} />

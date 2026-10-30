@@ -11,8 +11,8 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
   return hit && { lat: hit.lat, lng: hit.lng };
 }
 
-/** Like geocodeAddress, plus the two-letter US state the address is in (null outside the US or if unknown). */
-export async function lookupAddress(address: string): Promise<{ lat: number; lng: number; state: string | null } | null> {
+/** Like geocodeAddress, plus the two-letter US state the address is in (null outside the US or if unknown) and its neighborhood. */
+export async function lookupAddress(address: string): Promise<{ lat: number; lng: number; state: string | null; neighborhood: string | null } | null> {
   const q = address.trim();
   if (!q) return null;
   try {
@@ -27,7 +27,8 @@ export async function lookupAddress(address: string): Promise<{ lat: number; lng
     if (!hit) return null;
     const lat = Number(hit.lat);
     const lng = Number(hit.lon);
-    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, state: usState(hit.address) } : null;
+    const neighborhood = hit.address?.neighbourhood ?? hit.address?.suburb ?? null;
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng, state: usState(hit.address), neighborhood } : null;
   } catch (err) {
     console.warn('[geocode] lookup failed', err);
     return null;

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
-import { requireAdmin, requireUser } from '@/lib/auth';
+import { requireSuperAdmin, requireUser } from '@/lib/auth';
 import { appUrl } from '@/lib/email';
 import type { FormState } from '@/lib/forms';
 import { LEGAL_UPDATED } from '@/lib/legal';
@@ -55,7 +55,7 @@ export async function payPledge(houseId: string, fd: FormData) {
 
 /** Refunds a host's card payment in full. The webhook would also mark it, but we don't wait for it. */
 export async function refundPayment(id: string) {
-  await requireAdmin();
+  await requireSuperAdmin();
   const p = await db.potPayment.findUnique({ where: { id } });
   if (!p || p.status !== 'PAID' || p.source !== 'HOST' || !p.stripePaymentIntentId) return;
   try {
@@ -71,8 +71,8 @@ export async function refundPayment(id: string) {
 
 /** Records money a sponsor added to a season's pot outside Stripe (a check, an invoice). */
 export async function addSponsor(_prev: FormState, fd: FormData): Promise<FormState> {
+  await requireSuperAdmin();
   const { getSeason } = await seasonCalendar();
-  await requireAdmin();
   const parsed = sponsorSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
   const d = parsed.data;
@@ -88,7 +88,7 @@ export async function addSponsor(_prev: FormState, fd: FormData): Promise<FormSt
 }
 
 export async function removeSponsor(id: string) {
-  await requireAdmin();
+  await requireSuperAdmin();
   await db.potPayment.deleteMany({ where: { id, source: 'SPONSOR' } });
   revalidatePath('/admin', 'layout');
   revalidatePath('/');

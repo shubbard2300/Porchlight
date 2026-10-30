@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
+import { requireSuperAdmin } from '@/lib/auth';
 import type { FormState } from '@/lib/forms';
 import { HOLIDAYS } from '@/lib/holidays';
 import { getSeasonConfig, saveSeasonConfig } from '@/lib/seasonConfig';
@@ -15,8 +15,7 @@ const FIELDS = ['submitOpens', 'submitCloses', 'opens', 'closes'] as const;
  * Only dates that differ from the usual ones are stored, so untouched contests keep following holidays.ts.
  */
 export async function saveContestDates(_prev: FormState, fd: FormData): Promise<FormState> {
-  // Contest dates are owner-level settings: when the Super Admin role lands, gate this on it.
-  await requireAdmin();
+  await requireSuperAdmin();
   const today = contestToday();
   const saved = await getSeasonConfig();
   const shown = editableSeasons(buildSeasons(saved, today), today);

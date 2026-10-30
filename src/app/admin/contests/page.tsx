@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireSuperAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { editableSeasons } from '@/lib/contestAdmin';
 import { getSeasonConfig } from '@/lib/seasonConfig';
@@ -6,7 +7,9 @@ import { buildSeasons, contestToday, formatDay, phaseLabel, usualDates } from '@
 import { seasonTheme } from '@/lib/theme';
 import { ContestDatesForm, type ContestRow } from './ContestDatesForm';
 
+/** Super Admins only: which contests run and when, site-wide. */
 export default async function ContestDates() {
+  await requireSuperAdmin();
   const today = contestToday();
   const seasons = editableSeasons(buildSeasons(await getSeasonConfig(), today), today);
   const counts = await db.house.groupBy({ by: ['season'], where: { season: { in: seasons.map((s) => s.key) }, status: { not: 'REJECTED' } }, _count: true });

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
+import { isSuperAdmin } from '@/lib/roles';
 
 const cell = (v: unknown) => {
   const s = String(v ?? '');
@@ -9,7 +10,7 @@ const cell = (v: unknown) => {
 
 export async function GET(req: Request) {
   const user = await currentUser();
-  if (!user || user.role !== 'ADMIN') return new Response('Not found', { status: 404 });
+  if (!user || !isSuperAdmin(user.role)) return new Response('Not found', { status: 404 });
   const q = new URL(req.url).searchParams.get('q')?.trim();
   const users = await db.user.findMany({
     where: q ? { OR: [{ email: { contains: q, mode: 'insensitive' } }, { username: { contains: q, mode: 'insensitive' } }, { displayName: { contains: q, mode: 'insensitive' } }] } : {},

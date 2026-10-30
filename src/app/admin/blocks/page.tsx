@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { housesIn, type PlacedBlock } from '@/lib/blockStandings';
 import { seasonStandings } from '@/lib/seasonStandings';
@@ -7,6 +8,7 @@ import { seasonCalendar } from '@/lib/seasonConfig';
 import { BlockForm, EMPTY_BLOCK } from './BlockForm';
 
 export default async function Blocks() {
+  await requireAdmin();
   const { defaultSeason } = await seasonCalendar();
   const season = defaultSeason(contestToday());
   const [blocks, standings] = await Promise.all([db.anchorBlock.findMany({ orderBy: { name: 'asc' } }), seasonStandings(season.key)]);

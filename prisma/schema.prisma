@@ -7,8 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// ADMIN is a Super Admin. EDITOR reviews and edits anyone's content. See src/lib/roles.ts.
 enum Role {
   USER
+  EDITOR
   ADMIN
 }
 

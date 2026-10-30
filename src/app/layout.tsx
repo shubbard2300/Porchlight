@@ -17,6 +17,7 @@ import { seasonTheme } from '@/lib/theme';
 import { pendingTour } from '@/lib/tours';
 import { logout } from './actions/auth';
 import './globals.css';
+import { isStaff } from '@/lib/roles';
 
 export const metadata: Metadata = {
   title: 'Porchlight',
@@ -69,7 +70,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href="/faq" className="nav-faq">FAQ</Link>
               {user ? (
                 <>
-                  {user.role === 'ADMIN' && <Link href="/admin">Admin</Link>}
+                  {isStaff(user.role) && <Link href="/admin">Admin</Link>}
                   <span className="me-group">
                     <Link href="/profile" className="me">
                       {avatarUrl(user) ? <img src={avatarUrl(user)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{user.username[0].toUpperCase()}</span>}

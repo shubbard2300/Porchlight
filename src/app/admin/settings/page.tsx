@@ -1,9 +1,11 @@
+import { requireSuperAdmin } from '@/lib/auth';
 import { emailDeliveryConfigured } from '@/lib/email';
 import { emailFrom, notificationEmail, replyTo } from '@/lib/settings';
 import { sendTestEmail } from '../../actions/admin';
 import { SettingsForm } from './SettingsForm';
 
 export default async function Settings() {
+  await requireSuperAdmin();
   const [to, from, reply] = await Promise.all([notificationEmail(), emailFrom(), replyTo()]);
   const delivering = emailDeliveryConfigured();
   return (
