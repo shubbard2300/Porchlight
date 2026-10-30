@@ -34,7 +34,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   return (
     <>
       <h1 style={{ fontSize: 30 }}>Overview</h1>
-      {denied && <p className="notice warn" role="alert">That page is for Super Admins. As an Editor you can review submissions, pitstops and anchor blocks.</p>}
+      {denied && <p className="notice warn" role="alert">That page is for Super Admins. As an Editor you can review submissions, pitstops and anchor blocks, and switch members between Author and Viewer.</p>}
       {superAdmin && <>
       {!to && <p className="notice warn">No notification address is set, so form emails have nowhere to go. <Link href="/admin/settings">Set one in Settings</Link>.</p>}
       {to && !emailDeliveryConfigured() && <p className="notice warn">Emails are recorded in the Form inbox but not delivered yet. Add a <code>RESEND_API_KEY</code> to start sending to {to}.</p>}

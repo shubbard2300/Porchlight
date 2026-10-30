@@ -52,7 +52,7 @@ In development without `RESEND_API_KEY`, the "Check your email" page also shows 
 Super Admins manage access in **Admin > Users**: add someone by email (they get an invite link), change anyone's level, or delete an account. The levels (`src/lib/roles.ts`):
 
 - **Super Admin** (`role = ADMIN`): everything, including users and roles, settings, the prize pot and the Form inbox.
-- **Editor** (`role = EDITOR`): the admin portal's content tools. Approves, edits, takes down and deletes anyone's submissions, and manages pitstops and anchor blocks. No users, settings, payments or inbox.
+- **Editor** (`role = EDITOR`): the admin portal's content tools. Approves, edits, takes down and deletes anyone's submissions, manages pitstops and anchor blocks, and switches members between Author and Viewer on Admin > Users. Can't add, delete or promote users, or touch settings, payments or the inbox.
 - **Author**: a host (`accountType = HOST`). Posts, edits and deletes only their own submissions.
 - **Viewer**: browses the map, checks in and votes.
 

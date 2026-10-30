@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { accessLevel, deleteBlocked, isStaff, isSuperAdmin, levelData, roleChangeBlocked } from './roles';
 
-const target = (o: Partial<{ id: string; role: 'USER' | 'EDITOR' | 'ADMIN'; houses: number; owner: boolean }> = {}) => ({ id: 't', role: 'USER' as const, houses: 0, owner: false, ...o });
+const target = (o: Partial<{ id: string; role: 'USER' | 'EDITOR' | 'ADMIN'; owner: boolean }> = {}) => ({ id: 't', role: 'USER' as const, owner: false, ...o });
+const admin = { id: 'me', role: 'ADMIN' as const };
+const editor = { id: 'me', role: 'EDITOR' as const };
 
 describe('access levels', () => {
   it('reads the level from role and account type', () => {
@@ -26,22 +28,29 @@ describe('access levels', () => {
 
 describe('roleChangeBlocked', () => {
   it('allows normal changes', () => {
-    expect(roleChangeBlocked('me', target(), 'EDITOR', 1)).toBeNull();
-    expect(roleChangeBlocked('me', target({ role: 'ADMIN' }), 'EDITOR', 2)).toBeNull();
+    expect(roleChangeBlocked(admin, target(), 'EDITOR', 1)).toBeNull();
+    expect(roleChangeBlocked(admin, target({ role: 'ADMIN' }), 'EDITOR', 2)).toBeNull();
   });
   it('never changes your own access', () => {
-    expect(roleChangeBlocked('t', target({ role: 'ADMIN' }), 'EDITOR', 3)).toBe('self');
+    expect(roleChangeBlocked({ id: 't', role: 'ADMIN' }, target({ role: 'ADMIN' }), 'EDITOR', 3)).toBe('self');
   });
   it('keeps the owner a Super Admin', () => {
-    expect(roleChangeBlocked('me', target({ role: 'ADMIN', owner: true }), 'VIEWER', 5)).toBe('owner');
-    expect(roleChangeBlocked('me', target({ role: 'ADMIN', owner: true }), 'SUPER_ADMIN', 5)).toBeNull();
+    expect(roleChangeBlocked(admin, target({ role: 'ADMIN', owner: true }), 'VIEWER', 5)).toBe('owner');
+    expect(roleChangeBlocked(admin, target({ role: 'ADMIN', owner: true }), 'SUPER_ADMIN', 5)).toBeNull();
   });
   it('keeps at least one Super Admin', () => {
-    expect(roleChangeBlocked('me', target({ role: 'ADMIN' }), 'AUTHOR', 1)).toBe('last');
+    expect(roleChangeBlocked(admin, target({ role: 'ADMIN' }), 'AUTHOR', 1)).toBe('last');
   });
-  it('keeps members with houses as Authors', () => {
-    expect(roleChangeBlocked('me', target({ houses: 2 }), 'VIEWER', 1)).toBe('houses');
-    expect(roleChangeBlocked('me', target({ houses: 2 }), 'EDITOR', 1)).toBeNull();
+  it('lets a member with houses become a Viewer', () => {
+    expect(roleChangeBlocked(admin, target(), 'VIEWER', 1)).toBeNull();
+  });
+  it('keeps Editors to switching members between Author and Viewer', () => {
+    expect(roleChangeBlocked(editor, target(), 'VIEWER', 1)).toBeNull();
+    expect(roleChangeBlocked(editor, target(), 'AUTHOR', 1)).toBeNull();
+    expect(roleChangeBlocked(editor, target(), 'EDITOR', 1)).toBe('editor');
+    expect(roleChangeBlocked(editor, target({ role: 'EDITOR' }), 'VIEWER', 1)).toBe('editor');
+    expect(roleChangeBlocked(editor, target({ role: 'ADMIN' }), 'VIEWER', 3)).toBe('editor');
+    expect(roleChangeBlocked(editor, target({ role: 'ADMIN', owner: true }), 'VIEWER', 3)).toBe('owner');
   });
 });
 

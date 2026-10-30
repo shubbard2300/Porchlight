@@ -84,15 +84,15 @@ export async function removeHouse(id: string, rawNote: string) {
 const superAdminCount = () => db.user.count({ where: { role: 'ADMIN' } });
 const usersPage = (note: string) => redirect(`/admin/users?note=${note}`);
 
-/** A Super Admin changes someone's access level. */
+/** A Super Admin changes anyone's access level; an Editor switches members between Author and Viewer. */
 export async function setAccessLevel(fd: FormData) {
-  const admin = await requireSuperAdmin();
+  const admin = await requireAdmin();
   const id = String(fd.get('id'));
   const to = fd.get('level');
   if (!isAccessLevel(to)) return;
-  const target = await db.user.findUnique({ where: { id }, select: { id: true, email: true, role: true, _count: { select: { houses: true } } } });
+  const target = await db.user.findUnique({ where: { id }, select: { id: true, email: true, role: true } });
   if (!target) return;
-  const blocked = roleChangeBlocked(admin.id, { id, role: target.role, houses: target._count.houses, owner: isBootstrapAdmin(target.email) }, to, await superAdminCount());
+  const blocked = roleChangeBlocked(admin, { id, role: target.role, owner: isBootstrapAdmin(target.email) }, to, await superAdminCount());
   if (blocked) usersPage(blocked);
   await db.user.update({ where: { id }, data: levelData(to) });
   revalidatePath('/admin', 'layout');
