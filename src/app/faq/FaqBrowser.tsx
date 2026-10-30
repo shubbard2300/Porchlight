@@ -50,7 +50,7 @@ export function FaqBrowser({ topics }: { topics: FaqTopic[] }) {
         <nav className="tabs filter-tabs" aria-label="Topics">
           <button type="button" aria-pressed={!topic} onClick={() => setTopic(null)}>All</button>
           {topics.map((t) => (
-            <button key={t.key} type="button" aria-pressed={topic === t.key} onClick={() => setTopic(topic === t.key ? null : t.key)}>
+            <button key={t.key} type="button" aria-pressed={topic === t.key} onClick={(e) => { setTopic(topic === t.key ? null : t.key); e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }}>
               <Icon3D name={t.icon} size={20} />{t.label}
             </button>
           ))}
