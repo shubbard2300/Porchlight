@@ -5,6 +5,7 @@ import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
 import { boostActive } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
+import { Analytics } from '@/components/Analytics';
 import { BottomTabs } from '@/components/BottomTabs';
 import { LearningPath, XpToaster } from '@/components/LearningPath';
 import { Modals } from '@/components/Modals';
@@ -18,6 +19,7 @@ import { pendingTour } from '@/lib/tours';
 import { logout } from './actions/auth';
 import './globals.css';
 import { isStaff } from '@/lib/roles';
+import { gaMeasurementId } from '@/lib/analytics';
 
 export const metadata: Metadata = {
   title: 'Porchlight',
@@ -43,6 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await currentUser();
   const boosted = boostActive(user?.xpBoostUntil);
   const tour = user && pendingTour(user);
+  const gaId = gaMeasurementId();
   // Fonts and background follow the upcoming holiday. Pages about one contest can override it with data-season on <main>.
   const look = seasonTheme(defaultSeason(contestToday())).look;
   return (
@@ -56,6 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <ServiceWorker />
+        {gaId && <Analytics id={gaId} />}
         <header className="site-head">
           <div className="wrap">
             <Link href="/" className="brand">

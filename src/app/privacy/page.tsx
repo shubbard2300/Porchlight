@@ -20,6 +20,7 @@ export default function Privacy() {
         <li><b>Contest records:</b> when you agreed to the official rules (on entering a house or paying into a pot) and which version you saw. If you win, the identity and tax details on your IRS Form W-9, which we use only to pay and report the prize.</li>
         <li><b>Email records:</b> a log of the emails we send you (such as sign-in links), so we can fix delivery problems.</li>
         <li><b>Basic technical data:</b> like any website, our hosting provider receives your IP address and browser details when you load a page.</li>
+        <li><b>Usage statistics:</b> Google Analytics tells us which pages are visited, roughly where visitors are (city level), what device and browser they use, how they found us, and when someone finishes signing up as a viewer or a host. It doesn&apos;t receive your name, email or address.</li>
       </ul>
 
       <h2>How we use it</h2>
@@ -28,6 +29,7 @@ export default function Privacy() {
         <li>To show houses on the map, count verified votes, and decide the winner of each season.</li>
         <li>To send emails you need (confirmation and sign-in links) and, only if you opted in, an email when a new contest opens.</li>
         <li>To review submissions and prevent cheating or abuse.</li>
+        <li>To understand, in aggregate, how people use the site and which ways of finding us work, so we can improve it.</li>
       </ul>
       <p>We do not sell your personal information, and we do not use it for advertising.</p>
 
@@ -45,7 +47,7 @@ export default function Privacy() {
       </ul>
 
       <h2>Who we share it with</h2>
-      <p>We use a few service providers to run the site, and they only process data on our behalf: Vercel (hosting and photo storage), Neon (database), OpenStreetMap&apos;s Nominatim service (turning a street address you enter into a map location and state), Resend (sending email), Stripe (taking pot payments; card details go straight to Stripe and we never see them), ImprovMX (forwarding mail sent to us), and Google Fonts (typefaces, which means your browser contacts Google when a page loads). We may also share information if the law requires it.</p>
+      <p>We use a few service providers to run the site, and they only process data on our behalf: Vercel (hosting and photo storage), Neon (database), OpenStreetMap&apos;s Nominatim service (turning a street address you enter into a map location and state), Resend (sending email), Stripe (taking pot payments; card details go straight to Stripe and we never see them), ImprovMX (forwarding mail sent to us), Google Fonts (typefaces, which means your browser contacts Google when a page loads), and Google Analytics (usage statistics; we have turned off Google signals and ad personalization, so it isn&apos;t used to advertise to you). You can turn analytics off on our <Link href="/cookies">Cookie Policy</Link> page, and it stays off automatically if your browser sends Global Privacy Control. We may also share information if the law requires it.</p>
 
       <h2>How long we keep it</h2>
       <p>We keep your account until you delete it or ask us to. Past contests stay in the archive so results remain accurate. Sign-in links expire quickly, and email logs are kept only as long as they are useful for troubleshooting.</p>
@@ -54,7 +56,7 @@ export default function Privacy() {
       <p>You can edit your profile at any time. You can ask us to send you a copy of your data, correct it, or delete your account by <Link href="/contact?topic=Privacy+and+my+data" data-modal="contact:Privacy and my data">sending us a message</Link> or emailing {CONTACT_EMAIL}. Depending on where you live (for example California under the CCPA, or the EU and UK under the GDPR), you may have additional rights, and we will honor them. We will not treat you differently for using them.</p>
 
       <h2>Cookies</h2>
-      <p>We use one essential cookie to keep you signed in. See our <Link href="/cookies">Cookie Policy</Link>.</p>
+      <p>We use one essential cookie to keep you signed in, and Google Analytics cookies to count visits. See our <Link href="/cookies">Cookie Policy</Link> to turn analytics off.</p>
 
       <h2>Children</h2>
       <p>Porchlight is for people 18 and older. We do not knowingly collect information from children under 13. If you believe a child has signed up, <Link href="/contact?topic=Privacy+and+my+data" data-modal="contact:Privacy and my data">contact us</Link> and we will delete the account.</p>
