@@ -56,6 +56,10 @@ model User {
   referredBy      User?       @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals       User[]      @relation("Referrals")
   marketingOptIn  Boolean     @default(false)
+  /// When they agreed to the Terms and Official Rules at sign-up (by pressing "Create my account").
+  termsAcceptedAt DateTime?
+  /// Welcome tours finished or skipped: "viewer", "host". Each one pays TOUR_XP once, when finished.
+  toursDone       String[]    @default([])
 
   // Profile (all optional)
   displayName     String?

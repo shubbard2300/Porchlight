@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { HeroHouse } from '@/components/HeroHouse';
 import { HouseCard } from '@/components/HouseCard';
+import { Tip } from '@/components/Tip';
 import { HouseMap, type MapBlock, type MapHouse, type MapPitstop } from '@/components/HouseMap';
 import { housesIn, placedBlocks } from '@/lib/blockStandings';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
@@ -89,9 +90,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
             ))}
           </nav>
         )}
-        <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} blocks={mapBlocks} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+        <div style={{ position: 'relative' }}>
+          <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} blocks={mapBlocks} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+          {user && pins.length > 0 && <Tip id="map-pins" arrow="float">Tap a glowing pin to see the house, its photos and when the lights are on.</Tip>}
+        </div>
         {pins.length > 1 && (
-          <Link href={`/route?season=${season.key}`} className="btn primary" style={{ marginTop: 14 }}><Icon3D name="map" size={22} />Plan my light tour</Link>
+          <>
+            <Link href={`/route?season=${season.key}`} className="btn primary" style={{ marginTop: 14 }}><Icon3D name="map" size={22} />Plan my light tour</Link>
+            {user && <Tip id="route" arrow="up">Short on time? Pick a few favorites and we’ll plan the drive between them.</Tip>}
+          </>
         )}
       </section>
 

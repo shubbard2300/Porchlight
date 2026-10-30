@@ -2,11 +2,55 @@ import 'server-only';
 import type { HouseStatus } from '@prisma/client';
 import { db } from './db';
 import { appUrl } from './email';
-import { deletePhotoFiles } from './photoStorage';
-import { MAX_HOUSE_PHOTOS } from './validation';
+import { sniffImage } from './images';
+import { deletePhotoFiles, storePhotoFile } from './photoStorage';
+import { MAX_HOUSE_PHOTOS, type photoMetaSchema } from './validation';
+import type { z } from 'zod';
 
 /** Fields the browser needs to show a photo. Never selects the stored bytes. */
 export const photoSelect = { id: true, url: true, lat: true, lng: true, locationSource: true } as const;
+
+export const MAX_PHOTO_BYTES = 3_000_000;
+/** Photos uploaded before there is an entry (at sign-up or on the submit form) wait this long for one. */
+export const PENDING_PHOTO_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Checks and stores one uploaded photo for its owner, loose (no houseId) or on an entry.
+ * Returns the saved photo, or an error to show the person.
+ */
+export async function savePhoto(ownerId: string, file: File, meta: Omit<z.infer<typeof photoMetaSchema>, 'houseId'>, houseId: string | null = null) {
+  if (file.size > MAX_PHOTO_BYTES) return { error: 'That photo is too large. Try one under 3 MB.' };
+  const data = Buffer.from(await file.arrayBuffer());
+  const contentType = sniffImage(data);
+  if (!contentType) return { error: 'Use a JPEG, PNG or WebP photo.' };
+  const count = await db.housePhoto.count({ where: { ownerId, houseId } });
+  if (count >= MAX_HOUSE_PHOTOS) return { error: `You can add up to ${MAX_HOUSE_PHOTOS} photos per house.` };
+
+  const row = await db.housePhoto.create({
+    data: {
+      ownerId,
+      houseId,
+      url: '',
+      width: meta.width,
+      height: meta.height,
+      lat: meta.lat ?? null,
+      lng: meta.lng ?? null,
+      locationSource: meta.locationSource ?? null,
+      takenAt: meta.takenAt ?? null,
+      position: count,
+    },
+  });
+  let blobUrl: string | null;
+  try {
+    blobUrl = await storePhotoFile(row.id, data, contentType);
+  } catch (err) {
+    console.error('[photos] upload failed', err);
+    await db.housePhoto.delete({ where: { id: row.id } });
+    return { error: 'We could not save that photo. Try again in a moment.' };
+  }
+  const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url: blobUrl ?? `/house-photo/${row.id}`, blobUrl }, select: photoSelect });
+  return { photo };
+}
 
 /**
  * Copies the photo order into House.photoUrls (what the house cards read) and, if the house

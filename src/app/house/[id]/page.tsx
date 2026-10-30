@@ -17,6 +17,8 @@ import { BOOST_HOURS, TIERS, getCategory, nearestPitstop } from '@/lib/pitstops'
 import { Icon3D } from '@/components/Icon3D';
 import { critterFor } from '@/lib/hunt';
 import { VisitPanel, type VisitState } from '@/components/VisitPanel';
+import { CHECKIN_XP } from '@/lib/rewards';
+import { Tip } from '@/components/Tip';
 import styles from './house.module.css';
 
 const FLASH: Record<string, string> = {
@@ -190,6 +192,7 @@ export default async function HousePage({ params, searchParams }: Props) {
               })}
             </div>
           </div>
+          {state === 'needs-checkin' && <Tip id="check-in">Standing out front? Check in to unlock your scorecard. Your first check-in here earns {CHECKIN_XP} XP.</Tip>}
           <VisitPanel
             houseId={house.id}
             state={state}

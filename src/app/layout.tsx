@@ -5,12 +5,14 @@ import { currentUser } from '@/lib/auth';
 import { avatarUrl } from '@/lib/users';
 import { boostActive } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
+import { LearningPath, XpToaster } from '@/components/LearningPath';
 import { Modals } from '@/components/Modals';
 import { ServiceWorker } from '@/components/ServiceWorker';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteNav } from '@/components/SiteNav';
 import { contestToday, defaultSeason } from '@/lib/seasons';
 import { seasonTheme } from '@/lib/theme';
+import { pendingTour } from '@/lib/tours';
 import { logout } from './actions/auth';
 import './globals.css';
 
@@ -36,6 +38,7 @@ const FONTS = 'https://fonts.googleapis.com/css2?' + [
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await currentUser();
   const boosted = boostActive(user?.xpBoostUntil);
+  const tour = user && pendingTour(user);
   // Fonts and background follow the upcoming holiday. Pages about one contest can override it with data-season on <main>.
   const look = seasonTheme(defaultSeason(contestToday())).look;
   return (
@@ -93,6 +96,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </header>
         {children}
         <SiteFooter />
+        {tour && <LearningPath key={tour} tour={tour} name={user.displayName} />}
+        {user && <XpToaster />}
         <Modals signedIn={Boolean(user)} contact={{ name: user ? (user.displayName ?? user.username) : undefined, email: user?.email }} xp={user ? { xp: user.xp, boostUntil: user.xpBoostUntil?.toISOString() ?? null } : null} />
       </body>
     </html>
