@@ -726,3 +726,10 @@ main.home { gap: 56px; }
   .btn:hover .i3d { transform: none; }
 }
 @media print { .bottom-tabs { display: none !important; } body { padding-bottom: 0; } }
+
+/* Map view: the theme filters sit close under the holiday tabs and a size smaller, so the map stays the star. */
+main.home > .season-tabs + #map { margin-top: -42px; }
+.theme-tabs { gap: 6px; }
+.theme-tabs a { padding: 4px 11px 4px 6px; font-size: 13px; gap: 6px; }
+.theme-tabs .count { font-size: 11px; padding: 0 6px; }
+@media (max-width: 760px) { main.home > .season-tabs + #map { margin-top: -28px; } }
