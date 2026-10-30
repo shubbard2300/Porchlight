@@ -17,6 +17,7 @@ import { MIN_SQUAD_REVIEWERS, squadReview } from '@/lib/caravans';
 import { BOOST_HOURS, TIERS, getCategory, nearestPitstop } from '@/lib/pitstops';
 import { Icon3D } from '@/components/Icon3D';
 import { critterFor } from '@/lib/hunt';
+import { decorFor, forHoliday } from '@/lib/arDecor';
 import { VisitPanel, type VisitState } from '@/components/VisitPanel';
 import { CHECKIN_XP } from '@/lib/rewards';
 import { Tip } from '@/components/Tip';
@@ -54,7 +55,7 @@ export default async function HousePage({ params, searchParams }: Props) {
   const season = getSeason(house.season);
   const theme = season ? seasonTheme(season) : null;
   const verified = { houseId: id, verifiedAt: { not: null } };
-  const [likes, visitors, avg, comments, myCheckIn, myVote, squadVotes, myCatch] = await Promise.all([
+  const [likes, visitors, avg, comments, myCheckIn, myVote, squadVotes, myCatch, arDecor] = await Promise.all([
     db.vote.count({ where: { ...verified, liked: true } }),
     db.checkIn.groupBy({ by: ['userId'], where: { houseId: id } }).then((g) => g.length),
     db.vote.aggregate({ where: verified, _avg: { creativity: true, lighting: true, storytelling: true, sound: true }, _count: { creativity: true } }),
@@ -71,7 +72,9 @@ export default async function HousePage({ params, searchParams }: Props) {
       select: { liked: true, comment: true, creativity: true, lighting: true, storytelling: true, sound: true, caravan: { select: { id: true, name: true } } },
     }),
     user ? db.arCatch.findUnique({ where: { userId_houseId: { userId: user.id, houseId: id } }, select: { id: true } }) : null,
+    db.arDecoration.findMany({ where: { houseId: id }, select: { kind: true } }),
   ]);
+  const arProps = forHoliday(arDecor, season?.name).length;
   const critter = critterFor(house.id, season?.name);
   const open = await votingOpen(house.season);
   const squads = [...Map.groupBy(squadVotes, (v) => v.caravan!.id).values()]
@@ -207,6 +210,20 @@ export default async function HousePage({ params, searchParams }: Props) {
             flash={checkin ? FLASH[checkin] ?? null : null}
             myVote={myVote && { liked: myVote.liked, comment: myVote.comment, creativity: myVote.creativity, lighting: myVote.lighting, storytelling: myVote.storytelling, sound: myVote.sound }}
           />
+          {state === 'own' && arProps === 0 && <Tip id="ar-decor-house" news>Add virtual {season?.name ?? 'holiday'} props that visitors see through their phone camera when they visit.</Tip>}
+          {(arProps > 0 || house.arGreeting || state === 'own') && (
+            <Link href={arProps > 0 || house.arGreeting ? `/house/${house.id}/ar` : `/house/${house.id}/ar/edit`} className={styles.pitstop}>
+              <span className={styles.pitBadge} style={{ background: 'var(--amber-soft)' }}><Icon3D name="sparkles" size={34} /></span>
+              <span className="stack" style={{ gap: 2 }}>
+                <span className={styles.pitLabel}>AR decorations</span>
+                <b>{arProps > 0 ? `${arProps} virtual ${arProps === 1 ? 'prop' : 'props'} on this porch` : state === 'own' && !house.arGreeting ? 'Decorate your porch in AR' : 'A message floats over this porch'}</b>
+                <span className="small muted">
+                  {state === 'own' ? (arProps > 0 ? 'Preview what visitors see, or edit your props.' : `Add ${decorFor(season?.name).slice(0, 2).map((d) => d.name.toLowerCase()).join(', ')} and more that visitors see through their camera.`)
+                    : 'Point your camera at the house to see what the host added.'}
+                </span>
+              </span>
+            </Link>
+          )}
           {house.status === 'APPROVED' && open && (
             <Link href={myCatch ? '/hunt' : `/house/${house.id}/hunt`} className={styles.pitstop}>
               <span className={styles.pitBadge} style={{ background: 'var(--lilac)' }}><Icon3D name={critter.icon} size={34} /></span>

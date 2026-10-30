@@ -124,6 +124,7 @@ export default async function HouseStats({ params }: { params: Promise<{ id: str
           <div className="row" style={{ gap: 8 }}>
             <Link href={`/house/${id}/sign`} className="btn sm primary">Print porch QR sign</Link>
             {house.ownerId === user.id && <Link href={`/house/${id}/lights`} className="btn sm ghost">Porch light triggers</Link>}
+            {house.ownerId === user.id && <Link href={`/house/${id}/ar/edit`} className="btn sm ghost">AR decorations</Link>}
           </div>
         </section>
       </div>

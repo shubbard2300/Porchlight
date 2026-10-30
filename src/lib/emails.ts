@@ -100,6 +100,7 @@ export function approvedEmail(o: { name: string; house: string; season: string; 
       greeting: `Hi ${o.name},`,
       body: [
         `${o.house} is now on the ${o.season} map. You earned ${o.xp} XP and the Lamplighter badge.`,
+        `Want to stand out? Add AR decorations from your profile: virtual ${o.season ? `${o.season} ` : ''}props like ghosts or reindeer that visitors see floating over your house through their phone camera.`,
         ...(o.pledge ? [`You pledged ${o.pledge} to the prize pot. Whenever you're ready, you can pay it by card from your profile. It's optional, and it never affects votes.`] : []),
       ],
       ...(o.note && { quote: { label: 'Note from the team', text: o.note } }),

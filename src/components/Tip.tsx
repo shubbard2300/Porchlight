@@ -38,19 +38,22 @@ function thisVisit(): Store {
   return s;
 }
 
-/** `arrow` points at what the tip is about: below it (down), above it (up), or `float` to sit over it, like the map. */
-export function Tip({ id, children, arrow = 'down' }: { id: string; children: React.ReactNode; arrow?: 'down' | 'up' | 'float' }) {
+/**
+ * `arrow` points at what the tip is about: below it (down), above it (up), or `float` to sit over it, like the map.
+ * `news` announces a new feature: it shows past the first two visits too, until dismissed.
+ */
+export function Tip({ id, children, arrow = 'down', news = false }: { id: string; children: React.ReactNode; arrow?: 'down' | 'up' | 'float'; news?: boolean }) {
   const [show, setShow] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     const s = thisVisit();
-    setShow(!s.off && s.visits <= TIP_VISITS && !s.seen.includes(id));
+    setShow(!s.off && (news || s.visits <= TIP_VISITS) && !s.seen.includes(id));
     // Another tip's "Hide all tips" hides this one too.
     const onOff = () => setShow(false);
     window.addEventListener('pl-tips-off', onOff);
     return () => window.removeEventListener('pl-tips-off', onOff);
-  }, [id]);
+  }, [id, news]);
 
   if (!show) return null;
 
