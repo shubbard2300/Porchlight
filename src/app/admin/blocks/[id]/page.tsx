@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { deleteBlock } from '../../../actions/blocks';
 import { BlockForm } from '../BlockForm';
 
 export default async function EditBlock({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
+  await requireAdmin();
   const { id } = await params;
   const { saved } = await searchParams;
   const b = await db.anchorBlock.findUnique({ where: { id } });

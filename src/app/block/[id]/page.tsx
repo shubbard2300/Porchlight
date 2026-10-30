@@ -12,6 +12,7 @@ import { contestToday, defaultSeason, getSeason, phase, visibleSeasons } from '@
 import { seasonTheme } from '@/lib/theme';
 import { HouseCard } from '@/components/HouseCard';
 import { Icon3D } from '@/components/Icon3D';
+import { isStaff } from '@/lib/roles';
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ season?: string }> };
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlockPage({ params, searchParams }: Props) {
   const { id } = await params;
   const [block, user] = await Promise.all([db.anchorBlock.findUnique({ where: { id } }), currentUser()]);
-  if (!block || block.lat === null || block.lng === null || (!block.active && user?.role !== 'ADMIN')) notFound();
+  if (!block || block.lat === null || block.lng === null || (!block.active && !isStaff(user?.role))) notFound();
   const today = contestToday();
   const seasons = visibleSeasons(today);
   const requested = getSeason((await searchParams).season);

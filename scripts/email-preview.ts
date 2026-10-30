@@ -14,6 +14,7 @@ const photos = [url('/photos/sample-1.jpg'), url('/photos/sample-2.jpg')];
 const samples: Record<string, emails.Email> = {
   verify: emails.linkEmail({ name: 'Dana', verify: true, link: url('/login/link?token=sample'), expires: '24 hours' }),
   login: emails.linkEmail({ name: 'Dana', verify: false, link: url('/login/link?token=sample'), expires: '20 minutes' }),
+  invite: emails.inviteEmail({ invitedBy: 'gamecat', level: 'Editor', staff: true, link: url('/login/link?token=sample'), expires: '24 hours' }),
   welcome: emails.welcomeEmail({ username: 'dana', host: true, bonusXp: 50, referralCode: 'PORCH-3F9A1C' }, url),
   'submission-received': emails.submissionReceivedEmail({ name: 'Dana', house: 'The Glow Bungalow', season: 'Christmas 2026' }, url),
   approved: emails.approvedEmail({ name: 'Dana', house: 'The Glow Bungalow', season: 'Christmas', xp: 100, note: 'Love the candy cane walkway!' }, url),

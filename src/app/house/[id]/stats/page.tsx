@@ -12,6 +12,7 @@ import { getSeason } from '@/lib/seasons';
 import { SCORE_CATEGORIES } from '@/lib/visits';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import styles from './stats.module.css';
+import { isStaff } from '@/lib/roles';
 
 export const metadata: Metadata = { title: 'My house stats · Porchlight' };
 
@@ -23,7 +24,7 @@ export default async function HouseStats({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const user = await requireUser(`/house/${id}/stats`);
   const house = await db.house.findUnique({ where: { id } });
-  if (!house || (house.ownerId !== user.id && user.role !== 'ADMIN')) notFound();
+  if (!house || (house.ownerId !== user.id && !isStaff(user.role))) notFound();
   const season = getSeason(house.season);
   const bracket = getBracket(house.bracket);
 

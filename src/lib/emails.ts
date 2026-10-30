@@ -35,6 +35,26 @@ export function linkEmail(o: { name: string; verify: boolean; link: string; expi
       };
 }
 
+/** An admin added this person from Admin > Users. The link confirms the email and signs them in. */
+export function inviteEmail(o: { invitedBy: string; level: string; staff: boolean; link: string; expires: string }): Email {
+  return {
+    subject: o.staff ? `You're now a Porchlight ${o.level}` : 'You’re invited to Porchlight',
+    content: {
+      preheader: `${o.invitedBy} added you to Porchlight as ${o.level === 'Author' ? 'an' : 'a'} ${o.level}.`,
+      eyebrow: 'You’re invited',
+      heading: o.staff ? 'Welcome to the team' : 'Your porch light is waiting',
+      greeting: 'Hi neighbor,',
+      body: [
+        `${o.invitedBy} added you to Porchlight as ${o.level === 'Author' ? 'an' : 'a'} ${o.level}.`,
+        o.staff ? 'Tap the button to confirm your email and open the admin portal. You can set a password on your profile afterward.' : 'Tap the button to confirm your email and finish your profile. You can set a password there too.',
+      ],
+      button: { label: o.staff ? 'Open the admin portal' : 'Accept the invite', url: o.link },
+      showUrl: true,
+      fine: `The link works once and expires in ${o.expires}. After that, get a fresh one from the sign-in page with this email address.`,
+    },
+  };
+}
+
 export function welcomeEmail(o: { username: string; host: boolean; bonusXp: number; referralCode: string }, url: Link): Email {
   return {
     subject: 'Welcome to Porchlight',

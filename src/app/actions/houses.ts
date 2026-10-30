@@ -14,6 +14,7 @@ import { displayName } from '@/lib/users';
 import type { FormState } from '@/lib/forms';
 import { contestToday, getSeason, openForSubmissions, phase } from '@/lib/seasons';
 import { fieldErrors, houseEditSchema, houseSchema } from '@/lib/validation';
+import { isStaff } from '@/lib/roles';
 
 export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser('/submit');
@@ -91,10 +92,11 @@ export async function submitHouse(_prev: FormState, fd: FormData): Promise<FormS
 /**
  * A host edits a submission from their profile. A new address moves the pin and, on a live house,
  * sends it back to a quick review, so a house can't change places on the map without someone looking.
+ * Editors and Super Admins can edit anyone's submission from Admin > Submissions; that counts as the review.
  */
 export async function updateMyHouse(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
   const user = await requireUser('/profile');
-  const house = await db.house.findFirst({ where: { id, ownerId: user.id } });
+  const house = await db.house.findFirst({ where: isStaff(user.role) ? { id } : { id, ownerId: user.id } });
   if (!house) return { errors: { form: 'That submission wasn’t found.' } };
   const parsed = houseEditSchema.safeParse(Object.fromEntries(fd));
   if (!parsed.success) return { errors: fieldErrors(parsed.error) };
@@ -106,7 +108,8 @@ export async function updateMyHouse(id: string, _prev: FormState, fd: FormData):
     return { errors: { address: `Porchlight contests are open to homes in ${CONTEST_STATE!.name} only right now. Check the address.` } };
   }
   const spot = found && { lat: found.lat, lng: found.lng };
-  const backToReview = moved && house.status === 'APPROVED';
+  const byStaff = house.ownerId !== user.id;
+  const backToReview = moved && house.status === 'APPROVED' && !byStaff;
   const saved = await db.house.update({
     where: { id: house.id },
     data: {
@@ -122,7 +125,7 @@ export async function updateMyHouse(id: string, _prev: FormState, fd: FormData):
     },
   });
 
-  if (moved) {
+  if (moved && !byStaff) {
     const season = getSeason(saved.season);
     await notifyAdmin(
       submissionAdminEmail({
@@ -149,6 +152,10 @@ export async function updateMyHouse(id: string, _prev: FormState, fd: FormData):
   revalidatePath('/profile');
   revalidatePath('/');
   revalidatePath(`/house/${house.id}`);
+  if (byStaff) {
+    revalidatePath('/admin', 'layout');
+    return { message: moved && !spot ? 'Saved, but that address couldn’t be placed on the map. Check it.' : 'Saved. The host’s submission is updated.' };
+  }
   if (backToReview) return { message: 'Saved. Your new address is in a quick review, and your house is back on the map once it’s approved.' };
   if (moved && !spot) return { message: 'Saved. We couldn’t place that address on the map yet, so double-check it or add a photo taken at the house.' };
   return { message: 'Submission details saved.' };

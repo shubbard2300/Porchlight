@@ -1,10 +1,12 @@
 import Link from 'next/link';
+import { requireSuperAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { notificationEmail } from '@/lib/settings';
 
 const KINDS: [string, string][] = [['all', 'All'], ['signup', 'Sign-ups'], ['submission', 'Submissions'], ['contact', 'Messages'], ['outgoing', 'To users']];
 
 export default async function Inbox({ searchParams }: { searchParams: Promise<{ kind?: string }> }) {
+  await requireSuperAdmin();
   const kind = (await searchParams).kind ?? 'all';
   const where = kind === 'signup' || kind === 'submission' || kind === 'contact' ? { kind } : kind === 'outgoing' ? { kind: { notIn: ['signup', 'submission', 'contact', 'test'] } } : {};
   const [mail, to] = await Promise.all([db.emailLog.findMany({ where, orderBy: { createdAt: 'desc' }, take: 100 }), notificationEmail()]);
