@@ -52,6 +52,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
 
   const theme = seasonTheme(season);
   const crowd = await crowdCounts({ season: season.key });
+  const user = await currentUser();
+  const staff = isStaff(user?.role);
+  // A host edits their own house from its card on their profile; staff open anyone else's in the admin editor. Nobody else gets a link.
+  const editFor = (h: { id: string; ownerId: string }): MapHouse['edit'] =>
+    user && h.ownerId === user.id ? { href: `/profile#submission-${h.id}`, label: 'Edit your house' }
+      : staff ? { href: `/admin/submissions/${h.id}`, label: 'Edit this house' }
+        : undefined;
   const pins: MapHouse[] = ranked.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
     id: h.id,
     name: h.name,
@@ -66,6 +73,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     litFrom: h.litFrom,
     litUntil: h.litUntil,
     crowd: crowd[h.id] ?? 0,
+    edit: editFor(h),
   }]);
   const pitstops: MapPitstop[] = (await db.merchant.findMany({
     where: { active: true, lat: { not: null }, lng: { not: null } },
@@ -74,12 +82,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const blocks = (await placedBlocks()).map((b) => ({ ...b, inside: housesIn(b, houses) }));
   const mapBlocks: MapBlock[] = blocks.map(({ inside, ...b }) => ({ ...b, houses: inside.length }));
   const featured = blocks.filter((b) => b.featured);
-  const user = await currentUser();
   const [community, mine] = await Promise.all([communityCounts(season.key), user ? myContribution(user.id, season.key) : null]);
   const unplaced = ranked.filter((h) => h.lat === null || h.lng === null);
   // Pins still on their way: admins get a shortcut to sort them out, hosts hear where their own house stands, everyone else sees nothing.
   let notice: MapNotice | null = null;
-  if (isStaff(user?.role)) {
+  if (staff) {
     const waiting = await db.house.count({ where: { season: season.key, status: 'PENDING' } });
     notice = { for: 'admin', waiting, unplaced: unplaced.length, firstUnplacedId: unplaced[0]?.id ?? null };
   } else if (user) {
