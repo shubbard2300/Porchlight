@@ -405,10 +405,15 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
           <b>Crowd meter</b>
           {(['lively', 'busy', 'packed'] as const).map((k) => <span key={k}><i style={{ background: CROWD_LEVELS[k].color }} />{CROWD_LEVELS[k].label}</span>)}
           <span className={styles.legendNote}>Rings show check-ins in the last 30 minutes, updated every minute.</span>
-          <span><i className={styles.legendOn} />Lights on now</span>
-          <span><i className={styles.legendOff} />Lights off, back at their posted hours</span>
           {blocks.length > 0 && <span><i className={styles.legendBlock} />Anchor blocks</span>}
           {pitstops.length > 0 && <span><img src="/icons/3d/gift.webp" alt="" width={16} height={16} className={styles.legendGift} />Pitstops: scan for {BOOST_HOURS} h of double XP</span>}
+        </p>
+      )}
+      {houses.length > 0 && (
+        <p className={`${styles.legend} ${styles.legendRow}`}>
+          <b>Porch lights</b>
+          <span><i className={styles.legendOn} />Lights on now</span>
+          <span><i className={styles.legendOff} />Lights off now</span>
         </p>
       )}
       {notice && <PinNotice notice={notice} />}

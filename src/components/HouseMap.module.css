@@ -105,3 +105,4 @@
 }
 .hostNote img { flex: none; }
 .hostNote b { color: var(--ink); }
+.legendRow { margin-top: 8px; }
