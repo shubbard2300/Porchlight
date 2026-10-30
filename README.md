@@ -10,7 +10,7 @@ This repo is the real app. It currently covers:
 - **House photos with location**: hosts take a photo with their phone camera or choose from their library, on the submit form and on each entry in their profile (up to 6 per house; the first is the cover on the house card). The photo's GPS tags pin the house on the map; photos taken right there use the phone's location instead, and any photo without one gets an "Add my location" button. Photos are resized and stripped of metadata in the browser before upload, so the published image never carries GPS. Admins see the photos and map pin when reviewing.
 - **Enter the contest**: hosts submit their house for the live or next holiday, prefilled from their profile. Entries start in review.
 - **Form emails**: every sign-up and submission is emailed to the notification address you choose in the admin portal. Posters get a confirmation, then an approval or rejection email.
-- **Admin portal** (`/admin`): overview, submission review (approve, reject, take down, with a note to the poster), user management (filter viewers, hosts or unverified; search; make or remove admin; delete; CSV export with profile and property fields), a Form inbox showing every email the app has sent, and settings.
+- **Admin portal** (`/admin`): overview, submission review (approve, reject, take down, with a note to the poster), user management for Super Admins (add users by email invite; set Super Admin, Editor, Author or Viewer access; filter; search; delete; CSV export with profile and property fields), a Form inbox showing every email the app has sent, and settings.
 - **Visit check-ins and scorecard voting**: every approved house has its own page (`/house/<id>`) linked from the map and the house cards. To vote, a visitor checks in either by sharing their phone's location once (it must be within 150 m of the house; their own position is never stored) or by scanning the house's porch QR sign. Then they score Creativity, Lighting, Storytelling and Sound design from 1 to 10, choose Love it or Not my favorite, and can leave a short cheer (obvious put-downs are turned away). Hosts print their sign from My Profile (`/house/<id>/sign`). The QR code is derived from the house id and `SESSION_SECRET`, so changing that secret retires every printed sign. First check-in at a house earns 20 XP and the first scorecard 10 XP.
 - **Brackets, theme filters and the leaderboard**: every entry competes in a category bracket (Classic & Cozy, Light Show, Inflatable Kingdom, Extreme DIY, Small Porch, plus Spooky Halloween, Winter Wonderland or Red, White & Boom for their holiday; see `src/lib/brackets.ts`). Hosts pick one when they enter and can switch it on My Profile while the contest runs. The brackets double as theme filter chips above the home map. `/leaderboard` shows the overall pot race and the top three in each bracket. Order everywhere: verified likes, then the scorecard average, then entry date (`src/lib/standings.ts`).
 - **Crowd meter and host flex stats**: map pins get a colored ring (Lively, Busy, Packed) from the number of different people who checked in during the last 30 minutes. Open maps refresh it every minute from `/api/crowd`, and house pages show it too. Only counts are shared, never who. Hosts (and admins) get a stats page per entry (`/house/<id>/stats`, linked from My Profile): total visitors, likes, miles guests traveled from their previous stop, peak hour, bracket rank, cheers, a rush-hour chart, QR vs location check-ins, and their best-scored category.
@@ -47,13 +47,16 @@ In development without `RESEND_API_KEY`, the "Check your email" page also shows 
 
 `npm test` runs the unit tests and `npm run typecheck` checks types.
 
-## Who is an admin
+## Access levels
 
-- Anyone seeded with `npm run db:seed` (sign in with `npm run sign-in-link -- <email>`).
-- Anyone who signs up with an email listed in `ADMIN_EMAILS`.
-- Anyone an existing admin promotes on the Users page.
+Super Admins manage access in **Admin > Users**: add someone by email (they get an invite link), change anyone's level, or delete an account. The levels (`src/lib/roles.ts`):
 
-Admins can't demote or delete their own account, so there is always at least one admin.
+- **Super Admin** (`role = ADMIN`): everything, including users and roles, settings, the prize pot and the Form inbox.
+- **Editor** (`role = EDITOR`): the admin portal's content tools. Approves, edits, takes down and deletes anyone's submissions, and manages pitstops and anchor blocks. No users, settings, payments or inbox.
+- **Author**: a host (`accountType = HOST`). Posts, edits and deletes only their own submissions.
+- **Viewer**: browses the map, checks in and votes.
+
+Super Admins come from `npm run db:seed`, from emails in `ADMIN_EMAILS`, or from another Super Admin. Emails in `ADMIN_EMAILS` are the site owners: they are made Super Admin on every visit and can't be demoted or deleted from the portal. Nobody can change or delete their own account there, and the last Super Admin can't be demoted or deleted.
 
 ## Email
 

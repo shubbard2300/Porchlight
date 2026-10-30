@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE, verifySession } from '@/lib/token';
 
-// Fast gate only. Pages re-check the user and role against the database.
+// Fast sign-in gate only. Roles are checked against the database by every admin page and action
+// (requireAdmin / requireSuperAdmin), since the cookie's role goes stale when a Super Admin changes it.
 export async function proxy(req: NextRequest) {
   const session = await verifySession(req.cookies.get(SESSION_COOKIE)?.value);
   const { pathname, search } = req.nextUrl;
@@ -9,9 +10,6 @@ export async function proxy(req: NextRequest) {
     const url = new URL('/login', req.url);
     url.searchParams.set('next', pathname + search);
     return NextResponse.redirect(url);
-  }
-  if (pathname.startsWith('/admin') && session.role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/', req.url));
   }
   return NextResponse.next();
 }

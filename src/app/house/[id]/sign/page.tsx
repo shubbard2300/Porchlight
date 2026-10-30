@@ -11,6 +11,7 @@ import { Icon3D } from '@/components/Icon3D';
 import { LogoMark, Wordmark } from '@/components/LogoMark';
 import { PrintButton } from './PrintButton';
 import styles from './sign.module.css';
+import { isStaff } from '@/lib/roles';
 
 export const metadata: Metadata = { title: 'Porch sign · Porchlight' };
 
@@ -19,7 +20,7 @@ export default async function PorchSign({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const user = await requireUser(`/house/${id}/sign`);
   const house = await db.house.findUnique({ where: { id }, select: { id: true, name: true, ownerId: true, season: true, status: true } });
-  if (!house || (house.ownerId !== user.id && user.role !== 'ADMIN')) notFound();
+  if (!house || (house.ownerId !== user.id && !isStaff(user.role))) notFound();
 
   const url = porchUrl(house.id);
   const svg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#14123a', light: '#ffffff' } });

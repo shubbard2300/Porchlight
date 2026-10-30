@@ -7,6 +7,7 @@ import { BOOST_HOURS, boostActive, getCategory, TIERS } from '@/lib/pitstops';
 import { PITSTOP_XP } from '@/lib/rewards';
 import { Icon3D } from '@/components/Icon3D';
 import styles from './pitstop.module.css';
+import { isStaff } from '@/lib/roles';
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ scan?: string }> };
 
@@ -31,7 +32,7 @@ export default async function PitstopPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { scan } = await searchParams;
   const [m, user] = await Promise.all([db.merchant.findUnique({ where: { id } }), currentUser()]);
-  if (!m || (!m.active && user?.role !== 'ADMIN')) notFound();
+  if (!m || (!m.active && !isStaff(user?.role))) notFound();
   const tier = TIERS[m.tier];
   const cat = getCategory(m.category);
   const note = scan ? SCAN_NOTES[scan] : undefined;

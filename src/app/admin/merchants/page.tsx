@@ -1,9 +1,11 @@
 import Link from 'next/link';
+import { requireAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { TIERS, getCategory } from '@/lib/pitstops';
 import { EMPTY_MERCHANT, MerchantForm } from './MerchantForm';
 
 export default async function Merchants() {
+  await requireAdmin();
   const since = new Date(Date.now() - 7 * 24 * 3600_000);
   const merchants = await db.merchant.findMany({ include: { _count: { select: { scans: true } } } });
   const weekly = await db.pitstopScan.groupBy({ by: ['merchantId'], where: { createdAt: { gte: since } }, _count: { _all: true } });

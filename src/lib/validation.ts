@@ -113,6 +113,11 @@ export const photoLocationSchema = z.object({
   lng: z.coerce.number().min(-180).max(180),
 });
 
+export const addUserSchema = z.object({
+  email,
+  level: z.enum(['SUPER_ADMIN', 'EDITOR', 'AUTHOR', 'VIEWER'], 'Pick an access level.'),
+});
+
 export const settingsSchema = z.object({
   notificationEmail: z.string().trim().toLowerCase().email('Enter a valid email address.'),
   emailFrom: z.string().trim().max(120).optional().or(z.literal('')),

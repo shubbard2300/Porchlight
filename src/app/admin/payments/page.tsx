@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Icon3D } from '@/components/Icon3D';
+import { requireSuperAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { appUrl } from '@/lib/email';
 import { dollars } from '@/lib/pot';
@@ -14,6 +15,7 @@ const STATUS: Record<string, string> = { PAID: 'Paid', PENDING: 'At checkout', R
 const WEBHOOK_EVENTS = ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'checkout.session.expired', 'charge.refunded'];
 
 export default async function Payments({ searchParams }: { searchParams: Promise<{ season?: string; refund?: string }> }) {
+  await requireSuperAdmin();
   const today = contestToday();
   const { season: key, refund } = await searchParams;
   const seasons = SEASONS.filter((s) => visibleSeasons(today).includes(s) || openForSubmissions(today).includes(s));

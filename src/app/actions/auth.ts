@@ -1,7 +1,6 @@
 'use server';
 
 import bcrypt from 'bcryptjs';
-import { randomBytes, randomInt } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import type { TokenPurpose, User } from '@prisma/client';
 import { db } from '@/lib/db';
@@ -10,19 +9,14 @@ import { applyBootstrapAdmin, endSession, isBootstrapAdmin, startSession } from 
 import { appUrl, emailDeliveryConfigured, notifyAdmin, sendEmail } from '@/lib/email';
 import { linkEmail, newMemberAdminEmail, welcomeEmail } from '@/lib/emails';
 import { safeNext, type FormState } from '@/lib/forms';
+import { isStaff } from '@/lib/roles';
 import { consumeToken, issueToken, linkFor, sentRecently, TOKEN_TTL_MIN } from '@/lib/tokens';
 import { MAX_PHOTO_BYTES, savePhoto } from '@/lib/housePhotos';
-import { displayName, numberedUsername, usernameFromEmail } from '@/lib/users';
+import { uniqueReferralCode, uniqueUsername } from '@/lib/newUser';
+import { displayName } from '@/lib/users';
 import { emailOnlySchema, fieldErrors, joinSchema, loginSchema, photoMetaSchema } from '@/lib/validation';
 
 const BCRYPT_ROUNDS = 12;
-
-async function uniqueReferralCode() {
-  for (;;) {
-    const code = 'PORCH-' + randomBytes(3).toString('hex').toUpperCase();
-    if (!(await db.user.findUnique({ where: { referralCode: code } }))) return code;
-  }
-}
 
 /** Emails a one-time link and sends the person to the "check your email" page. */
 async function sendLink(user: User, purpose: TokenPurpose, next: string): Promise<never> {
@@ -46,16 +40,6 @@ async function sendLink(user: User, purpose: TokenPurpose, next: string): Promis
 
 /** Where a new member lands after confirming their email: hosts on the entry form, viewers on the map. */
 const welcomePath = (accountType: 'VIEWER' | 'HOST') => (accountType === 'HOST' ? '/submit?welcome=1' : '/?welcome=1#map');
-
-/** The email's name if it's free, otherwise that name with a short number on the end. */
-async function uniqueUsername(email: string) {
-  const base = usernameFromEmail(email);
-  if (!(await db.user.findUnique({ where: { username: base }, select: { id: true } }))) return base;
-  for (;;) {
-    const name = numberedUsername(base, 1000 + randomInt(9000));
-    if (!(await db.user.findUnique({ where: { username: name }, select: { id: true } }))) return name;
-  }
-}
 
 /** A house photo picked on the host sign-up form. It waits, unattached, for the host's first entry. */
 async function saveSignupPhoto(userId: string, fd: FormData): Promise<{ error?: string }> {
@@ -116,7 +100,7 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   const signedIn = await applyBootstrapAdmin(user);
   await startSession({ userId: signedIn.id, role: signedIn.role });
-  redirect(safeNext(fd.get('next')) ?? (signedIn.role === 'ADMIN' ? '/admin' : '/profile'));
+  redirect(safeNext(fd.get('next')) ?? (isStaff(signedIn.role) ? '/admin' : '/profile'));
 }
 
 export async function requestLoginLink(_prev: FormState, fd: FormData): Promise<FormState> {
