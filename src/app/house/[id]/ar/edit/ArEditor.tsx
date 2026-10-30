@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { useRef, useState, useTransition, type PointerEvent as ReactPointerEvent } from 'react';
 import { GREETING_MAX, MAX_DECOR, MAX_SCALE, MIN_SCALE, getDecor, type Decor, type Placement } from '@/lib/arDecor';
 import { saveArScene } from '../../../../actions/arDecor';
+import { ArCanvas3D } from '../ArCanvas3D';
 import { ArScene } from '../ArScene';
 import styles from '../ar.module.css';
+
+const NONE: Placement[] = [];
 
 /** Tap a prop to drop it on the porch, drag it into place, resize it, then save for visitors. */
 export function ArEditor({ houseId, photo, palette, initial, initialGreeting, greetingHint }: { houseId: string; photo: string | null; palette: Decor[]; initial: Placement[]; initialGreeting: string; greetingHint: string }) {
@@ -15,6 +18,7 @@ export function ArEditor({ houseId, photo, palette, initial, initialGreeting, gr
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [dirty, setDirty] = useState(false);
   const [pending, start] = useTransition();
+  const [preview3d, setPreview3d] = useState(false);
   const frame = useRef<HTMLDivElement>(null);
   const drag = useRef<{ i: number; ox: number; oy: number } | null>(null);
 
@@ -73,10 +77,21 @@ export function ArEditor({ houseId, photo, palette, initial, initialGreeting, gr
     <div className={styles.editor}>
       <div className={styles.stageCol}>
         <div ref={frame} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-          <ArScene placements={items} greeting={greeting.trim() || null} photo={photo} selected={selected} onPropDown={onPropDown} onBackdropDown={() => setSelected(null)} />
+          {preview3d ? (
+            <ArScene placements={NONE} photo={photo}>
+              <ArCanvas3D placements={items} greeting={greeting.trim() || null} className={styles.gl} />
+            </ArScene>
+          ) : (
+            <ArScene placements={items} greeting={greeting.trim() || null} photo={photo} selected={selected} onPropDown={onPropDown} onBackdropDown={() => setSelected(null)} />
+          )}
         </div>
         <div className={styles.toolbar} role="toolbar" aria-label="Selected prop">
-          {sel ? (
+          {preview3d ? (
+            <>
+              <span className="small muted" style={{ marginRight: 'auto' }}>This is how your props look in 3D to visitors.</span>
+              <button type="button" className="btn sm ghost" onClick={() => setPreview3d(false)}>Back to editing</button>
+            </>
+          ) : sel ? (
             <>
               <b className="small" style={{ marginRight: 'auto' }}>{sel.name}</b>
               <button type="button" className="btn sm ghost" onClick={() => resize(1 / 1.2)} aria-label="Smaller">−</button>
@@ -85,7 +100,10 @@ export function ArEditor({ houseId, photo, palette, initial, initialGreeting, gr
               <button type="button" className="btn sm ghost" onClick={remove}>Remove</button>
             </>
           ) : (
-            <span className="small muted">{items.length ? 'Tap a prop to move, resize or remove it.' : 'Pick a prop from the set to drop it on your porch.'}</span>
+            <>
+              <span className="small muted" style={{ marginRight: 'auto' }}>{items.length ? 'Tap a prop to move, resize or remove it.' : 'Pick a prop from the set to drop it on your porch.'}</span>
+              {items.length > 0 && <button type="button" className="btn sm ghost" onClick={() => { setSelected(null); setPreview3d(true); }}>3D preview</button>}
+            </>
           )}
         </div>
         {!photo && <p className="small muted">Add a house photo from your profile so you can place props right where they belong. Visitors line the photo up with your real house.</p>}

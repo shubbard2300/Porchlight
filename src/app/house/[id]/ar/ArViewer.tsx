@@ -2,17 +2,28 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { BASE_SIZE, degDiff, getDecor, panOffset, type Placement } from '@/lib/arDecor';
+import { degDiff, panOffset, type Placement } from '@/lib/arDecor';
+import { openQuickLook, startWebXr, worldArSupport, type WebXrRun, type WorldArKind } from '@/lib/ar3d/worldAr';
+import { ArCanvas3D } from './ArCanvas3D';
 import { ArScene } from './ArScene';
 import styles from './ar.module.css';
 
 type Mode = 'intro' | 'align' | 'pinned' | 'snap';
+type XrStatus = 'searching' | 'aim' | 'placed';
+const XR_HINT: Record<XrStatus, string> = {
+  searching: 'Move your phone slowly so it can find the ground…',
+  aim: 'Point at the ground in front of the house and tap to place the props.',
+  placed: 'Walk around! Tap the ground again to move them.',
+};
+const NO_PLACEMENTS: Placement[] = [];
 type Tilt = { alpha: number; beta: number };
 type PermissionApi = { requestPermission?: () => Promise<'granted' | 'denied'> };
 
 /**
- * The visitor's camera view. They line the host's photo up with the real house and tap Pin; from
- * then on the phone's gyroscope slides the props as they look around, so they stay on the house.
+ * The visitor's camera view, with the host's props as 3D models. In the camera view they line the
+ * host's photo up with the real house and tap Pin; from then on the phone's gyroscope turns the
+ * virtual camera with the real one, so the props stay on the house. Phones with world-tracked AR
+ * (WebXR on Android, AR Quick Look on iPhone) can also anchor the props in space and walk around them.
  */
 export function ArViewer({ houseId, houseName, photo, placements, greeting }: { houseId: string; houseName: string; photo: string | null; placements: Placement[]; greeting: string | null }) {
   const [mode, setMode] = useState<Mode>('intro');
@@ -25,6 +36,25 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
   const frame = useRef<HTMLDivElement>(null);
   const tilt = useRef<Tilt | null>(null);
   const anchor = useRef<Tilt | null>(null);
+  const gl = useRef<HTMLCanvasElement | null>(null);
+  const overlay = useRef<HTMLDivElement>(null);
+  const xrRun = useRef<WebXrRun | null>(null);
+  const [frameH, setFrameH] = useState(0);
+  const [worldAr, setWorldAr] = useState<WorldArKind>(null);
+  const [xrStatus, setXrStatus] = useState<XrStatus>('searching');
+  const [note, setNote] = useState<string | null>(null);
+
+  useEffect(() => { worldArSupport().then(setWorldAr); }, []);
+  useEffect(() => () => xrRun.current?.end(), []);
+
+  // The 3D props fill the screen; they line up with the 3:4 frame in the middle of it.
+  useEffect(() => {
+    const f = frame.current;
+    if (!f) return;
+    const ro = new ResizeObserver(() => setFrameH(f.getBoundingClientRect().height));
+    ro.observe(f);
+    return () => ro.disconnect();
+  }, [mode]);
 
   const stop = () => stream.current?.getTracks().forEach((t) => t.stop());
   useEffect(() => stop, []);
@@ -102,36 +132,13 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
       const oy = vb.top + (vb.height - v.videoHeight * k) / 2;
       g.drawImage(v, (box.left - ox) / k, (box.top - oy) / k, box.width / k, box.height / k, 0, 0, W, H);
     }
-    const icons = await Promise.all(placements.map((p) => new Promise<HTMLImageElement | null>((res) => {
-      const d = getDecor(p.kind);
-      if (!d) return res(null);
-      const img = new Image();
-      img.onload = () => res(img);
-      img.onerror = () => res(null);
-      img.src = `/icons/3d/${d.icon}.webp`;
-    })));
-    g.shadowColor = 'rgba(255, 201, 74, 0.6)';
-    g.shadowBlur = 14 * scale;
-    placements.forEach((p, i) => {
-      const img = icons[i];
-      if (!img) return;
-      const s = BASE_SIZE * p.scale * W;
-      g.drawImage(img, (p.x + shift.dx) * W - s / 2, (p.y + shift.dy) * H - s / 2, s, s);
-    });
-    g.shadowBlur = 0;
-    if (greeting) {
-      g.font = `800 ${Math.round(W * 0.06)}px system-ui, sans-serif`;
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      const tx = (0.5 + shift.dx) * W;
-      const ty = (0.08 + shift.dy) * H;
-      const tw = Math.min(W * 0.88, g.measureText(greeting).width + W * 0.08);
-      g.fillStyle = 'rgba(11, 10, 36, 0.72)';
-      g.beginPath();
-      g.roundRect(tx - tw / 2, ty - W * 0.05, tw, W * 0.1, W * 0.05);
-      g.fill();
-      g.fillStyle = '#fff4e4';
-      g.fillText(greeting, tx, ty, W * 0.82);
+    const c3 = gl.current;
+    if (c3) {
+      // The 3D canvas covers the screen too; copy the part over the frame.
+      const cb = c3.getBoundingClientRect();
+      const kx = c3.width / cb.width;
+      const ky = c3.height / cb.height;
+      g.drawImage(c3, (box.left - cb.left) * kx, (box.top - cb.top) * ky, box.width * kx, box.height * ky, 0, 0, W, H);
     }
     g.font = `700 ${Math.round(W * 0.032)}px system-ui, sans-serif`;
     g.textAlign = 'right';
@@ -144,6 +151,33 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
       setShot({ url: URL.createObjectURL(blob), blob });
       setMode('snap');
     }, 'image/jpeg', 0.9);
+  };
+
+  const placeInAr = async () => {
+    setNote(null);
+    if (worldAr === 'quicklook') {
+      await openQuickLook(placements, greeting, houseName).catch(() => setNote('AR Quick Look couldn’t open. Try the camera view instead.'));
+      return;
+    }
+    const root = overlay.current;
+    if (!root) return;
+    root.style.display = 'block';
+    setXrStatus('searching');
+    try {
+      xrRun.current = await startWebXr({
+        placements,
+        greeting,
+        overlay: root,
+        onStatus: setXrStatus,
+        onEnd: () => {
+          xrRun.current = null;
+          root.style.display = 'none';
+        },
+      });
+    } catch {
+      root.style.display = 'none';
+      setNote('This phone couldn’t start AR. Try the camera view instead.');
+    }
   };
 
   const share = async () => {
@@ -165,9 +199,21 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
         <span className="label">AR decorations · {houseName}</span>
         <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)' }}>See the magic you can’t see</h1>
         <p className="muted" style={{ maxWidth: 460 }}>The host added {placements.length === 1 ? 'a virtual prop' : `${placements.length} virtual props`} to their display. Stand out front, point your phone at the house and line it up with the outline.</p>
-        <ArScene placements={placements} greeting={greeting} photo={photo} className={styles.preview} />
-        <button type="button" className="btn primary" onClick={begin}>Open my camera</button>
-        <p className="small muted">We use your camera and motion sensor only on this screen. Nothing is recorded or uploaded unless you save a photo.</p>
+        <ArScene placements={NO_PLACEMENTS} photo={photo} className={styles.preview}>
+          <ArCanvas3D placements={placements} greeting={greeting} className={styles.gl} />
+        </ArScene>
+        <div className="row" style={{ justifyContent: 'center' }}>
+          <button type="button" className="btn primary" onClick={begin}>Open my camera</button>
+          {worldAr && <button type="button" className="btn ghost" onClick={placeInAr}>Place in AR and walk around</button>}
+        </div>
+        {note && <p className="notice warn small" role="alert">{note}</p>}
+        <p className="small muted">{worldAr ? '“Place in AR” anchors the props in real space, so they stay put as you walk around. ' : ''}We use your camera and motion sensor only on this screen. Nothing is recorded or uploaded unless you save a photo.</p>
+        <div ref={overlay} className={styles.xrOverlay} style={{ display: 'none' }}>
+          <div className={styles.hud}>
+            <button type="button" className={styles.close} aria-label="Leave AR" onClick={() => xrRun.current?.end()}>✕</button>
+            <span>{XR_HINT[xrStatus]}</span>
+          </div>
+        </div>
       </section>
     );
   }
@@ -195,8 +241,9 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
         <span>{mode === 'align' ? (photo ? 'Line the outline up with the house' : 'Center the house in the frame') : gyro ? 'Look around, the props stay put' : 'Hold steady and enjoy the show'}</span>
       </div>
       <div ref={frame} className={styles.liveWrap}>
-        <ArScene placements={placements} greeting={greeting} photo={mode === 'align' ? photo : null} ghost={mode === 'align'} shift={shift} className={styles.live} />
+        <ArScene placements={NO_PLACEMENTS} photo={mode === 'align' ? photo : null} ghost={mode === 'align'} className={styles.live} />
       </div>
+      <ArCanvas3D placements={placements} greeting={greeting} live shift={shift} frameHeight={frameH} onCanvas={(c) => { gl.current = c; }} className={styles.glLive} />
       {!camera && <p className={styles.note} role="status">We couldn’t open the camera, so here’s the display on its own. Check your browser’s camera permission to see it on the real house.</p>}
       <div className={styles.dock}>
         {mode === 'align' ? (
