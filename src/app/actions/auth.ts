@@ -10,6 +10,7 @@ import { appUrl, emailDeliveryConfigured, notifyAdmin, sendEmail } from '@/lib/e
 import { linkEmail, newMemberAdminEmail, welcomeEmail } from '@/lib/emails';
 import { safeNext, type FormState } from '@/lib/forms';
 import { isStaff } from '@/lib/roles';
+import { withSignupMark } from '@/lib/analytics';
 import { consumeToken, issueToken, linkFor, sentRecently, TOKEN_TTL_MIN } from '@/lib/tokens';
 import { MAX_PHOTO_BYTES, savePhoto } from '@/lib/housePhotos';
 import { uniqueReferralCode, uniqueUsername } from '@/lib/newUser';
@@ -151,7 +152,9 @@ export async function confirmLink(fd: FormData) {
 
   const signedIn = await applyBootstrapAdmin(user);
   await startSession({ userId: signedIn.id, role: signedIn.role });
-  redirect(safeNext(t.next) ?? '/profile');
+  const next = safeNext(t.next) ?? '/profile';
+  // A brand-new account lands with ?signup=viewer|host so Google Analytics can count the conversion once.
+  redirect(firstTime ? withSignupMark(next, user.accountType) : next);
 }
 
 export async function logout() {
