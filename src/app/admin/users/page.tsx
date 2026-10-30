@@ -56,38 +56,42 @@ export default async function Users({ searchParams }: { searchParams: Promise<{ 
         <button className="btn ghost sm">Search</button>
       </form>
       <div className="table-wrap">
-        <table>
-          <thead><tr><th>User</th><th>Email</th><th>Access</th><th>Status</th><th>XP</th><th>Houses</th><th>Joined</th><th></th></tr></thead>
+        <table className="users-table">
+          <thead><tr><th>User</th><th>Access</th><th>Activity</th><th>Manage</th></tr></thead>
           <tbody>
             {users.map((u) => {
               const s = getSeason(u.hostSeason);
               const level = accessLevel(u);
               const owner = isBootstrapAdmin(u.email);
+              const property = u.accountType === 'HOST' ? [u.propertyAddress, s && `${s.name} ${s.year}`, u.decorationTheme].filter(Boolean).join(' · ') : '';
               return (
                 <tr key={u.id}>
                   <td>
                     <div className="row" style={{ flexWrap: 'nowrap', gap: 8 }}>
                       {avatarUrl(u) ? <img src={avatarUrl(u)!} alt="" className="avatar sm" /> : <span className="avatar sm" aria-hidden="true">{u.username[0].toUpperCase()}</span>}
-                      <span><b>@{u.username}</b>{u.displayName && <div className="small muted">{u.displayName}</div>}</span>
+                      <span style={{ minWidth: 0 }}><b>@{u.username}</b>{u.displayName && <div className="small muted">{u.displayName}</div>}</span>
                     </div>
+                    <div className="small user-email">{u.email}</div>
+                    {(u.hometown || property) && <div className="small muted">{[u.hometown, property].filter(Boolean).join(' · ')}</div>}
                     {u.referredBy && <div className="small muted">invited by @{u.referredBy.username}</div>}
                   </td>
-                  <td>{u.email}{u.hometown && <div className="small muted">{u.hometown}</div>}</td>
                   <td>
-                    <span className={`pill ${LEVEL_PILL[level]}`}>{levelLabel(level)}</span>{owner && <> <span className="pill">owner</span></>}
-                    {u.accountType === 'HOST' && (u.propertyAddress || s) && <div className="small muted" style={{ minWidth: 180 }}>{[u.propertyAddress, s && `${s.name} ${s.year}`, u.decorationTheme].filter(Boolean).join(' · ')}</div>}
+                    <div className="pills">
+                      <span className={`pill ${LEVEL_PILL[level]}`}>{levelLabel(level)}</span>
+                      {owner && <span className="pill">owner</span>}
+                      {u.emailVerifiedAt ? <span className="pill sent">verified</span> : <span className="pill skipped">not verified</span>}
+                    </div>
                   </td>
-                  <td>
-                    {u.emailVerifiedAt ? <span className="pill sent">verified</span> : <span className="pill skipped">not verified</span>}
+                  <td className="small">
+                    <div><span className="num">{u.xp}</span> XP</div>
+                    <div><span className="num">{u._count.houses}</span> {u._count.houses === 1 ? 'house' : 'houses'}</div>
+                    <div className="muted">joined <span className="num">{u.createdAt.toLocaleDateString('en-US')}</span></div>
                   </td>
-                  <td className="num">{u.xp}</td>
-                  <td className="num">{u._count.houses}</td>
-                  <td className="num">{u.createdAt.toLocaleDateString('en-US')}</td>
-                  <td>
+                  <td className="manage">
                     {u.id === me.id ? <span className="small muted">you</span> : owner ? <span className="small muted">always Super Admin</span> : (
                       <details>
                         <summary>Manage</summary>
-                        <div className="stack" style={{ gap: 8, marginTop: 8, minWidth: 180 }}>
+                        <div className="stack" style={{ gap: 8, marginTop: 8 }}>
                           <form action={setAccessLevel} className="stack" style={{ gap: 6 }}>
                             <input type="hidden" name="id" value={u.id} />
                             <select name="level" defaultValue={level} aria-label={`Access level for @${u.username}`}>
