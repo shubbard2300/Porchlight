@@ -6,7 +6,7 @@ import { CommunityBoard } from '@/components/CommunityBoard';
 import { HeroHouse } from '@/components/HeroHouse';
 import { HouseCard } from '@/components/HouseCard';
 import { Tip } from '@/components/Tip';
-import { HouseMap, type MapBlock, type MapHouse, type MapPitstop } from '@/components/HouseMap';
+import { HouseMap, type MapBlock, type MapHouse, type MapNotice, type MapPitstop } from '@/components/HouseMap';
 import { housesIn, placedBlocks } from '@/lib/blockStandings';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
 import { StringLights, Ticker } from '@/components/StringLights';
@@ -60,6 +60,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     likes: h.likes,
     rank: i + 1,
     lit: `${h.litFrom}–${h.litUntil}`,
+    litFrom: h.litFrom,
+    litUntil: h.litUntil,
     crowd: crowd[h.id] ?? 0,
   }]);
   const pitstops: MapPitstop[] = (await db.merchant.findMany({
@@ -71,6 +73,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
   const featured = blocks.filter((b) => b.featured);
   const user = await currentUser();
   const [community, mine] = await Promise.all([communityCounts(season.key), user ? myContribution(user.id, season.key) : null]);
+  const unplaced = ranked.filter((h) => h.lat === null || h.lng === null);
+  // Pins still on their way: admins get a shortcut to sort them out, hosts hear where their own house stands, everyone else sees nothing.
+  let notice: MapNotice | null = null;
+  if (user?.role === 'ADMIN') {
+    const waiting = await db.house.count({ where: { season: season.key, status: 'PENDING' } });
+    notice = { for: 'admin', waiting, unplaced: unplaced.length, firstUnplacedId: unplaced[0]?.id ?? null };
+  } else if (user) {
+    const own = await db.house.findMany({ where: { season: season.key, ownerId: user.id, status: { in: ['PENDING', 'APPROVED'] } }, select: { status: true, lat: true, lng: true } });
+    notice = {
+      for: 'host',
+      waiting: own.filter((h) => h.status === 'PENDING').length,
+      unplaced: own.filter((h) => h.status === 'APPROVED' && (h.lat === null || h.lng === null)).length,
+    };
+  }
 
   return (
     <main className="wrap stack home" data-season={theme.look}>
@@ -95,7 +111,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           </nav>
         )}
         <div style={{ position: 'relative' }}>
-          <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} blocks={mapBlocks} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} unplaced={ranked.length - pins.length} />
+          <HouseMap key={`${season.key}-${bracket?.key ?? 'all'}`} seasonKey={season.key} houses={pins} pitstops={pitstops} blocks={mapBlocks} icon={theme.icon} seasonLabel={bracket ? bracket.label : `${season.name} ${season.year}`} notice={notice} />
           {user && pins.length > 0 && <Tip id="map-pins" arrow="float">Tap a glowing pin to see the house, its photos and when the lights are on.</Tip>}
         </div>
         {pins.length > 1 && (
