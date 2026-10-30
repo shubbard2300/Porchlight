@@ -83,6 +83,9 @@ export const houseSchema = z.object({
   permission: checkbox.refine((v) => v, 'Please confirm you live here or have permission.'),
 });
 
+/** What a host can change on a submission after posting it, from their profile. */
+export const houseEditSchema = houseSchema.pick({ name: true, address: true, neighborhood: true, showExactAddress: true, litFrom: true, litUntil: true, description: true });
+
 export const MAX_HOUSE_PHOTOS = 6;
 
 const blankToUndefined = (v: unknown) => (v === '' || v === null ? undefined : v);

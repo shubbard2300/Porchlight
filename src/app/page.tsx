@@ -122,7 +122,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
               ) : (
                 <>
                   <b className="num">{dollars(pledged)}</b>
-                  <div className="muted small">pledged to the pot · free entries welcome · <Link href="/rules">Official rules</Link></div>
+                  <div className="muted small">pledged to the pot · free submissions welcome · <Link href="/rules">Official rules</Link></div>
                 </>
               )}
             </div>

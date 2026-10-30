@@ -19,7 +19,7 @@ export default async function SubmitPage() {
     );
   }
   const today = contestToday();
-  // Photos uploaded on an earlier visit to this form that never became part of an entry.
+  // Photos uploaded on an earlier visit to this form that never became part of a submission.
   const photos = await db.housePhoto.findMany({ where: { ownerId: user.id, houseId: null, createdAt: { gt: new Date(Date.now() - 20 * 60 * 60 * 1000) } }, orderBy: { createdAt: 'asc' }, select: photoSelect });
   const open = openForSubmissions(today);
   const preferred = open.find((s) => s.key === user.hostSeason) ?? open.find((s) => s.key === defaultSeason(today).key) ?? open[0];
@@ -28,7 +28,7 @@ export default async function SubmitPage() {
       <div className="page-head">
         <Icon3D name="house" size={72} />
         <div>
-          <span className="label">Enter the contest</span>
+          <span className="label">Share your house</span>
           <h1 style={{ fontSize: 32 }}>Get your display on the map</h1>
         </div>
       </div>
@@ -36,7 +36,7 @@ export default async function SubmitPage() {
         <p className="muted">We filled in what you saved on your profile. We review new houses quickly and email you when yours is live. Approved houses earn 100 XP and the Lamplighter badge.</p>
       </div>
       <div className="panel">
-        {!preferred ? <p>No contests are taking entries right now.</p> : (
+        {!preferred ? <p>No holidays are taking submissions right now.</p> : (
           <SubmitForm
             defaultSeason={preferred.key}
             seasons={open.map((s) => ({ key: s.key, holiday: s.name, label: `${s.name} ${s.year}`, note: phase(s, today) === 'live' ? 'voting now' : `opens ${formatDay(s.opens)}` }))}

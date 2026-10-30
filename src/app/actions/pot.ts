@@ -15,7 +15,7 @@ import { fieldErrors, sponsorSchema } from '@/lib/validation';
 /** Sends a host to Stripe Checkout to pay their pledge into their house's season pot. */
 export async function payPledge(houseId: string, fd: FormData) {
   const user = await requireUser('/profile');
-  const back = (why: string) => redirect(`/profile?pay=${why}#entry-${houseId}`);
+  const back = (why: string) => redirect(`/profile?pay=${why}#pot-${houseId}`);
   const amount = Number(fd.get('amount'));
   if (!(POT_AMOUNTS as readonly number[]).includes(amount)) back('amount');
   if (!stripeConfigured()) back('off');
@@ -34,10 +34,10 @@ export async function payPledge(houseId: string, fd: FormData) {
       paymentId: payment.id,
       amountCents: payment.amountCents,
       name: `${season!.name} ${season!.year} prize pot`,
-      description: `Contribution for ${house!.name}. Optional: free entries compete for the same prize.`,
+      description: `Contribution for ${house!.name}. Optional: free submissions compete for the same prize.`,
       email: user.email,
       successUrl: appUrl(`/pot/${payment.id}/done?session_id={CHECKOUT_SESSION_ID}`),
-      cancelUrl: appUrl(`/profile?pay=cancelled#entry-${houseId}`),
+      cancelUrl: appUrl(`/profile?pay=cancelled#pot-${houseId}`),
     });
     await db.potPayment.update({ where: { id: payment.id }, data: { stripeSessionId: session.id } });
     url = session.url;
