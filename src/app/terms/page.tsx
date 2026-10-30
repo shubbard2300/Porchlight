@@ -30,8 +30,8 @@ export default function Terms() {
       <ul>
         <li>Each season (such as Halloween or Christmas) runs on the dates shown on the site. Entering is free. Once their house is approved, hosts may choose to pay into that season&apos;s pot through Stripe; this never affects voting or results. Contributions are not refundable, except where the law requires, if we remove an entry without a rules violation, or if the season is cancelled.</li>
         <li>Displays must follow the content rules in the official rules: no commercial branding, political messages, safety hazards or inappropriate content.</li>
-        <li>The house with the most verified likes when voting closes wins the pot, with ties decided as the official rules describe. Hosts may not offer anything of value for votes. We may disqualify entries or votes that break these terms, and our decision on results is final.</li>
-        <li>We will contact the winner by email. The winner may need to confirm their identity and eligibility, and is responsible for any taxes on the prize.</li>
+        <li>The three houses with the most verified likes when voting closes win first, second and third place, with ties decided as the official rules describe. Hosts may not offer anything of value for votes. We may disqualify entries or votes that break these terms, and our decision on results is final.</li>
+        <li>We will contact winners by email. Winners may need to confirm their identity and eligibility, and are responsible for any taxes on their prize.</li>
         <li>The <Link href="/rules">official contest rules</Link> add details, and they control if they differ from this summary.</li>
         <li>{CONTEST_STATE ? `The contest is open to legal residents of ${CONTEST_STATE.name} aged 18 or older, for homes in ${CONTEST_STATE.name}, and is void where prohibited.` : 'The contest is open to legal residents of the United States and is void where prohibited or restricted by law.'} Anyone 18 or older can browse and vote.</li>
         <li>Rewards for voters (such as XP and badges) have no cash value.</li>

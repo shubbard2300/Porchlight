@@ -1,5 +1,5 @@
 /** Who runs Porchlight, as named in the footer and legal pages. Change these in one place. */
-export const OWNER_NAME = 'Porchlight LLC';
+export const OWNER_NAME = 'Steven John Hubbard LLC';
 export const CONTACT_EMAIL = 'hello@porchlightcontest.com';
 export const SITE_URL = 'https://www.porchlightcontest.com';
 /** Bump this whenever the wording of a legal page changes. Entries and payments record which version they agreed to. */
@@ -11,13 +11,17 @@ export const LEGAL_UPDATED = 'October 30, 2026';
  */
 export const CONTEST_STATE: { code: string; name: string } | null = { code: 'OR', name: 'Oregon' };
 
+export const SPONSOR_ADDRESS = '3737 NE Simpson, Portland, OR 97211';
+
 /**
- * Still to be filled in before launch. Left empty, the rules page shows a highlighted blank so nobody
- * mistakes a missing detail for a real one.
+ * The prize places for each contest. An empty amount shows as a highlighted blank on the rules page,
+ * so nobody mistakes a missing detail for a real one. Fill these in before a contest opens.
  */
-export const SPONSOR_ADDRESS = '';
-/** Dollars Porchlight guarantees for each contest's prize, whatever the pot holds. 0 means none yet. */
-export const GUARANTEED_PRIZE = 0;
+export const PRIZE_PLACES: { place: string; amount: string }[] = [
+  { place: 'First place', amount: '' },
+  { place: 'Second place', amount: '' },
+  { place: 'Third place', amount: '' },
+];
 
 /** The words on the agreement checkbox, shared by the submit form and the pot payment. */
 export function rulesAgreementText(): string {

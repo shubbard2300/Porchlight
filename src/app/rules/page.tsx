@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalPage } from '@/components/LegalPage';
-import { CONTACT_EMAIL, CONTEST_STATE, GUARANTEED_PRIZE, OWNER_NAME, rulesAgreementText, SITE_URL, SPONSOR_ADDRESS } from '@/lib/legal';
+import { CONTACT_EMAIL, CONTEST_STATE, OWNER_NAME, PRIZE_PLACES, rulesAgreementText, SITE_URL, SPONSOR_ADDRESS } from '@/lib/legal';
 import { POT_AMOUNTS } from '@/lib/pot';
 import { contestToday, formatDay, openForSubmissions, visibleSeasons } from '@/lib/seasons';
 
@@ -18,7 +18,7 @@ export default function Rules() {
   return (
     <LegalPage title="Official contest rules" intro={<><b>No purchase or payment is necessary to enter or win.</b> Paying into the pot does not improve your chances of winning. These rules apply to every Porchlight holiday decorating contest run by {OWNER_NAME} at {site}.</>}>
       <h2>1. Sponsor</h2>
-      <p>{OWNER_NAME} (&quot;Porchlight&quot;), {SPONSOR_ADDRESS || <Blank>mailing address</Blank>}, {CONTACT_EMAIL}. Local businesses shown as Pitstops may add money to a pot, but they don&apos;t run the contest or pick the winner.</p>
+      <p>{OWNER_NAME} (&quot;Porchlight&quot;), {SPONSOR_ADDRESS || <Blank>mailing address</Blank>}, {CONTACT_EMAIL}. Local businesses shown as Pitstops may add money to a pot, but they don&apos;t run the contest or pick the winners.</p>
 
       <h2>2. Who can enter</h2>
       <ul>
@@ -51,16 +51,16 @@ export default function Rules() {
       <h2>6. Optional pot contributions</h2>
       <ul>
         <li>After your house is approved, you may choose to add ${POT_AMOUNTS.join(', $')} to that contest&apos;s pot through our payment processor, Stripe. It is entirely optional and is not an entry fee.</li>
-        <li>Contributions never affect voting, ranking, visibility on the map, or eligibility. A free entry can win the whole prize.</li>
+        <li>Contributions never affect voting, ranking, visibility on the map, or eligibility. A free entry can win any prize.</li>
         <li>Contributions are not refundable, including if you withdraw your entry, except where the law requires, if we remove your entry without a rules violation, or if the contest is cancelled.</li>
       </ul>
 
-      <h2>7. How the winner is decided</h2>
+      <h2>7. How the winners are decided</h2>
       <ul>
-        <li>The winner is decided by verified public vote, not by chance. A visitor earns a vote by proving they visited in person (phone location within about 150 meters, or the porch QR sign), then likes a house and scores it on creativity, lighting, storytelling and sound.</li>
+        <li>Winners are decided by verified public vote, not by chance. A visitor earns a vote by proving they visited in person (phone location within about 150 meters, or the porch QR sign), then likes a house and scores it on creativity, lighting, storytelling and sound.</li>
         <li>Each account gets one like and one scorecard per house per contest.</li>
-        <li>The approved house with the most verified likes when voting closes wins.</li>
-        <li><b>Ties:</b> if houses tie on likes, the higher average scorecard wins. If they are still tied, an independent guest judge picked by Porchlight scores the tied displays on creative complexity (50%) and visual impact (50%), and the higher score wins.</li>
+        <li>When voting closes, the approved houses with the most verified likes win first, second and third place, in that order.</li>
+        <li><b>Ties:</b> if houses tie on likes for a prize place, the higher average scorecard places higher. If they are still tied, an independent guest judge picked by Porchlight scores the tied displays on creative complexity (50%) and visual impact (50%), and the higher score places higher.</li>
       </ul>
 
       <h2>8. Fair voting</h2>
@@ -73,10 +73,14 @@ export default function Rules() {
 
       <h2>9. The prize</h2>
       <ul>
-        <li>The winner receives the money paid into that contest&apos;s pot by hosts and sponsors, as shown on the home page when voting closes{GUARANTEED_PRIZE > 0 ? <>, and never less than ${GUARANTEED_PRIZE.toLocaleString('en-US')}</> : <>, with a guaranteed minimum of <Blank>amount</Blank></>}. Pledges that were never paid are not part of the prize.</li>
-        <li>We contact the winner by email within 7 days after the holiday and announce the winner on Porchlight. The winner must confirm identity and eligibility, and return a signed IRS Form W-9, within 14 days, or the prize goes to the next eligible house.</li>
-        <li>We pay the prize within 30 days of confirmation. The winner is responsible for all taxes. We report prizes as the law requires, including on IRS Form 1099-MISC when a winner&apos;s prizes from us reach $2,000 or more in a year.</li>
-        <li>The prize can&apos;t be transferred or swapped.</li>
+        <li>Each contest awards three cash prizes:
+          <ul>{PRIZE_PLACES.map((p) => <li key={p.place}>{p.place}: {p.amount || <Blank>amount</Blank>}</li>)}</ul>
+        </li>
+        <li>Prizes are paid from the money in that contest&apos;s pot from hosts and sponsors, as shown on the home page when voting closes, together with any amount Porchlight adds. Pledges that were never paid are not part of the pot.</li>
+        <li>We contact the winners by email within 7 days after the holiday and announce them on Porchlight. Each winner must confirm identity and eligibility, and return a signed IRS Form W-9, within 14 days, or that prize goes to the next eligible house.</li>
+        <li>We pay prizes within 30 days of confirmation. Winners are responsible for all taxes. We report prizes as the law requires, including on IRS Form 1099-MISC when a winner&apos;s prizes from us reach $2,000 or more in a year.</li>
+        <li>A house can win only one prize per contest.</li>
+        <li>Prizes can&apos;t be transferred or swapped.</li>
       </ul>
 
       <h2>10. Photos, publicity and privacy</h2>
@@ -86,7 +90,7 @@ export default function Rules() {
       <p>You can delete your entry from your profile at any time. Contributions already paid stay in the pot (see section 6).</p>
 
       <h2>12. General</h2>
-      <p>We may change, suspend or cancel a contest if fraud, technical problems or events beyond our control affect it, and will refund contributions if a contest is cancelled. {where ? `These rules are governed by the laws of ${where}.` : `To the extent the law allows, these rules are governed by the laws of the state where ${OWNER_NAME} is organized.`} If these rules and the <Link href="/terms">Terms of Service</Link> differ, these rules control for the contest. For the winner&apos;s name after the contest, email {CONTACT_EMAIL}.</p>
+      <p>We may change, suspend or cancel a contest if fraud, technical problems or events beyond our control affect it, and will refund contributions if a contest is cancelled. {where ? `These rules are governed by the laws of ${where}.` : `To the extent the law allows, these rules are governed by the laws of the state where ${OWNER_NAME} is organized.`} If these rules and the <Link href="/terms">Terms of Service</Link> differ, these rules control for the contest. For the winners&apos; names after the contest, email {CONTACT_EMAIL}.</p>
 
       <h2>13. Your agreement</h2>
       <p>When you enter a house or pay into a pot, you tick this box, and we record when you did and which version of these rules you saw:</p>

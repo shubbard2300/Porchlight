@@ -50,7 +50,7 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
       <Field label="Name your display" htmlFor="name" error={e.name}><input id="name" name="name" type="text" maxLength={60} defaultValue={value('name', prefill.name)} placeholder="The Hollow at Alder" /></Field>
       <Field label="Street address" htmlFor="address" error={e.address} hint={CONTEST_STATE ? `Contests are open to homes in ${CONTEST_STATE.name} right now.` : undefined}><input id="address" name="address" type="text" maxLength={120} autoComplete="street-address" defaultValue={value('address', prefill.address)} placeholder="1820 SE Alder Ct, Portland, OR" /></Field>
       <Field label="Neighborhood (optional)" htmlFor="neighborhood" error={e.neighborhood}><input id="neighborhood" name="neighborhood" type="text" maxLength={60} defaultValue={value('neighborhood', prefill.neighborhood)} placeholder="Sunnyside" /></Field>
-      <label className="check" htmlFor="showExactAddress"><input type="checkbox" id="showExactAddress" name="showExactAddress" defaultChecked={checked('showExactAddress', true)} /><span>Show my exact address. Turn this off to show only your neighborhood until visitors check in.</span></label>
+      <label className="check" htmlFor="showExactAddress"><input type="checkbox" id="showExactAddress" name="showExactAddress" defaultChecked={checked('showExactAddress', true)} /><span>Show my exact address to signed-in members. Turn this off to show only your neighborhood until visitors check in. People who aren&apos;t signed in never see your address.</span></label>
       <Field label="What makes it special?" error={e.tags}>
         <div className="chips">
           {HOUSE_TAGS.map((t, i) => (

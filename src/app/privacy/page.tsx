@@ -32,12 +32,13 @@ export default function Privacy() {
       <p>We do not sell your personal information, and we do not use it for advertising.</p>
 
       <h2>What is public</h2>
-      <p>Your username, profile photo, and comments are visible to other users. If you host, your house name, photos, description, and its location on the map are public.</p>
+      <p>Your username, profile photo, and comments are visible to other users. If you host, your house name, photos, description, neighborhood and approximate spot on the map are public. Exact addresses are shown only to signed-in members (see below).</p>
 
       <h2>Your home address</h2>
       <ul>
         <li><b>Why we ask:</b> to confirm the home is eligible{CONTEST_STATE ? ` (contests are open to homes in ${CONTEST_STATE.name})` : ''}, to stop duplicate or spoofed entries, and to put your house on the map so visitors can find it.</li>
-        <li><b>You choose what&apos;s shown:</b> when you post a house you decide whether to show your exact address. If you turn it off, the map shows only an approximate spot (within about a kilometer) and your neighborhood, and the exact spot is shared with a visitor only once they check in nearby.</li>
+        <li><b>Members only:</b> visitors who aren&apos;t signed in, and search engines, never see your street address or exact pin; they see your neighborhood and an approximate spot (within about a kilometer).</li>
+        <li><b>You choose what members see:</b> when you post a house you decide whether signed-in members can see your exact address. If you turn it off, members also see only the approximate spot, and the exact spot is shared with a visitor only once they check in nearby.</li>
         <li><b>How it&apos;s protected:</b> it travels over encrypted connections and is stored with our database provider, which encrypts data at rest. Only Porchlight admins can see hidden addresses.</li>
         <li><b>No selling:</b> we never sell, rent or trade your address or identity to marketers, advertisers or data brokers.</li>
         <li><b>How long:</b> while your entry is posted and in the contest archive. If you delete an entry, its address is deleted with it. An address saved on your profile stays until you change it or delete your account.</li>
