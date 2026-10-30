@@ -5,16 +5,13 @@ import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
 import { notifyAdmin } from '@/lib/email';
 import { newPhotoAdminEmail } from '@/lib/emails';
-import { absolutePhotoUrl, photoSelect, reviewUrl, syncHousePhotos } from '@/lib/housePhotos';
-import { sniffImage } from '@/lib/images';
-import { deletePhotoFiles, storePhotoFile } from '@/lib/photoStorage';
-import { MAX_HOUSE_PHOTOS, photoLocationSchema, photoMetaSchema } from '@/lib/validation';
+import { absolutePhotoUrl, PENDING_PHOTO_MS, photoSelect, reviewUrl, savePhoto, syncHousePhotos } from '@/lib/housePhotos';
+import { deletePhotoFiles } from '@/lib/photoStorage';
+import { photoLocationSchema, photoMetaSchema } from '@/lib/validation';
 
 export type HousePhotoView = { id: string; url: string; lat: number | null; lng: number | null; locationSource: string | null };
 type Result = { photo?: HousePhotoView; error?: string };
 
-const MAX_PHOTO_BYTES = 3_000_000;
-const PENDING_TTL_MS = 24 * 60 * 60 * 1000;
 /** Photos added to one entry within this window share a single admin email. */
 const NOTIFY_QUIET_MS = 10 * 60 * 1000;
 
@@ -25,7 +22,7 @@ function refresh() {
 
 /** Removes submit-form uploads that never became part of an entry. */
 async function sweepAbandoned(ownerId: string) {
-  const stale = await db.housePhoto.findMany({ where: { ownerId, houseId: null, createdAt: { lt: new Date(Date.now() - PENDING_TTL_MS) } }, select: { id: true, blobUrl: true } });
+  const stale = await db.housePhoto.findMany({ where: { ownerId, houseId: null, createdAt: { lt: new Date(Date.now() - PENDING_PHOTO_MS) } }, select: { id: true, blobUrl: true } });
   if (stale.length === 0) return;
   await db.housePhoto.deleteMany({ where: { id: { in: stale.map((p) => p.id) } } });
   await deletePhotoFiles(stale.map((p) => p.blobUrl));
@@ -49,49 +46,21 @@ export async function uploadHousePhoto(fd: FormData): Promise<Result> {
   if (user.accountType !== 'HOST') return { error: 'Only hosts can add house photos.' };
   const file = fd.get('photo');
   if (!(file instanceof File) || file.size === 0) return { error: 'Choose a photo to upload.' };
-  if (file.size > MAX_PHOTO_BYTES) return { error: 'That photo is too large. Try one under 3 MB.' };
   const parsed = photoMetaSchema.safeParse(Object.fromEntries([...fd].filter(([k]) => k !== 'photo')));
   if (!parsed.success) return { error: 'We could not read that photo’s details. Try again.' };
-  const m = parsed.data;
-  const data = Buffer.from(await file.arrayBuffer());
-  const contentType = sniffImage(data);
-  if (!contentType) return { error: 'Use a JPEG, PNG or WebP photo.' };
+  const { houseId, ...m } = parsed.data;
 
-  if (m.houseId) {
-    const house = await db.house.findFirst({ where: { id: m.houseId, ownerId: user.id }, select: { id: true } });
+  if (houseId) {
+    const house = await db.house.findFirst({ where: { id: houseId, ownerId: user.id }, select: { id: true } });
     if (!house) return { error: 'That submission was not found.' };
   } else {
     await sweepAbandoned(user.id);
   }
-  const count = await db.housePhoto.count({ where: { ownerId: user.id, houseId: m.houseId ?? null } });
-  if (count >= MAX_HOUSE_PHOTOS) return { error: `You can add up to ${MAX_HOUSE_PHOTOS} photos per house.` };
-
-  const row = await db.housePhoto.create({
-    data: {
-      ownerId: user.id,
-      houseId: m.houseId ?? null,
-      url: '',
-      width: m.width,
-      height: m.height,
-      lat: m.lat ?? null,
-      lng: m.lng ?? null,
-      locationSource: m.locationSource ?? null,
-      takenAt: m.takenAt ?? null,
-      position: count,
-    },
-  });
-  let blobUrl: string | null;
-  try {
-    blobUrl = await storePhotoFile(row.id, data, contentType);
-  } catch (err) {
-    console.error('[photos] upload failed', err);
-    await db.housePhoto.delete({ where: { id: row.id } });
-    return { error: 'We could not save that photo. Try again in a moment.' };
-  }
-  const photo = await db.housePhoto.update({ where: { id: row.id }, data: { url: blobUrl ?? `/house-photo/${row.id}`, blobUrl }, select: photoSelect });
-  if (m.houseId) {
-    await syncHousePhotos(m.houseId);
-    await notifyNewPhoto(m.houseId, row.id, user);
+  const { photo, error } = await savePhoto(user.id, file, m, houseId ?? null);
+  if (!photo) return { error };
+  if (houseId) {
+    await syncHousePhotos(houseId);
+    await notifyNewPhoto(houseId, photo.id, user);
     refresh();
   }
   return { photo };

@@ -24,8 +24,8 @@ type Open =
   | { kind: 'xp' };
 
 const JOIN = {
-  viewer: { type: 'VIEWER' as const, label: 'Viewer / rater', title: 'Find the best lights in town', blurb: 'Sign up and get 100 XP and the Porch Pass badge.' },
-  host: { type: 'HOST' as const, label: 'Host / decorator', title: 'Put your house on the map', blurb: 'Sign up, confirm your email, then add your property and this season’s decorations.' },
+  viewer: { type: 'VIEWER' as const, label: 'Viewer / rater', title: 'Find the best lights in town', blurb: 'Just an email and a password. You start with 100 XP and the Porch Pass badge.' },
+  host: { type: 'HOST' as const, label: 'Host / decorator', title: 'Put your house on the map', blurb: 'Snap your house, confirm the address, and you’re most of the way onto the map.' },
 };
 
 function parse(attr: string): Open | null {

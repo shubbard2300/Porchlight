@@ -33,3 +33,41 @@ export async function lookupAddress(address: string): Promise<{ lat: number; lng
     return null;
   }
 }
+
+type NominatimAddress = {
+  house_number?: string; road?: string; neighbourhood?: string; suburb?: string;
+  city?: string; town?: string; village?: string; hamlet?: string; county?: string;
+  state?: string; postcode?: string; 'ISO3166-2-lvl4'?: string;
+};
+
+/** "1820 SE Alder Ct, Portland, OR 97214" from Nominatim's address parts. Exported for tests. */
+export function formatAddress(a: NominatimAddress) {
+  const street = [a.house_number, a.road].filter(Boolean).join(' ');
+  const town = a.city ?? a.town ?? a.village ?? a.hamlet ?? a.county;
+  const iso = a['ISO3166-2-lvl4'];
+  const state = iso?.startsWith('US-') ? iso.slice(3) : a.state;
+  const region = [state, a.postcode].filter(Boolean).join(' ');
+  return {
+    address: [street, town, region].filter(Boolean).join(', '),
+    neighborhood: a.neighbourhood ?? a.suburb ?? null,
+    hasStreet: Boolean(street),
+  };
+}
+
+/** The street address at a point, for suggesting where a house is. Null if the lookup fails. */
+export async function reverseGeocode(lat: number, lng: number) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&lat=${lat}&lon=${lng}`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Porchlight/1.0 (hello@porchlightcontest.com)', 'Accept-Language': 'en' },
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const hit = (await res.json()) as { address?: NominatimAddress };
+    return hit.address ? formatAddress(hit.address) : null;
+  } catch (err) {
+    console.warn('[geocode] reverse lookup failed', err);
+    return null;
+  }
+}

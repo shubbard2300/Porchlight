@@ -1,33 +1,35 @@
 import { describe, expect, it } from 'vitest';
-import { contactSchema, houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema, voteSchema } from './validation';
+import { contactSchema, houseSchema, joinSchema, newPasswordSchema, photoMetaSchema, profileSchema, usernameSchema, voteSchema } from './validation';
 
 describe('joinSchema', () => {
-  const base = { accountType: 'VIEWER', email: '  Sam@Example.COM ', username: 'Sam_Rivera', password: 'lanterns-glow', terms: 'on' };
-  it('normalizes email and username and reads checkboxes', () => {
+  const base = { accountType: 'VIEWER', email: '  Sam@Example.COM ', password: 'lanterns-glow' };
+  it('needs only an email and password, and normalizes the email', () => {
     const r = joinSchema.safeParse(base);
     expect(r.success).toBe(true);
     if (r.success) {
       expect(r.data.email).toBe('sam@example.com');
-      expect(r.data.username).toBe('sam_rivera');
       expect(r.data.marketingOptIn).toBe(false);
     }
-  });
-  it('rejects bad and reserved usernames', () => {
-    expect(joinSchema.safeParse({ ...base, username: 'a b' }).success).toBe(false);
-    expect(joinSchema.safeParse({ ...base, username: 'xy' }).success).toBe(false);
-    expect(joinSchema.safeParse({ ...base, username: 'Admin' }).success).toBe(false);
   });
   it('requires a password of at least 8 characters', () => {
     expect(joinSchema.safeParse({ ...base, password: undefined }).success).toBe(false);
     expect(joinSchema.safeParse({ ...base, password: 'short' }).success).toBe(false);
   });
-  it('requires accepting the rules and a known account type', () => {
-    expect(joinSchema.safeParse({ ...base, terms: undefined }).success).toBe(false);
+  it('requires a known account type', () => {
     expect(joinSchema.safeParse({ ...base, accountType: 'JUDGE' }).success).toBe(false);
   });
   it('lets hosts add an optional property location', () => {
     const r = joinSchema.safeParse({ ...base, accountType: 'HOST', propertyAddress: '1820 SE Alder Ct' });
     expect(r.success && r.data.propertyAddress).toBe('1820 SE Alder Ct');
+  });
+});
+
+describe('usernameSchema', () => {
+  it('rejects bad and reserved usernames', () => {
+    expect(usernameSchema.safeParse('a b').success).toBe(false);
+    expect(usernameSchema.safeParse('xy').success).toBe(false);
+    expect(usernameSchema.safeParse('Admin').success).toBe(false);
+    expect(usernameSchema.safeParse('Sam_Rivera').data).toBe('sam_rivera');
   });
 });
 

@@ -46,10 +46,10 @@ export function welcomeEmail(o: { username: string; host: boolean; bonusXp: numb
       greeting: `Hi ${o.username},`,
       body: [
         `Your welcome gift: ${o.bonusXp} XP and the Porch Pass badge.`,
-        o.host ? 'Finish your host profile with your property and this season’s decorations, then post your house.' : 'Add a profile photo, then head out and find some lights.',
+        o.host ? 'Next up: get your house on the map. Add a night photo and your address, and we’ll review it quickly.' : 'The map is ready when you are. Find a glowing pin, check in at the porch and score it.',
       ],
       details: [['Your invite code', o.referralCode]],
-      button: { label: o.host ? 'Finish my profile' : 'Open my profile', url: url('/profile') },
+      button: { label: o.host ? 'Put my house on the map' : 'Open the map', url: url(o.host ? '/submit' : '/#map') },
       fine: 'Invite neighbors with your code. You both earn XP when they join.',
     },
   };

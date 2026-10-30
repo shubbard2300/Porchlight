@@ -10,7 +10,7 @@ export { CONTRIBUTIONS, HOUSE_TAGS };
 
 const checkbox = z.preprocess((v) => v === 'on' || v === 'true' || v === true, z.boolean());
 
-const RESERVED_USERNAMES = ['admin', 'administrator', 'porchlight', 'support', 'help', 'moderator', 'staff'];
+export const RESERVED_USERNAMES = ['admin', 'administrator', 'porchlight', 'support', 'help', 'moderator', 'staff'];
 
 const email = z.string().trim().toLowerCase().email('Enter a valid email address.');
 const optional = (max: number) => z.string().trim().max(max, `Keep this under ${max} characters.`).optional().or(z.literal(''));
@@ -24,15 +24,14 @@ export const usernameSchema = z
 
 export const passwordSchema = z.string().min(8, 'Use at least 8 characters.').max(200, 'Keep it under 200 characters.');
 
+/** Sign-up asks only for an email and password. A username is made from the email and can be changed on the profile. */
 export const joinSchema = z.object({
   accountType: z.enum(['VIEWER', 'HOST']),
   email,
-  username: usernameSchema,
   password: passwordSchema,
   propertyAddress: optional(120),
   referralCode: z.string().trim().toUpperCase().max(20).optional().or(z.literal('')),
   marketingOptIn: checkbox,
-  terms: checkbox.refine((v) => v, 'Please accept the contest rules to continue.'),
 });
 
 export const emailOnlySchema = z.object({ email });
