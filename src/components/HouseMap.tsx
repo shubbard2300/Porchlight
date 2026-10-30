@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { GeoJSONSource, Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
+import Link from 'next/link';
+import type { FilterSpecification, GeoJSONSource, Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Icon3DName } from './Icon3D';
 import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
 import { BOOST_HOURS, TIERS, type Tier } from '@/lib/pitstops';
 import { circleRing } from '@/lib/blocks';
+import { isLitNow } from '@/lib/litHours';
 import styles from './HouseMap.module.css';
 
 export type MapHouse = {
@@ -22,6 +24,9 @@ export type MapHouse = {
   likes: number;
   rank: number;
   lit: string;
+  /** The host's lights-on window, like "6 pm" and "10 pm", in the contest time zone. */
+  litFrom: string;
+  litUntil: string;
   /** Visitors who checked in during the crowd window. */
   crowd: number;
 };
@@ -38,11 +43,19 @@ export type MapPitstop = {
   lng: number;
 };
 
+/** Houses that aren't on the map yet, told only to the people who can do something about them. */
+export type MapNotice =
+  | { for: 'admin'; waiting: number; unplaced: number; firstUnplacedId: string | null }
+  /** The signed-in host's own houses in this contest. */
+  | { for: 'host'; waiting: number; unplaced: number };
+
 /** An anchor block: a glowing zone around a well-known decorated street. */
 export type MapBlock = { id: string; name: string; blurb: string; lat: number; lng: number; radiusM: number; houses: number };
 
-/** How often an open map refreshes its crowd meter. */
+/** How often an open map refreshes its crowd meter and which houses have their lights on. */
 const CROWD_POLL_MS = 60_000;
+/** One slow breath of the glow around a house that's lit right now. */
+const PULSE_MS = 2600;
 
 /** Free vector tiles from OpenFreeMap: no API key, no usage limits. "fiord" is a dusk-blue style that suits the twilight look. */
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/fiord';
@@ -65,7 +78,7 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       ${h.neighborhood ? `<span class="${styles.popLabel}">${esc(h.neighborhood)}</span>` : ''}
       <b class="${styles.popName}">${esc(h.name)}</b>
       <span class="${styles.popMeta}">${esc(where)}</span>
-      <span class="${styles.popMeta}">Lit ${esc(h.lit)}</span>
+      <span class="${styles.popMeta}">${isLitNow(h.litFrom, h.litUntil) ? `<b class="${styles.popOn}">Lights on now</b> · until ${esc(h.litUntil)}` : `Lights off now · on ${esc(h.lit)}`}</span>
       <span class="${styles.popCrowd}"><i style="background:${CROWD_LEVELS[crowdLevel(h.crowd)].color}"></i>${esc(crowdLine(h.crowd))}</span>
       <div class="${styles.popFoot}"><span class="${styles.popLikes}"><img src="/icons/3d/heart.webp" alt="" width="16" height="16" />${h.likes} verified ${h.likes === 1 ? 'like' : 'likes'}</span>${directions}</div>
       <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
@@ -99,7 +112,7 @@ function blockHtml(b: MapBlock) {
   </div>`;
 }
 
-export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel, unplaced, seasonKey }: { houses: MapHouse[]; pitstops?: MapPitstop[]; blocks?: MapBlock[]; icon: Icon3DName; seasonLabel: string; unplaced: number; seasonKey: string }) {
+export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel, notice = null, seasonKey }: { houses: MapHouse[]; pitstops?: MapPitstop[]; blocks?: MapBlock[]; icon: Icon3DName; seasonLabel: string; notice?: MapNotice | null; seasonKey: string }) {
   const el = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -108,6 +121,7 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
     let map: MapLibreMap | undefined;
     let cancelled = false;
     let poll: ReturnType<typeof setInterval> | undefined;
+    let pulse = 0;
 
     (async () => {
       const [maplibre, style] = await Promise.all([
@@ -121,7 +135,7 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
         features: [...byId.values()].map((h) => ({
           type: 'Feature',
           id: h.id,
-          properties: { id: h.id, name: h.name, exact: h.exact, rank: h.rank, crowd: crowdLevel(h.crowd) },
+          properties: { id: h.id, name: h.name, exact: h.exact, rank: h.rank, crowd: crowdLevel(h.crowd), on: isLitNow(h.litFrom, h.litUntil) },
           geometry: { type: 'Point', coordinates: [h.lng, h.lat] },
         })),
       });
@@ -234,9 +248,15 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
           id: 'pin-area', type: 'circle', source: 'houses', filter: ['all', ['!', ['has', 'point_count']], ['!', ['get', 'exact']]],
           paint: { 'circle-color': '#b9a6ff', 'circle-opacity': 0.3, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 14, 15, 46], 'circle-stroke-color': '#b9a6ff', 'circle-stroke-width': 1.5 },
         });
+        // Houses with their lights on right now glow and breathe; the rest sit dimmed until their hours come around.
+        const litPins: FilterSpecification = ['all', ['!', ['has', 'point_count']], ['get', 'on']];
         map.addLayer({
-          id: 'pin-glow', type: 'circle', source: 'houses', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': '#ffb000', 'circle-opacity': 0.35, 'circle-blur': 0.7, 'circle-radius': 26 },
+          id: 'pin-halo', type: 'circle', source: 'houses', filter: litPins,
+          paint: { 'circle-color': '#ffc93c', 'circle-opacity': 0.9, 'circle-blur': 0.5, 'circle-radius': 34 },
+        });
+        map.addLayer({
+          id: 'pin-glow', type: 'circle', source: 'houses', filter: litPins,
+          paint: { 'circle-color': '#ffb000', 'circle-opacity': 0.55, 'circle-blur': 0.55, 'circle-radius': 46 },
         });
         // Crowd meter: a colored ring around pins where people have checked in recently.
         map.addLayer({
@@ -248,12 +268,20 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
         });
         map.addLayer({
           id: 'pins', type: 'circle', source: 'houses', filter: ['!', ['has', 'point_count']],
-          paint: { 'circle-color': '#fff4e4', 'circle-stroke-color': '#14123a', 'circle-stroke-width': 2.5, 'circle-radius': 19 },
+          paint: {
+            'circle-color': ['case', ['get', 'on'], '#fff4e4', '#a9a4cc'],
+            'circle-opacity': ['case', ['get', 'on'], 1, 0.6],
+            'circle-stroke-color': ['case', ['get', 'on'], '#ffb000', '#14123a'],
+            'circle-stroke-opacity': ['case', ['get', 'on'], 1, 0.7],
+            'circle-stroke-width': ['case', ['get', 'on'], 3, 2.5],
+            'circle-radius': 19,
+          },
         });
         if (map.hasImage('season')) {
           map.addLayer({
             id: 'pin-icons', type: 'symbol', source: 'houses', filter: ['!', ['has', 'point_count']],
             layout: { 'icon-image': 'season', 'icon-size': 0.24, 'icon-allow-overlap': true },
+            paint: { 'icon-opacity': ['case', ['get', 'on'], 1, 0.45] },
           });
         }
 
@@ -264,8 +292,20 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
             'text-field': ['get', 'name'], 'text-font': ['Noto Sans Bold'], 'text-size': 13, 'text-anchor': 'top', 'text-offset': [0, 1.9],
             'text-max-width': 10, 'text-optional': true,
           },
-          paint: { 'text-color': '#fff4e4', 'text-halo-color': '#14123a', 'text-halo-width': 2 },
+          paint: { 'text-color': '#fff4e4', 'text-opacity': ['case', ['get', 'on'], 1, 0.6], 'text-halo-color': '#14123a', 'text-halo-width': 2 },
         });
+
+        // The breathing glow. Visitors who asked for less motion get the same glow, held still.
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          const breathe = (t: number) => {
+            if (!map?.getLayer('pin-glow')) return;
+            const k = (1 - Math.cos((t % PULSE_MS) / PULSE_MS * 2 * Math.PI)) / 2;
+            map.setPaintProperty('pin-glow', 'circle-radius', 38 + 22 * k);
+            map.setPaintProperty('pin-glow', 'circle-opacity', 0.8 - 0.5 * k);
+            pulse = requestAnimationFrame(breathe);
+          };
+          pulse = requestAnimationFrame(breathe);
+        }
 
         const popup = new maplibre.Popup({ offset: 20, maxWidth: '300px', className: styles.popWrap });
         // Hovering a pin shows just its title; clicking opens the full card.
@@ -325,10 +365,11 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
           try {
             const counts: Record<string, number> = await (await fetch(`/api/crowd?season=${encodeURIComponent(seasonKey)}`, { cache: 'no-store' })).json();
             for (const h of byId.values()) h.crowd = counts[h.id] ?? 0;
-            (map.getSource('houses') as GeoJSONSource | undefined)?.setData(features());
           } catch {
             // Keep showing the last reading; the next poll tries again.
           }
+          // Redrawing also moves houses between glowing and dimmed as their hours start and end.
+          (map?.getSource('houses') as GeoJSONSource | undefined)?.setData(features());
         }, CROWD_POLL_MS);
         map.on('mouseenter', 'clusters', () => { map!.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'clusters', () => { map!.getCanvas().style.cursor = ''; });
@@ -338,6 +379,7 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
     return () => {
       cancelled = true;
       clearInterval(poll);
+      cancelAnimationFrame(pulse);
       map?.remove();
     };
   }, [houses, pitstops, blocks, icon, seasonKey]);
@@ -363,13 +405,53 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
           <b>Crowd meter</b>
           {(['lively', 'busy', 'packed'] as const).map((k) => <span key={k}><i style={{ background: CROWD_LEVELS[k].color }} />{CROWD_LEVELS[k].label}</span>)}
           <span className={styles.legendNote}>Rings show check-ins in the last 30 minutes, updated every minute.</span>
+          <span><i className={styles.legendOn} />Lights on now</span>
+          <span><i className={styles.legendOff} />Lights off, back at their posted hours</span>
           {blocks.length > 0 && <span><i className={styles.legendBlock} />Anchor blocks</span>}
           {pitstops.length > 0 && <span><img src="/icons/3d/gift.webp" alt="" width={16} height={16} className={styles.legendGift} />Pitstops: scan for {BOOST_HOURS} h of double XP</span>}
         </p>
       )}
-      {unplaced > 0 && (
-        <p className={styles.unplaced}>{unplaced} more {unplaced === 1 ? 'house is' : 'houses are'} still placing {unplaced === 1 ? 'its pin' : 'their pins'}. You&rsquo;ll find {unplaced === 1 ? 'it' : 'them'} in the list below.</p>
-      )}
+      {notice && <PinNotice notice={notice} />}
     </>
   );
+}
+
+const houseCount = (n: number) => `${n} ${n === 1 ? 'house' : 'houses'}`;
+
+function PinNotice({ notice }: { notice: MapNotice }) {
+  if (notice.for === 'admin') {
+    if (notice.waiting === 0 && notice.unplaced === 0) return null;
+    return (
+      <div className={styles.notes}>
+        {notice.waiting > 0 && (
+          <Link className={styles.adminNote} href="/admin/submissions?status=PENDING">
+            <b>{houseCount(notice.waiting)} waiting for approval.</b> Review {notice.waiting === 1 ? 'it' : 'them'} in Submissions <span aria-hidden="true">&rarr;</span>
+          </Link>
+        )}
+        {notice.unplaced > 0 && (
+          <Link className={styles.adminNote} href={`/admin/submissions?status=APPROVED${notice.firstUnplacedId ? `#h-${notice.firstUnplacedId}` : ''}`}>
+            <b>{notice.unplaced} live {notice.unplaced === 1 ? 'house is' : 'houses are'} still missing a pin.</b> Place {notice.unplaced === 1 ? 'it' : 'them'} from Submissions <span aria-hidden="true">&rarr;</span>
+          </Link>
+        )}
+        <span className={styles.adminOnly}>Only admins see this.</span>
+      </div>
+    );
+  }
+  if (notice.waiting > 0) {
+    return (
+      <p className={styles.hostNote} role="status">
+        <img src="/icons/3d/clipboard.webp" alt="" width={28} height={28} />
+        <span><b>{notice.waiting === 1 ? 'Your house is in line for approval.' : 'Your houses are in line for approval.'}</b> More houses are getting approved every day. Your pin lights up here as soon as {notice.waiting === 1 ? 'yours is' : 'yours are'} through, and we&rsquo;ll email you when it happens.</span>
+      </p>
+    );
+  }
+  if (notice.unplaced > 0) {
+    return (
+      <p className={styles.hostNote} role="status">
+        <img src="/icons/3d/pin.webp" alt="" width={28} height={28} />
+        <span><b>You&rsquo;re approved!</b> We&rsquo;re still placing your pin, so for now neighbors can find your house in the list below.</span>
+      </p>
+    );
+  }
+  return null;
 }

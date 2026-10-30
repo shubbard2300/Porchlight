@@ -29,7 +29,6 @@
   background: var(--paper); border: var(--edge); border-radius: 18px; box-shadow: 3px 3px 0 var(--ink);
   font-size: 14px; font-weight: 700; pointer-events: none;
 }
-.unplaced { margin-top: 12px; font-size: 14px; color: var(--text-2); }
 
 /* Popup card */
 .popWrap :global(.maplibregl-popup-content) {
@@ -86,3 +85,23 @@
 .popOffer { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
 .legendGift { flex: none; }
 .legend i.legendBlock { border-radius: 4px; border: 2px dashed #c79a1c; background: rgba(255, 211, 107, 0.35); }
+
+/* Lights on / off */
+.popOn { color: #b36b00; }
+.legend i.legendOn { background: #fff4e4; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(255, 176, 0, 0.35), 0 0 10px 2px rgba(255, 176, 0, 0.6); }
+.legend i.legendOff { background: #a9a4cc; opacity: 0.7; }
+
+/* Houses not on the map yet */
+.notes { display: grid; gap: 8px; margin-top: 12px; justify-items: start; }
+.adminNote {
+  display: inline-block; font-size: 14px; color: var(--ink); text-decoration: none; padding: 8px 14px;
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink);
+}
+.adminNote:hover, .adminNote:focus-visible { background: #fff0c2; }
+.adminOnly { font-size: 12px; font-weight: 700; color: var(--text-3); }
+.hostNote {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px;
+  font-size: 14px; color: var(--text-2); background: var(--paper); border: 2px solid var(--ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--ink);
+}
+.hostNote img { flex: none; }
+.hostNote b { color: var(--ink); }
