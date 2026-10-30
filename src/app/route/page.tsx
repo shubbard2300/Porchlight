@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { bracketsFor } from '@/lib/brackets';
 import { crowdCounts } from '@/lib/crowdCounts';
-import { publicPin } from '@/lib/mapPins';
+import { currentUser } from '@/lib/auth';
+import { forViewer, publicPin } from '@/lib/mapPins';
 import { seasonStandings } from '@/lib/seasonStandings';
 import { contestToday, defaultSeason, getSeason, visibleSeasons } from '@/lib/seasons';
 import { seasonTheme } from '@/lib/theme';
@@ -32,7 +33,8 @@ export default async function RoutePage({ searchParams }: { searchParams: Promis
     placedBlocks(),
   ]);
 
-  const houses: RouteHouse[] = standings.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
+  const signedIn = !!(await currentUser());
+  const houses: RouteHouse[] = standings.map((h) => forViewer(h, signedIn)).flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
     id: h.id,
     name: h.name,
     bracket: h.bracket,

@@ -36,7 +36,7 @@ describe('usernameSchema', () => {
 describe('houseSchema', () => {
   const base = {
     season: 'halloween-2026', name: 'The Hollow', address: '1820 SE Alder Ct', litFrom: '6 pm', litUntil: '10 pm',
-    description: 'A skeleton choir every twenty minutes.', contribution: '25', permission: 'on', tags: ['Fog'], bracket: 'spooky',
+    description: 'A skeleton choir every twenty minutes.', contribution: '25', permission: 'on', agreeRules: 'on', tags: ['Fog'], bracket: 'spooky',
   };
   it('rejects unknown tags and odd contribution amounts', () => {
     expect(houseSchema.safeParse(base).success).toBe(false);
@@ -46,6 +46,11 @@ describe('houseSchema', () => {
     const r = houseSchema.safeParse({ ...base, tags: ['Handmade'] });
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.contribution).toBe(25);
+  });
+  it('needs the official rules agreement', () => {
+    const r = houseSchema.safeParse({ ...base, tags: ['Handmade'], agreeRules: undefined });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues[0].path).toEqual(['agreeRules']);
   });
 });
 

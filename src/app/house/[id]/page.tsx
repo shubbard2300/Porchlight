@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
+import { forViewer } from '@/lib/mapPins';
 import { votingOpen } from '@/lib/checkIns';
 import { getSeason } from '@/lib/seasons';
 import { getBracket } from '@/lib/brackets';
@@ -90,7 +91,11 @@ export default async function HousePage({ params, searchParams }: Props) {
   const pitstop = house.lat !== null && house.lng !== null
     ? nearestPitstop({ lat: house.lat, lng: house.lng }, await db.merchant.findMany({ where: { active: true }, select: { id: true, name: true, category: true, tier: true, offer: true, lat: true, lng: true } }))
     : null;
-  const where = house.showExactAddress ? house.address : `Near ${house.neighborhood ?? 'the neighborhood'}. The exact spot is shared when you check in.`;
+  // Exact addresses are for signed-in members only (see the privacy policy).
+  const exact = forViewer(house, !!user).showExactAddress;
+  const where = exact ? house.address
+    : house.showExactAddress ? `Near ${house.neighborhood ?? 'the neighborhood'}. Sign in to see the exact address.`
+    : `Near ${house.neighborhood ?? 'the neighborhood'}. The exact spot is shared when you check in.`;
 
   return (
     <main className="wrap stack" style={{ gap: 28 }} data-season={theme?.look}>
@@ -122,7 +127,7 @@ export default async function HousePage({ params, searchParams }: Props) {
           </div>
           <p>{house.description}</p>
           {house.tags.length > 0 && <div className="row" style={{ gap: 6 }}>{house.tags.map((t) => <span key={t} className="tag">{t}</span>)}</div>}
-          {house.showExactAddress && house.lat !== null && (
+          {exact && house.lat !== null && (
             <a className="btn ghost" style={{ justifySelf: 'start' }} href={`https://www.google.com/maps/dir/?api=1&destination=${house.lat},${house.lng}`} target="_blank" rel="noopener">
               <Icon3D name="map" size={22} />Directions
             </a>
@@ -218,7 +223,7 @@ export default async function HousePage({ params, searchParams }: Props) {
             <Link href={`/pitstop/${pitstop.id}`} className={styles.pitstop}>
               <span className={styles.pitBadge} style={{ background: TIERS[pitstop.tier].color }}><Icon3D name={getCategory(pitstop.category).icon} size={30} /></span>
               <span className="stack" style={{ gap: 2 }}>
-                <span className={styles.pitLabel}>Pitstop nearby{house.showExactAddress ? ` · ${formatDistance(pitstop.distanceM)}` : ''}</span>
+                <span className={styles.pitLabel}>Pitstop nearby{exact ? ` · ${formatDistance(pitstop.distanceM)}` : ''}</span>
                 <b>{pitstop.name}</b>
                 <span className="small">{pitstop.offer}</span>
                 <span className="small muted">Scan their counter QR for {BOOST_HOURS} hours of double XP. No purchase necessary.</span>
