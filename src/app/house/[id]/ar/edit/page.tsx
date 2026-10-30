@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth';
-import { decorFor } from '@/lib/arDecor';
+import { decorFor, forHoliday, greetingHint } from '@/lib/arDecor';
 import { seasonCalendar } from '@/lib/seasonConfig';
 import { Icon3D } from '@/components/Icon3D';
 import { ArEditor } from './ArEditor';
@@ -29,10 +29,19 @@ export default async function ArEditPage({ params }: { params: Promise<{ id: str
         <Icon3D name="sparkles" size={64} />
         <div className="stack" style={{ gap: 4 }}>
           <h1 style={{ fontSize: 30 }}>AR decorations</h1>
-          <p className="muted">Add virtual props to your display. Visitors out front point their phone at your house and see them floating right where you put them.</p>
+          <p className="muted">Add virtual {holiday ?? 'holiday'} props to your display. Visitors out front point their phone at your house and see them floating right where you put them.</p>
         </div>
       </header>
-      <ArEditor houseId={house.id} photo={house.photoUrls[0] ?? null} palette={decorFor(holiday)} initial={house.arDecorations} initialGreeting={house.arGreeting ?? ''} />
+      <ArEditor houseId={house.id} photo={house.photoUrls[0] ?? null} palette={decorFor(holiday)} initial={forHoliday(house.arDecorations, holiday)} initialGreeting={house.arGreeting ?? ''} greetingHint={greetingHint(holiday)} />
+      <section className="panel stack" aria-labelledby="how" style={{ gap: 10 }}>
+        <h2 id="how" style={{ fontSize: 20 }}>How it works</h2>
+        <ol className="stack small" style={{ gap: 6, margin: 0, paddingLeft: 20 }}>
+          <li><b>Place your props.</b> Tap one to drop it on your photo, drag it where it belongs on the real house, and use + and − to size it. The set matches your holiday{holiday ? ` (${holiday})` : ''}.</li>
+          <li><b>Save.</b> An “AR decorations” card appears on your house page right away.</li>
+          <li><b>Visitors look through their phone.</b> Out front, they open the card, line up a faint copy of your photo with your house and tap “Pin it here.” Your props float in place and they can snap a photo to share.</li>
+        </ol>
+        <p className="small muted">Tip: a photo taken from the sidewalk, straight on, makes lining up easiest.</p>
+      </section>
     </main>
   );
 }

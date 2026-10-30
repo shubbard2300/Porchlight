@@ -8,7 +8,7 @@ import { ArScene } from '../ArScene';
 import styles from '../ar.module.css';
 
 /** Tap a prop to drop it on the porch, drag it into place, resize it, then save for visitors. */
-export function ArEditor({ houseId, photo, palette, initial, initialGreeting }: { houseId: string; photo: string | null; palette: Decor[]; initial: Placement[]; initialGreeting: string }) {
+export function ArEditor({ houseId, photo, palette, initial, initialGreeting, greetingHint }: { houseId: string; photo: string | null; palette: Decor[]; initial: Placement[]; initialGreeting: string; greetingHint: string }) {
   const [items, setItems] = useState<Placement[]>(initial);
   const [greeting, setGreeting] = useState(initialGreeting);
   const [selected, setSelected] = useState<number | null>(null);
@@ -85,7 +85,7 @@ export function ArEditor({ houseId, photo, palette, initial, initialGreeting }: 
               <button type="button" className="btn sm ghost" onClick={remove}>Remove</button>
             </>
           ) : (
-            <span className="small muted">{items.length ? 'Tap a prop to move, resize or remove it.' : 'Pick a prop on the right to drop it on your porch.'}</span>
+            <span className="small muted">{items.length ? 'Tap a prop to move, resize or remove it.' : 'Pick a prop from the set to drop it on your porch.'}</span>
           )}
         </div>
         {!photo && <p className="small muted">Add a house photo from your profile so you can place props right where they belong. Visitors line the photo up with your real house.</p>}
@@ -112,7 +112,7 @@ export function ArEditor({ houseId, photo, palette, initial, initialGreeting }: 
           <h2 id="greet" style={{ fontSize: 20 }}>Floating greeting</h2>
           <label className="stack" style={{ gap: 6 }}>
             <span className="small muted">Optional. Shows over your house, like a sign in the sky.</span>
-            <input value={greeting} maxLength={GREETING_MAX} placeholder="Happy haunting!" onChange={(e) => { setGreeting(e.target.value); setDirty(true); setStatus(null); }} />
+            <input value={greeting} maxLength={GREETING_MAX} placeholder={greetingHint} onChange={(e) => { setGreeting(e.target.value); setDirty(true); setStatus(null); }} />
           </label>
         </section>
 

@@ -19,6 +19,7 @@ import { PotPanel } from './PotPanel';
 import { AlertSettings } from './AlertSettings';
 import { vapidPublicKey } from '@/lib/push';
 import { stripeConfigured } from '@/lib/stripe';
+import { Tip } from '@/components/Tip';
 
 export const metadata = { title: 'My profile · Porchlight' };
 
@@ -131,7 +132,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             </div>
           )}
 
-          {active.map(({ h, s }) => (
+          {active.map(({ h, s }, hi) => (
             <div key={h.id} id={`submission-${h.id}`} className="submission stack" style={{ scrollMarginTop: 16 }}>
               <div className="row spread">
                 <div><b style={{ fontSize: 18 }}>{h.name}</b><div className="small muted">{s!.name} {s!.year} · {phaseLabel(s!, today).tag}</div>{h.reviewNote && <div className="small muted">Note: {h.reviewNote}</div>}</div>
@@ -144,6 +145,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
               </div>
 
+              {hi === 0 && <Tip id="ar-decor" news>New: make your display pop with AR decorations. Add virtual {s!.name} props that visitors see through their phone camera.</Tip>}
               <div className="row">
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}`} className="btn sm ghost">View house page</Link>}
                 <Link href={`/house/${h.id}/sign`} className="btn sm ghost">Print porch QR sign</Link>
