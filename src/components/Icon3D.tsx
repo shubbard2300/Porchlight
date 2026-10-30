@@ -2,7 +2,8 @@
 export type Icon3DName =
   | 'bulb' | 'camera' | 'chat' | 'check' | 'clipboard' | 'envelope' | 'fire' | 'fireworks' | 'gear' | 'ghost' | 'gift'
   | 'heart' | 'house' | 'inbox' | 'key' | 'map' | 'medal' | 'money' | 'moon' | 'owl' | 'party' | 'people' | 'person'
-  | 'pin' | 'pumpkin' | 'shield' | 'snowman' | 'sparkles' | 'star' | 'tree' | 'trophy';
+  | 'pin' | 'pumpkin' | 'shield' | 'snowman' | 'sparkles' | 'star' | 'tree' | 'trophy'
+  | 'bat' | 'bell' | 'candle' | 'candy' | 'crystal' | 'deer' | 'firecracker' | 'ribbon' | 'skull' | 'snowflake' | 'sparkler' | 'spider' | 'web';
 
 export function Icon3D({ name, size = 28, label, className }: { name: Icon3DName; size?: number; label?: string; className?: string }) {
   return (

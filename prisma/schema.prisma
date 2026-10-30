@@ -160,6 +160,9 @@ model House {
   checkIns          CheckIn[]
   potPayments       PotPayment[]
   arCatches         ArCatch[]
+  arDecorations     ArDecoration[]
+  /// Short line the host floats over the house in the AR view, e.g. "Happy haunting!".
+  arGreeting        String?
   porchTrigger      PorchTrigger?
   /// When the host was last pinged about a like, so a busy night sends one alert per half hour, not one per vote.
   lastLikeAlertAt   DateTime?
@@ -425,6 +428,24 @@ model ArCatch {
 
   @@unique([userId, houseId])
   @@index([userId, season])
+}
+
+/// A virtual prop a host placed on their house for visitors to see through the camera.
+/// x and y are fractions of a 3:4 portrait frame over the house photo (see src/lib/arDecor.ts).
+model ArDecoration {
+  id        String   @id @default(cuid())
+  houseId   String
+  house     House    @relation(fields: [houseId], references: [id], onDelete: Cascade)
+  /// Prop key from src/lib/arDecor.ts.
+  kind      String
+  x         Float
+  y         Float
+  scale     Float    @default(1)
+  /// Back-to-front drawing order.
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@index([houseId, position])
 }
 
 /// A host's smart-light hook: Porchlight POSTs to this URL (IFTTT, Home Assistant, Zapier...) when
