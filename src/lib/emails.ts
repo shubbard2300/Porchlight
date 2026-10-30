@@ -60,11 +60,11 @@ export function submissionReceivedEmail(o: { name: string; house: string; season
     subject: `We got ${o.house}`,
     content: {
       preheader: 'Your house is in the review queue.',
-      eyebrow: 'Entry received',
+      eyebrow: 'Submission received',
       heading: `${o.house} is in the queue`,
       greeting: `Hi ${o.name},`,
       body: [`Thanks for posting ${o.house} for ${o.season}. We review new houses quickly, and you'll get an email once it's live on the map.`],
-      button: { label: 'See my entries', url: url('/profile') },
+      button: { label: 'See my submissions', url: url('/profile') },
     },
   };
 }
@@ -93,7 +93,7 @@ export function rejectedEmail(o: { name: string; house: string; note: string | n
     subject: `About your ${o.house} submission`,
     content: {
       preheader: `We couldn't publish ${o.house} yet.`,
-      eyebrow: 'Entry update',
+      eyebrow: 'Submission update',
       accent: 'lilac',
       heading: 'Not quite yet',
       greeting: `Hi ${o.name},`,
@@ -110,7 +110,7 @@ export function removedEmail(o: { name: string; house: string; note: string | nu
     subject: `${o.house} was removed from Porchlight`,
     content: {
       preheader: `${o.house} is no longer on the map.`,
-      eyebrow: 'Entry removed',
+      eyebrow: 'Submission removed',
       accent: 'lilac',
       heading: `${o.house} was removed`,
       greeting: `Hi ${o.name},`,
@@ -193,10 +193,10 @@ export function newPhotoAdminEmail(o: { username: string; email: string; house: 
     content: {
       audience: 'admin',
       preheader: `${o.username} added a photo to ${o.house}.`,
-      eyebrow: o.live ? 'Live entry' : 'Needs review',
+      eyebrow: o.live ? 'Live submission' : 'Needs review',
       heading: `New photo on ${o.house}`,
       body: [`${o.username} <${o.email}> added a photo to ${o.house}${o.live ? ', which is live on the site now' : ''}.`],
-      links: { label: 'All photos on this entry', urls: o.photoUrls },
+      links: { label: 'All photos on this submission', urls: o.photoUrls },
       button: { label: o.live ? 'Review it (take it down if needed)' : 'Approve or reject it', url: o.reviewUrl },
     },
   };

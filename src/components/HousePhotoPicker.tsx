@@ -15,7 +15,7 @@ function locationLabel(p: HousePhotoView) {
 
 /**
  * Take or choose photos of a house display. Reads GPS from the photo when it has it, and uses the
- * phone's location for photos taken right now. With houseId, photos save straight to that entry;
+ * phone's location for photos taken right now. With houseId, photos save straight to that submission;
  * without it (the submit form) they are held and sent with the form as `inputName` values.
  */
 export function HousePhotoPicker({ houseId, initial = [], inputName }: { houseId?: string; initial?: HousePhotoView[]; inputName?: string }) {

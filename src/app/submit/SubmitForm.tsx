@@ -8,7 +8,7 @@ import { Field } from '@/components/Field';
 import { HousePhotoPicker } from '@/components/HousePhotoPicker';
 import { SubmitButton } from '@/components/SubmitButton';
 import { useFormAction } from '@/components/useFormAction';
-import { CONTRIBUTIONS, HOUSE_TAGS } from '@/lib/houseOptions';
+import { CONTRIBUTIONS, HOUSE_TAGS, LIT_FROM, LIT_UNTIL } from '@/lib/houseOptions';
 import { bracketsFor } from '@/lib/brackets';
 import { Icon3D } from '@/components/Icon3D';
 import { CONTEST_STATE, rulesAgreementText } from '@/lib/legal';
@@ -24,7 +24,7 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
   return (
     <form action={action} className="stack" noValidate>
       {e.form && <p className="err" role="alert">{e.form}</p>}
-      <Field label="Which holiday?" error={e.season} hint="You can post for the next holiday early. Finished contests are closed to new entries.">
+      <Field label="Which holiday?" error={e.season} hint="You can post for the next holiday early. Finished holidays are closed to new submissions.">
         <div className="chips">
           {seasons.map((s) => (
             <span key={s.key}>
@@ -59,18 +59,18 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
         </div>
       </Field>
       <div className="two">
-        <Field label="Lights on" htmlFor="litFrom"><select id="litFrom" name="litFrom" defaultValue={value('litFrom', '6 pm')}><option>4:30 pm</option><option>5 pm</option><option>6 pm</option><option>7 pm</option></select></Field>
-        <Field label="Lights off" htmlFor="litUntil"><select id="litUntil" name="litUntil" defaultValue={value('litUntil', '10 pm')}><option>9 pm</option><option>10 pm</option><option>11 pm</option><option>Midnight</option></select></Field>
+        <Field label="Lights on" htmlFor="litFrom"><select id="litFrom" name="litFrom" defaultValue={value('litFrom', '6 pm')}>{LIT_FROM.map((t) => <option key={t}>{t}</option>)}</select></Field>
+        <Field label="Lights off" htmlFor="litUntil"><select id="litUntil" name="litUntil" defaultValue={value('litUntil', '10 pm')}>{LIT_UNTIL.map((t) => <option key={t}>{t}</option>)}</select></Field>
       </div>
       <Field label="Tell visitors what to look for" htmlFor="description" error={e.description}>
         <textarea id="description" name="description" maxLength={600} defaultValue={value('description', prefill.description)} placeholder="The skeleton choir sings every 20 minutes. Park on 18th and walk down." />
       </Field>
-      <Field label="Add to the pot (optional)" error={e.contribution} hint={<>Free entries compete for the same prize. This records your pledge; you can pay it by card once your house is approved. <Link href="/rules">Official rules</Link></>}>
+      <Field label="Add to the pot (optional)" error={e.contribution} hint={<>Free submissions compete for the same prize. This records your pledge; you can pay it by card once your house is approved. <Link href="/rules">Official rules</Link></>}>
         <div className="chips">
           {CONTRIBUTIONS.map((a) => (
             <span key={a}>
               <input type="radio" id={`amt-${a}`} name="contribution" value={a} checked={amount === a} onChange={() => setAmount(a)} />
-              <label htmlFor={`amt-${a}`}>{a ? `$${a}` : 'Free entry'}</label>
+              <label htmlFor={`amt-${a}`}>{a ? `$${a}` : 'Free'}</label>
             </span>
           ))}
         </div>

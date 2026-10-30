@@ -18,6 +18,17 @@ export function XpProgress({ xp }: { xp: number }) {
   );
 }
 
+/** One line on where someone stands: "You're Level 3, Porchlight, with 400 XP. 400 more reaches Beacon." */
+export function XpSummary({ xp }: { xp: number }) {
+  const lvl = level(xp);
+  return (
+    <span className="small muted">
+      You&apos;re Level {lvl.number}, {lvl.name}, with {xp} XP.{' '}
+      {lvl.next ? <><b className="xp-next">{lvl.next[0] - xp} more reaches {lvl.next[1]}.</b> Open to see every way to earn.</> : 'That’s the top level. Nice work!'}
+    </span>
+  );
+}
+
 /**
  * How XP works: the ways to earn it, the pitstop boost, the levels, and the promise that it never touches votes.
  * Shown in the XP popup (any link with data-modal="xp") and in the About XP section of the profile.

@@ -52,7 +52,7 @@ export async function uploadHousePhoto(fd: FormData): Promise<Result> {
 
   if (houseId) {
     const house = await db.house.findFirst({ where: { id: houseId, ownerId: user.id }, select: { id: true } });
-    if (!house) return { error: 'That entry was not found.' };
+    if (!house) return { error: 'That submission was not found.' };
   } else {
     await sweepAbandoned(user.id);
   }

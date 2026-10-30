@@ -40,7 +40,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
       </div>
 
       {houses.length === 0 ? (
-        <div className="empty"><Icon3D name={theme.icon} size={72} /><h2>No houses yet</h2><p className="muted">{phase(season, today) === 'soon' ? 'Entries are coming in. Check back when voting opens.' : 'Be the first on the board.'}</p></div>
+        <div className="empty"><Icon3D name={theme.icon} size={72} /><h2>No houses yet</h2><p className="muted">{phase(season, today) === 'soon' ? 'Submissions are coming in. Check back when voting opens.' : 'Be the first on the board.'}</p></div>
       ) : (
         <>
           <section className="stack" aria-labelledby="overall">
@@ -60,7 +60,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
                       <div><h3>{b.label}</h3><p>{b.blurb}</p></div>
                     </div>
                     {inBracket.length === 0
-                      ? <p className={styles.empty}>No entries yet. <Link href="/submit">Claim this bracket</Link></p>
+                      ? <p className={styles.empty}>No submissions yet. <Link href="/submit">Claim this bracket</Link></p>
                       : <ol className={styles.list}>{inBracket.slice(0, PODIUM).map((h, i) => <Entry key={h.id} h={h} place={i + 1} />)}</ol>}
                     {inBracket.length > PODIUM && <Link href={`/?season=${season.key}&bracket=${b.key}#map`} className="small">See all {inBracket.length} on the map</Link>}
                   </div>

@@ -356,7 +356,7 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
         {houses.length === 0 && !failed && (
           <div className={styles.emptyNote}>Be the first pin on the map. Approved houses show up here for everyone.</div>
         )}
-        {failed && <div className={styles.emptyNote}>The map couldn&rsquo;t load right now. The house list below has every entry.</div>}
+        {failed && <div className={styles.emptyNote}>The map couldn&rsquo;t load right now. The house list below has every house.</div>}
       </div>
       {houses.length > 0 && (
         <p className={styles.legend}>

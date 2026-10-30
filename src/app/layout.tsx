@@ -79,7 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         <b>XP: your explorer points</b>
                         Earn them by checking in at porches, filling in scorecards and scanning pitstops. They level you up but never change votes.
                         {boosted && <em>2× pitstop boost is on: everything you earn counts double.</em>}
-                        <span className="xp-tip-more">Click for how to earn more</span>
+                        <span className="xp-tip-more">Learn more</span>
                       </span>
                     </a>
                   </span>

@@ -3,7 +3,7 @@ import { getBracket } from '@/lib/brackets';
 import type { HouseStanding } from '@/lib/seasonStandings';
 import { Icon3D, type Icon3DName } from './Icon3D';
 
-/** A contest entry in a grid: cover photo, rank, verified likes and the basics. */
+/** A submitted house in a grid: cover photo, rank, verified likes and the basics. */
 export function HouseCard({ house: h, rank, icon }: { house: HouseStanding; rank: number; icon: Icon3DName }) {
   return (
     <article className={`house-card reveal${rank === 1 ? ' leader' : ''}`}>

@@ -71,7 +71,7 @@ export default async function Payments({ searchParams }: { searchParams: Promise
                   <td className="small">{(r.paidAt ?? r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
                   <td>
                     {r.source === 'SPONSOR' ? <><b>{r.sponsorName}</b><div className="small muted">Sponsor</div></> : (
-                      <>{r.house ? <Link href={`/house/${r.house.id}`}><b>{r.house.name}</b></Link> : <b>Deleted entry</b>}<div className="small muted">{r.user ? `@${r.user.username} · ${r.user.email}` : 'Deleted account'}</div></>
+                      <>{r.house ? <Link href={`/house/${r.house.id}`}><b>{r.house.name}</b></Link> : <b>Deleted submission</b>}<div className="small muted">{r.user ? `@${r.user.username} · ${r.user.email}` : 'Deleted account'}</div></>
                     )}
                   </td>
                   <td className="num">{dollars(r.amountCents)}</td>

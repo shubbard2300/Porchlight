@@ -6,7 +6,7 @@ import { canPay, dollars, POT_AMOUNTS, suggestedAmount } from '@/lib/pot';
 import type { Phase } from '@/lib/seasons';
 import { payPledge } from '../actions/pot';
 
-/** A host entry's prize pot status: paid, ready to pay, or why not yet. */
+/** A host submission's prize pot status: paid, ready to pay, or why not yet. */
 export function PotPanel({ houseId, status, phase, pledgeCents, paid, online }: {
   houseId: string;
   status: string;
@@ -39,7 +39,7 @@ export function PotPanel({ houseId, status, phase, pledgeCents, paid, online }: 
       <div className="stack" style={{ gap: 10, flex: 1, minWidth: 0 }}>
         <div>
           <b>{pledgeCents > 0 ? `Pay your ${dollars(pledgeCents)} pledge` : 'Add to the prize pot'}</b>
-          <div className="small muted">Optional. Free entries compete for the same prize, and paying never changes your ranking. <Link href="/rules">Official rules</Link></div>
+          <div className="small muted">Optional. Free submissions compete for the same prize, and paying never changes your ranking. <Link href="/rules">Official rules</Link></div>
         </div>
         <label className="check small" htmlFor={`agree-${houseId}`}><input type="checkbox" id={`agree-${houseId}`} name="agreeRules" required /><span>{rulesAgreementText()}</span></label>
         <div className="row" style={{ gap: 10 }}>
