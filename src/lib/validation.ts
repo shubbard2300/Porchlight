@@ -81,6 +81,7 @@ export const houseSchema = z.object({
   description: z.string().trim().min(10, 'Tell visitors what to look for (at least 10 characters).').max(600),
   contribution: z.coerce.number().refine((n) => (CONTRIBUTIONS as readonly number[]).includes(n), 'Pick a contribution amount.'),
   permission: checkbox.refine((v) => v, 'Please confirm you live here or have permission.'),
+  agreeRules: checkbox.refine((v) => v, 'Please confirm you’re eligible and agree to the official rules.'),
 });
 
 export const MAX_HOUSE_PHOTOS = 6;

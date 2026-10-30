@@ -11,6 +11,7 @@ import { useFormAction } from '@/components/useFormAction';
 import { CONTRIBUTIONS, HOUSE_TAGS } from '@/lib/houseOptions';
 import { bracketsFor } from '@/lib/brackets';
 import { Icon3D } from '@/components/Icon3D';
+import { CONTEST_STATE, rulesAgreementText } from '@/lib/legal';
 
 type Option = { key: string; holiday: string; label: string; note: string };
 export type Prefill = { name: string; address: string; neighborhood: string; description: string };
@@ -47,7 +48,7 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
         <HousePhotoPicker inputName="photoIds" initial={photos} />
       </Field>
       <Field label="Name your display" htmlFor="name" error={e.name}><input id="name" name="name" type="text" maxLength={60} defaultValue={value('name', prefill.name)} placeholder="The Hollow at Alder" /></Field>
-      <Field label="Street address" htmlFor="address" error={e.address}><input id="address" name="address" type="text" maxLength={120} autoComplete="street-address" defaultValue={value('address', prefill.address)} placeholder="1820 SE Alder Ct, Portland, OR" /></Field>
+      <Field label="Street address" htmlFor="address" error={e.address} hint={CONTEST_STATE ? `Contests are open to homes in ${CONTEST_STATE.name} right now.` : undefined}><input id="address" name="address" type="text" maxLength={120} autoComplete="street-address" defaultValue={value('address', prefill.address)} placeholder="1820 SE Alder Ct, Portland, OR" /></Field>
       <Field label="Neighborhood (optional)" htmlFor="neighborhood" error={e.neighborhood}><input id="neighborhood" name="neighborhood" type="text" maxLength={60} defaultValue={value('neighborhood', prefill.neighborhood)} placeholder="Sunnyside" /></Field>
       <label className="check" htmlFor="showExactAddress"><input type="checkbox" id="showExactAddress" name="showExactAddress" defaultChecked={checked('showExactAddress', true)} /><span>Show my exact address. Turn this off to show only your neighborhood until visitors check in.</span></label>
       <Field label="What makes it special?" error={e.tags}>
@@ -77,6 +78,10 @@ export function SubmitForm({ seasons, defaultSeason, prefill, photos }: { season
       <div className="field">
         <label className="check" htmlFor="permission"><input type="checkbox" id="permission" name="permission" defaultChecked={checked('permission')} /><span>I live here or have the owner&apos;s permission, and the display is visible from the sidewalk.</span></label>
         {e.permission && <span className="err" role="alert">{e.permission}</span>}
+      </div>
+      <div className="field">
+        <label className="check" htmlFor="agreeRules"><input type="checkbox" id="agreeRules" name="agreeRules" defaultChecked={checked('agreeRules')} /><span>{rulesAgreementText()} <Link href="/rules" target="_blank">Official rules</Link> · <Link href="/privacy" target="_blank">Privacy</Link></span></label>
+        {e.agreeRules && <span className="err" role="alert">{e.agreeRules}</span>}
       </div>
       <SubmitButton pendingText="Posting…">Light it up</SubmitButton>
     </form>

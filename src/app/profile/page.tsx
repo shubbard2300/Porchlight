@@ -25,6 +25,7 @@ const PAY_NOTES: Record<string, string> = {
   closed: 'That pot is closed: payments open once a house is approved and close when voting ends.',
   off: 'Online payments aren’t switched on yet.',
   amount: 'Pick an amount to add to the pot.',
+  agree: 'Please tick the box to confirm you’re eligible and agree to the official rules before paying.',
   missing: 'We couldn’t find that entry.',
 };
 
