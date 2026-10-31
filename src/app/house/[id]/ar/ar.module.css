@@ -50,3 +50,10 @@ span.prop { pointer-events: none; }
 .snapWrap { display: grid; gap: 12px; justify-items: center; }
 .snap { width: 100%; max-width: 420px; border-radius: var(--r-lg); border: var(--edge); box-shadow: var(--pop); }
 .preview { max-width: 360px; width: 100%; margin: 0 auto; box-shadow: var(--pop); border: var(--edge); }
+
+/* 3D props */
+.gl, .glLive { position: absolute; inset: 0; pointer-events: none; }
+.gl canvas, .glLive canvas { display: block; width: 100%; height: 100%; }
+.glLive { z-index: 1; }
+.xrOverlay { position: fixed; inset: 0; z-index: 70; pointer-events: none; color: #fff; }
+.xrOverlay > * { pointer-events: auto; }
