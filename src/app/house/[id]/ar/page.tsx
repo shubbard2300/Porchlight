@@ -11,9 +11,10 @@ import { ArViewer } from './ArViewer';
 export const metadata: Metadata = { title: 'AR decorations · Porchlight' };
 
 /** Anyone can open a house's AR view; it's meant for visitors standing out front with their phone. */
-export default async function ArViewPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ArViewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ checkin?: string }> }) {
   const { getSeason } = await seasonCalendar();
   const { id } = await params;
+  const { checkin } = await searchParams;
   const [house, user] = await Promise.all([
     db.house.findUnique({
       where: { id },
@@ -33,6 +34,11 @@ export default async function ArViewPage({ params }: { params: Promise<{ id: str
         <Link href={`/house/${id}`} className="small">← {house.name}</Link>
         {own && <Link href={`/house/${id}/ar/edit`} className="btn sm ghost">Edit decorations</Link>}
       </div>
+      {checkin === 'nearby' && (
+        <p className="notice" role="status" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Icon3D name="check" size={24} />You&rsquo;re checked in at {house.name}. Open your camera to see the decorations, then score the house when you&rsquo;re done.
+        </p>
+      )}
       {empty ? (
         <section className="panel stack" style={{ justifyItems: 'center', textAlign: 'center', padding: '32px 24px', gap: 14 }}>
           <Icon3D name="sparkles" size={96} />

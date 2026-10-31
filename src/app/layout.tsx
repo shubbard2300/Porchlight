@@ -10,6 +10,7 @@ import { BottomTabs } from '@/components/BottomTabs';
 import { LearningPath, XpToaster } from '@/components/LearningPath';
 import { Modals } from '@/components/Modals';
 import { ServiceWorker } from '@/components/ServiceWorker';
+import { NearbyHouse } from '@/components/NearbyHouse';
 import { SiteFooter } from '@/components/SiteFooter';
 import { SiteNav } from '@/components/SiteNav';
 import { contestToday } from '@/lib/seasons';
@@ -107,6 +108,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <BottomTabs signedIn={Boolean(user)} />
         {tour && <LearningPath key={tour} tour={tour} name={user.displayName} />}
         {user && <XpToaster />}
+        {user && <NearbyHouse />}
         <Modals signedIn={Boolean(user)} contact={{ name: user ? (user.displayName ?? user.username) : undefined, email: user?.email }} xp={user ? { xp: user.xp, boostUntil: user.xpBoostUntil?.toISOString() ?? null } : null} />
       </body>
     </html>
