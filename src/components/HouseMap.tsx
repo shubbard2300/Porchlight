@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import type { FilterSpecification, GeoJSONSource, Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
+import type { FilterSpecification, GeoJSONSource, LngLatLike, Map as MapLibreMap, MapGeoJSONFeature } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Icon3DName } from './Icon3D';
 import { CROWD_LEVELS, crowdLevel, crowdLine } from '@/lib/crowd';
@@ -63,6 +63,10 @@ const PULSE_MS = 2600;
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/fiord';
 /** Continental US, for a season with no pins yet. */
 const EMPTY_VIEW = { center: [-98.6, 39.5] as [number, number], zoom: 3.2 };
+/** Phones get the house card as a sheet along the bottom of the map instead of a popup that can run off the edge. */
+const PHONE_QUERY = '(max-width: 760px)';
+/** The map's title badge covers this much of the top; the pin is placed below it. */
+const SHEET_TOP_CLEAR = 64;
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -83,8 +87,10 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       <span class="${styles.popMeta}">${isLitNow(h.litFrom, h.litUntil) ? `<b class="${styles.popOn}">Lights on now</b> · until ${esc(h.litUntil)}` : `Lights off now · on ${esc(h.lit)}`}</span>
       <span class="${styles.popCrowd}"><i style="background:${CROWD_LEVELS[crowdLevel(h.crowd)].color}"></i>${esc(crowdLine(h.crowd))}</span>
       <div class="${styles.popFoot}"><span class="${styles.popLikes}"><img src="/icons/3d/heart.webp" alt="" width="16" height="16" />${h.likes} verified ${h.likes === 1 ? 'like' : 'likes'}</span>${directions}</div>
-      <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
-      ${h.edit ? `<a class="${styles.popEdit}" href="${esc(h.edit.href)}"><img src="/icons/3d/house.webp" alt="" width="18" height="18" />${esc(h.edit.label)}</a>` : ''}
+      <div class="${styles.popActions}">
+        <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
+        ${h.edit ? `<a class="${styles.popEdit}" href="${esc(h.edit.href)}"><img src="/icons/3d/house.webp" alt="" width="18" height="18" />${esc(h.edit.label)}</a>` : ''}
+      </div>
     </div>
   </div>`;
 }
@@ -118,6 +124,11 @@ function blockHtml(b: MapBlock) {
 export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel, notice = null, seasonKey }: { houses: MapHouse[]; pitstops?: MapPitstop[]; blocks?: MapBlock[]; icon: Icon3DName; seasonLabel: string; notice?: MapNotice | null; seasonKey: string }) {
   const el = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const frameEl = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<MapLibreMap | undefined>(undefined);
+  const sheetEl = useRef<HTMLDivElement>(null);
+  const sheetAt = useRef<LngLatLike | null>(null);
+  const [sheet, setSheet] = useState<string | null>(null);
 
   useEffect(() => {
     if (!el.current) return;
@@ -152,10 +163,11 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
         dragRotate: false,
         pitchWithRotate: false,
       });
+      mapRef.current = map;
       map.touchZoomRotate.disableRotation();
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
       map.addControl(new maplibre.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false }), 'top-right');
-      map.addControl(new maplibre.FullscreenControl(), 'top-right');
+      map.addControl(new maplibre.FullscreenControl({ container: frameEl.current ?? undefined }), 'top-right');
 
       const framed = houses.length > 0 ? houses : blocks.length > 0 ? blocks : pitstops;
       if (framed.length > 0) {
@@ -314,26 +326,37 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
         // Hovering a pin shows just its title; clicking opens the full card.
         const tip = new maplibre.Popup({ offset: 22, closeButton: false, closeOnClick: false, className: styles.tipWrap });
         let tipId = '';
+        const phone = window.matchMedia(PHONE_QUERY);
+        // Desktop keeps the popup beside the pin. Phones get the bottom sheet, and the pin slides into view above it.
+        const show = (html: string, at: LngLatLike) => {
+          if (!map) return;
+          tip.remove();
+          if (!phone.matches) { popup.setLngLat(at).setHTML(html).addTo(map); return; }
+          popup.remove();
+          sheetAt.current = at;
+          setSheet(html);
+        };
         const houseOf = (f?: MapGeoJSONFeature) => (f ? byId.get(String(f.properties.id)) : undefined);
         const openHouse = (f: MapGeoJSONFeature) => {
           const h = houseOf(f);
-          if (!h || !map) return;
-          tip.remove();
-          popup.setLngLat([h.lng, h.lat]).setHTML(popupHtml(h, icon)).addTo(map);
+          if (h) show(popupHtml(h, icon), [h.lng, h.lat]);
         };
         const pitPopup = (id: string) => {
           const p = pitById.get(id);
-          if (!p || !map) return;
-          tip.remove();
-          popup.setLngLat([p.lng, p.lat]).setHTML(pitstopHtml(p)).addTo(map);
+          if (p) show(pitstopHtml(p), [p.lng, p.lat]);
         };
+        // Tapping empty map closes the sheet, the way it closes a popup.
+        map.on('click', (e) => {
+          const layers = ['pins', 'pin-icons', 'pitstops', 'pitstop-icons', 'clusters', 'block-fill'].filter((l) => map!.getLayer(l));
+          if (!map!.queryRenderedFeatures(e.point, { layers }).length) setSheet(null);
+        });
         if (blocks.length > 0) {
           map.on('click', 'block-fill', (e) => {
             // Pins and clusters drawn on top win the click.
             const above = ['pins', 'clusters', 'pitstops'].filter((l) => map!.getLayer(l));
             if (map!.queryRenderedFeatures(e.point, { layers: above }).length) return;
             const b = blockById.get(String(e.features?.[0]?.properties.id));
-            if (b) { tip.remove(); popup.setLngLat(e.lngLat).setHTML(blockHtml(b)).addTo(map!); }
+            if (b) show(blockHtml(b), e.lngLat);
           });
         }
         for (const layer of ['pitstops', 'pitstop-icons']) {
@@ -384,12 +407,33 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
       clearInterval(poll);
       cancelAnimationFrame(pulse);
       map?.remove();
+      mapRef.current = undefined;
+      setSheet(null);
     };
   }, [houses, pitstops, blocks, icon, seasonKey]);
 
+  // Once the sheet has its height, center the pin in the strip of map between the title badge and the sheet. Escape closes it.
+  useEffect(() => {
+    const box = sheetEl.current;
+    if (!sheet || !box) return;
+    box.querySelector(`.${styles.sheetBody}`)?.scrollTo({ top: 0 });
+    if (sheetAt.current) mapRef.current?.easeTo({ center: sheetAt.current, offset: [0, (SHEET_TOP_CLEAR - box.offsetHeight - 10) / 2], duration: 450 });
+    // If the bottom of the map is behind the phone tab bar, scroll the page up so the whole sheet shows.
+    const frame = frameEl.current?.getBoundingClientRect();
+    if (frame && !document.fullscreenElement) {
+      const tabs = document.querySelector('.bottom-tabs')?.getBoundingClientRect().height ?? 0;
+      const hidden = frame.bottom - (window.innerHeight - tabs - 8);
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (hidden > 0) window.scrollBy({ top: Math.min(hidden, frame.top - 72), behavior: smooth ? 'smooth' : 'auto' });
+    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSheet(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sheet]);
+
   return (
     <>
-      <div className={styles.frame}>
+      <div ref={frameEl} className={styles.frame}>
         <div ref={el} className={styles.map} role="region" aria-label={`Map of ${seasonLabel} houses`} />
         <div className={styles.badge}>
           <img src={`/icons/3d/${icon}.webp`} alt="" width={28} height={28} />
@@ -402,6 +446,12 @@ export function HouseMap({ houses, pitstops = [], blocks = [], icon, seasonLabel
           <div className={styles.emptyNote}>Be the first pin on the map. Approved houses show up here for everyone.</div>
         )}
         {failed && <div className={styles.emptyNote}>The map couldn&rsquo;t load right now. The house list below has every house.</div>}
+        {sheet && (
+          <div ref={sheetEl} className={styles.sheet} role="dialog" aria-label="Details">
+            <button type="button" className={styles.sheetClose} aria-label="Close" onClick={() => setSheet(null)}>&times;</button>
+            <div className={styles.sheetBody} dangerouslySetInnerHTML={{ __html: sheet }} />
+          </div>
+        )}
       </div>
       {houses.length > 0 && (
         <p className={styles.legend}>

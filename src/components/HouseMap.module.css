@@ -64,6 +64,8 @@
   border-radius: 12px; background: var(--amber); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
 }
 
+.popActions { display: grid; }
+
 /* Only the house's host (and staff) see this. */
 .popEdit {
   margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 800; text-decoration: none;
@@ -81,6 +83,43 @@
 @media (max-width: 760px) {
   .frame { height: clamp(360px, 70vh, 560px); border-radius: 22px; }
 }
+/* Fullscreen takes the whole frame, so the phone sheet comes along. */
+.frame:fullscreen { border-radius: 0; border: 0; box-shadow: none; }
+
+/* Phone house card: a sheet along the bottom of the map, full width, scrolling when a card runs long. */
+.sheet {
+  position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3;
+  display: flex; flex-direction: column; max-height: calc(100% - 128px);
+  background: var(--paper); color: var(--ink); font-family: var(--font-body);
+  border: var(--edge); border-radius: 20px; box-shadow: 4px 4px 0 var(--ink); overflow: hidden;
+  animation: sheetUp 0.22s ease-out;
+}
+.sheetBody { overflow-y: auto; overscroll-behavior: contain; min-height: 0; -webkit-overflow-scrolling: touch; }
+.sheet .pop { width: auto; }
+.sheet .popArt { height: 96px; }
+.sheet .popArt img.popIcon { width: 60px; height: 60px; }
+.sheet .popBody { padding: 12px 12px 14px; }
+/* Check in (and Edit, for hosts) sit side by side, pinned to the bottom of the sheet while the details scroll. */
+.sheet .popActions {
+  position: sticky; bottom: 0; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0 10px;
+  margin: 0 -12px -14px; padding: 0 12px 14px; background: linear-gradient(transparent, var(--paper) 10px);
+}
+.sheet .popActions > a { white-space: nowrap; }
+/* The smallest phones: a shorter picture and slimmer buttons, so the pair still fits on one row. */
+@media (max-width: 360px) {
+  .sheet .popArt { height: 72px; }
+  .sheet .popArt img.popIcon { width: 48px; height: 48px; }
+  .sheet .popActions { gap: 0 8px; }
+  .sheet .popActions > a { font-size: 13px; padding-inline: 6px; }
+  .sheet .popEdit img { display: none; }
+}
+.sheetClose {
+  position: absolute; top: 8px; right: 8px; z-index: 1; width: 34px; height: 34px; border-radius: 999px;
+  display: grid; place-items: center; padding: 0; cursor: pointer;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); font-size: 22px; line-height: 1;
+}
+@keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
 
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 12px 4px 0; font-size: 13px; font-weight: 700; color: var(--text-2); }
 .legend b { color: var(--ink); }
