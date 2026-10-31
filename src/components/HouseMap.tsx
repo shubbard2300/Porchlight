@@ -31,6 +31,8 @@ export type MapHouse = {
   crowd: number;
   /** Set only when the signed-in viewer may edit this house: its host, or staff. */
   edit?: { href: string; label: string };
+  /** The printable porch sign, for the same people who can edit. */
+  sign?: string;
 };
 
 /** A sponsor's pin. Shown under the houses so the decorations stay the main event. */
@@ -90,6 +92,7 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       <div class="${styles.popActions}">
         <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
         ${h.edit ? `<a class="${styles.popEdit}" href="${esc(h.edit.href)}"><img src="/icons/3d/house.webp" alt="" width="18" height="18" />${esc(h.edit.label)}</a>` : ''}
+        ${h.sign ? `<a class="${styles.popEdit} ${styles.popSign}" href="${esc(h.sign)}"><img src="/icons/3d/clipboard.webp" alt="" width="18" height="18" />Print QR sign</a>` : ''}
       </div>
     </div>
   </div>`;

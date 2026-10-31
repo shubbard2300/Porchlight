@@ -74,6 +74,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     litUntil: h.litUntil,
     crowd: crowd[h.id] ?? 0,
     edit: editFor(h),
+    sign: user && (h.ownerId === user.id || staff) ? `/house/${h.id}/sign` : undefined,
   }]);
   const pitstops: MapPitstop[] = (await db.merchant.findMany({
     where: { active: true, lat: { not: null }, lng: { not: null } },

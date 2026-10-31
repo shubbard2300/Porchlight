@@ -105,6 +105,9 @@
   margin: 0 -12px -14px; padding: 0 12px 14px; background: linear-gradient(transparent, var(--paper) 10px);
 }
 .sheet .popActions > a { white-space: nowrap; }
+/* A host's card has three buttons: Check in across the top, Edit and Print sign side by side under it. */
+.sheet .popActions:has(.popSign) { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+.sheet .popActions:has(.popSign) .popCta { grid-column: 1 / -1; }
 /* The smallest phones: a shorter picture and slimmer buttons, so the pair still fits on one row. */
 @media (max-width: 360px) {
   .sheet .popArt { height: 72px; }

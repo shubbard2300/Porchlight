@@ -20,6 +20,7 @@ import { AlertSettings } from './AlertSettings';
 import { vapidPublicKey } from '@/lib/push';
 import { stripeConfigured } from '@/lib/stripe';
 import { Tip } from '@/components/Tip';
+import { PorchSignCard } from '@/components/PorchSignCard';
 
 export const metadata = { title: 'My profile · Porchlight' };
 
@@ -145,10 +146,11 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
               </div>
 
+              <PorchSignCard houseId={h.id} approved={h.status === 'APPROVED'} />
+
               {hi === 0 && <Tip id="ar-decor" news>New: make your display pop with AR decorations. Add virtual {s!.name} props that visitors see through their phone camera.</Tip>}
               <div className="row">
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}`} className="btn sm ghost">View house page</Link>}
-                <Link href={`/house/${h.id}/sign`} className="btn sm ghost">Print porch QR sign</Link>
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}/stats`} className="btn sm ghost">My flex stats</Link>}
                 <Link href={`/house/${h.id}/ar/edit`} className="btn sm ghost">AR decorations</Link>
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}/lights`} className="btn sm ghost">Porch lights</Link>}
