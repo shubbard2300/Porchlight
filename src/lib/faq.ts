@@ -74,6 +74,10 @@ export const FAQ: FaqTopic[] = [
         'When a host added virtual props, their house page shows an AR decorations card. At the house, tap it and open your camera, line up the faint outline with the real house and tap “Pin it here”. The 3D props stay on the house as you look around, and you can take a photo with them to share.',
         'On phones that support it (most recent Android phones and iPhones), “Place in AR and walk around” anchors the props in real space so you can walk right up to them.',
       ] },
+      { id: 'youre-here', q: 'Why did Porchlight say “You’re here”?', a: [
+        'When you’re signed in, Porchlight is open and your browser already lets it use your location, we tap you as you reach the front of a contest house. “View house” checks you in and opens the house, straight into the AR camera when the host added decorations. “Dismiss” hides it for that house for a few hours.',
+        'It works while the app is open on your screen (phones don’t let websites track you in the background), only for houses that show their address, and your location is never saved. Turn it on or off for each device under Alerts on your [profile](/profile#alerts).',
+      ] },
       { id: 'route', q: 'How do I plan a night out?', a: [
         'Use [Plan a route](/route) to pick a handful of houses near you in a sensible order, then hand the route to Google or Apple Maps. Start a [Caravan](/caravan) to go with friends and earn a squad bonus.',
       ] },

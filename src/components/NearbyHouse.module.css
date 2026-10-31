@@ -1,0 +1,34 @@
+.card {
+  position: fixed; z-index: 55; left: 50%; bottom: 24px; width: min(440px, calc(100vw - 24px));
+  transform: translateX(-50%); display: grid; gap: 14px; padding: 16px 16px 16px;
+  background: var(--ink); color: var(--on-dark); border: 2.5px solid var(--amber); border-radius: var(--r-lg);
+  box-shadow: 0 0 0 5px rgba(255, 176, 0, .22), 0 18px 40px rgba(20, 18, 58, .45);
+  animation: nearby-in .45s cubic-bezier(.3, 1.5, .5, 1);
+}
+@media (max-width: 760px) {
+  .card { bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
+}
+.x {
+  position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%;
+  border: 0; background: transparent; color: var(--on-dark-2); font-size: 16px; cursor: pointer;
+}
+.x:hover, .x:focus-visible { background: var(--ink-line); color: var(--on-dark); }
+.top { display: grid; grid-template-columns: 72px 1fr; gap: 14px; align-items: center; padding-right: 26px; }
+.photo {
+  width: 72px; height: 72px; border-radius: var(--r-md); object-fit: cover; border: 2px solid var(--on-dark);
+  display: grid; place-items: center; background: var(--ink-line);
+}
+.text { display: grid; gap: 3px; min-width: 0; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--amber);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 0 rgba(255, 176, 0, .7); animation: nearby-pulse 1.6s infinite; }
+.title { font-size: 21px; line-height: 1.15; color: var(--on-dark); overflow-wrap: anywhere; }
+.body { font-size: 14px; line-height: 1.4; color: var(--on-dark-2); margin: 0; }
+.actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; }
+.actions :global(.btn) { box-shadow: 3px 3px 0 var(--on-dark); border-color: var(--on-dark); }
+.actions :global(.btn.ghost) { background: transparent; color: var(--on-dark); }
+@keyframes nearby-in { from { opacity: 0; transform: translate(-50%, 24px) scale(.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+@keyframes nearby-pulse { 70% { box-shadow: 0 0 0 9px rgba(255, 176, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 176, 0, 0); } }
+@media (prefers-reduced-motion: reduce) { .card, .dot { animation: none; } }

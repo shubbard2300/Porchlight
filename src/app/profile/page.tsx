@@ -17,6 +17,7 @@ import { OpenOnHash } from './OpenOnHash';
 import { ALERT_KINDS } from '@/lib/alerts';
 import { PotPanel } from './PotPanel';
 import { AlertSettings } from './AlertSettings';
+import { NearbySwitch } from './NearbySwitch';
 import { vapidPublicKey } from '@/lib/push';
 import { stripeConfigured } from '@/lib/stripe';
 import { Tip } from '@/components/Tip';
@@ -105,6 +106,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 radiusKm={user.alertRadiusKm}
                 devices={await db.pushSubscription.count({ where: { userId: user.id } })}
               />
+              <NearbySwitch />
             </div>
           </details>
           <details className="acc" id="about-xp">

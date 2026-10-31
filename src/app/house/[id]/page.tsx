@@ -27,6 +27,7 @@ import { isStaff } from '@/lib/roles';
 const FLASH: Record<string, string> = {
   'qr-first': 'Checked in with the porch sign and earned XP! Now fill in your scorecard.',
   qr: 'Checked in with the porch sign.',
+  nearby: 'You’re checked in. Fill in your scorecard and leave the host a cheer.',
   'bad-code': 'That QR code doesn’t match this house. Try scanning the sign again.',
   own: 'That’s your own porch sign. It works for visitors.',
   closed: 'Voting isn’t open for this contest right now.',
