@@ -1,0 +1,69 @@
+/*
+ * The porch sign is drawn on a US Letter sheet. Every size is in --u, one inch on paper.
+ * On screen the sheet shrinks to fit, so --u follows the width of .stage (a size container).
+ */
+@page { size: letter; margin: 0; }
+
+.stage { container-type: inline-size; display: grid; justify-items: center; }
+
+.sheet {
+  --u: min(0.86in, calc(100cqw / 8.5));
+  position: relative; width: calc(8.5 * var(--u)); height: calc(11 * var(--u)); padding: calc(0.3 * var(--u));
+  background: #fff; color: var(--ink); font-family: var(--font-body);
+  border: 2px solid var(--ink); border-radius: calc(0.12 * var(--u)); box-shadow: var(--pop);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+.frame {
+  height: 100%; display: grid; grid-template-rows: auto auto 1fr auto auto; justify-items: center; row-gap: calc(0.16 * var(--u));
+  padding-bottom: calc(0.22 * var(--u)); overflow: hidden;
+  border: calc(0.07 * var(--u)) solid var(--ink); border-radius: calc(0.34 * var(--u));
+  background: var(--season-tile), #fffaf2; background-size: calc(2.6 * var(--u)), auto;
+  box-shadow: inset 0 0 0 calc(0.09 * var(--u)) var(--sign-a);
+}
+
+/* Top band: the Porchlight brand on ink, with the holiday on the right. */
+.band {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: calc(0.2 * var(--u));
+  padding: calc(0.2 * var(--u)) calc(0.38 * var(--u)); background: var(--ink); color: var(--on-dark);
+  border-bottom: calc(0.08 * var(--u)) solid var(--sign-a);
+}
+.brand { display: flex; align-items: center; gap: calc(0.12 * var(--u)); font-family: var(--font-brand); font-weight: 800; font-size: calc(0.44 * var(--u)); letter-spacing: -0.03em; }
+.brand svg { width: calc(0.66 * var(--u)); height: calc(0.66 * var(--u)); }
+.brand :global(.wordmark-dot) { animation: none; box-shadow: 0 0 .25em var(--amber); }
+.season { display: grid; grid-template-columns: auto auto; column-gap: calc(0.1 * var(--u)); align-items: center; text-align: left; font-family: var(--font-display); font-weight: var(--display-weight); font-size: calc(0.32 * var(--u)); line-height: 1; letter-spacing: var(--display-track); }
+.season img { grid-row: span 2; width: calc(0.52 * var(--u)); height: calc(0.52 * var(--u)); }
+.season small { font-family: var(--font-body); font-weight: 700; font-size: calc(0.15 * var(--u)); letter-spacing: 0; color: var(--on-dark-2); margin-top: calc(0.04 * var(--u)); }
+
+/* Headline, flanked by the holiday's two icons. */
+.head { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: calc(0.12 * var(--u)); padding: calc(0.14 * var(--u)) calc(0.42 * var(--u)) 0; text-align: center; }
+.flank { width: calc(0.95 * var(--u)); height: calc(0.95 * var(--u)); }
+.head > :global(.i3d):last-child { transform: scaleX(-1); }
+.scan { font-family: var(--font-accent); font-weight: var(--accent-weight); font-size: calc(0.8 * var(--u)); line-height: 1; letter-spacing: var(--display-track); color: var(--sign-b-dark); }
+.name { margin: calc(0.06 * var(--u)) 0 0; font-family: var(--font-display); font-weight: var(--display-weight); font-size: calc(0.32 * var(--u)); line-height: 1.1; color: var(--ink); overflow-wrap: anywhere; }
+
+/* The code: as big as the page allows, on a white tile wide enough to be its quiet zone. */
+.qr {
+  align-self: center; width: calc(5.75 * var(--u)); aspect-ratio: 1; padding: calc(0.32 * var(--u)); background: #fff;
+  border: calc(0.06 * var(--u)) solid var(--ink); border-radius: calc(0.28 * var(--u));
+  box-shadow: calc(0.12 * var(--u)) calc(0.12 * var(--u)) 0 var(--sign-b);
+}
+.qr svg { width: 100%; height: 100%; display: block; }
+
+.steps { list-style: none; margin: 0; padding: 0 calc(0.4 * var(--u)); width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(0.16 * var(--u)); }
+.steps li { display: flex; align-items: center; gap: calc(0.08 * var(--u)); font-weight: 700; font-size: calc(0.165 * var(--u)); line-height: 1.2; }
+.steps img { flex: none; width: calc(0.46 * var(--u)); height: calc(0.46 * var(--u)); }
+.steps b {
+  display: inline-grid; place-items: center; width: calc(0.26 * var(--u)); height: calc(0.26 * var(--u)); margin-right: calc(0.06 * var(--u)); vertical-align: middle;
+  border-radius: 50%; background: var(--sign-a); color: var(--ink); border: calc(0.025 * var(--u)) solid var(--ink); font-family: var(--font-brand); font-size: calc(0.14 * var(--u));
+}
+
+.foot { margin: 0; font-size: calc(0.16 * var(--u)); font-weight: 600; color: var(--text-2); }
+.foot b { color: var(--ink); }
+
+@media print {
+  .noPrint { display: none !important; }
+  .page { padding: 0 !important; margin: 0 !important; max-width: none !important; gap: 0 !important; }
+  .stage { display: block; }
+  .sheet { --u: 1in; width: 8.5in; height: 11in; margin: 0; border: 0; border-radius: 0; box-shadow: none; break-inside: avoid; overflow: hidden; }
+}

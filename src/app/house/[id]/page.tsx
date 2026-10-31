@@ -186,6 +186,7 @@ export default async function HousePage({ params, searchParams }: Props) {
           )}
           {house.status === 'APPROVED' && house.lat !== null && <Link href={`/route?season=${house.season}&from=${house.id}`} className="btn ghost"><Icon3D name="map" size={22} />Plan a tour from here</Link>}
           {user && (house.ownerId === user.id || isStaff(user.role)) && <Link href={`/house/${house.id}/stats`} className="btn ghost"><Icon3D name="sparkles" size={22} />{house.ownerId === user.id ? 'My flex stats' : 'Host stats'}</Link>}
+          {user && (house.ownerId === user.id || isStaff(user.role)) && <Link href={`/house/${house.id}/sign`} className="btn ghost"><Icon3D name="clipboard" size={22} />Print QR sign</Link>}
           <div className="panel stack" style={{ gap: 14 }}>
             <div className="row spread">
               <h2 style={{ fontSize: 20 }}>Scorecard</h2>

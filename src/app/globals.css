@@ -286,6 +286,14 @@ pre.mail { white-space: pre-wrap; font-family: var(--font-body); background: var
 
 /* Host property block */
 .submission { gap: 16px; padding: 18px; border: var(--edge); border-radius: var(--r-lg); background: var(--cream); }
+/* Porch sign callout on each submission: a real preview of the QR code next to the print button. */
+.sign-card { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border: var(--edge); border-radius: var(--r-md); background: var(--paper); box-shadow: 4px 4px 0 var(--amber); }
+.sign-card-qr { flex: none; display: block; width: 104px; height: 104px; padding: 8px; background: #fff; border: var(--edge); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink); transition: transform .15s; }
+.sign-card-qr:hover { transform: rotate(-3deg) scale(1.03); }
+.sign-card-qr svg { width: 100%; height: 100%; display: block; }
+.sign-card-title { font-family: var(--font-display); font-size: 19px; }
+@media (max-width: 520px) { .sign-card { align-items: flex-start; gap: 12px; padding: 12px; } .sign-card-qr { width: 76px; height: 76px; padding: 6px; } }
+@media (prefers-reduced-motion: reduce) { .sign-card-qr { transition: none; } .sign-card-qr:hover { transform: none; } }
 .property-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 18px; border: 2px dashed var(--ink); border-radius: var(--r-lg); background: var(--cream); }
 .property-empty > .stack { flex: 1 1 220px; }
 @media (max-width: 520px) { .submission { padding: 14px; } .acc > summary { padding: 11px 12px; } .acc-body { padding: 14px 12px; } }
@@ -508,7 +516,8 @@ p.addr-guess { display: flex; box-shadow: none; background: var(--paper); font-w
 .foot-brand svg { flex: none; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255, 244, 228, .35); }
 
 @media print {
-  .site-head, .site-foot { display: none !important; }
+  /* Popups (the tour, login) never belong on a printed sign or flyer. */
+  .site-head, .site-foot, dialog.modal { display: none !important; }
   body { background: #fff; }
   main.wrap { padding-block: 0; }
 }
