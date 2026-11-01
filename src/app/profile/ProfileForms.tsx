@@ -1,6 +1,8 @@
 'use client';
 
-import { saveHostProfile, saveProfile, setPassword } from '../actions/profile';
+import { useState } from 'react';
+import { deleteMyAccount, saveHostProfile, saveProfile, setPassword } from '../actions/profile';
+import { confirmsDelete, DELETE_PHRASE } from '@/lib/deleteAccount';
 import { updateMyHouse } from '../actions/houses';
 import { LIT_FROM, LIT_UNTIL } from '@/lib/houseOptions';
 import { Field } from '@/components/Field';
@@ -73,6 +75,36 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
       <div><SubmitButton pendingText="Saving…" className="btn ghost">{hasPassword ? 'Change password' : 'Set password'}</SubmitButton></div>
     </form>
   );
+}
+
+/** Delete your own account. The button stays off until they type DELETE, so it can't happen by a stray tap. */
+export function DeleteAccountForm({ houses }: { houses: number }) {
+  const { formAction: action, errors: e } = useFormAction(deleteMyAccount);
+  const [typed, setTyped] = useState('');
+  const ready = confirmsDelete(typed);
+  return (
+    <form action={action} className="stack" noValidate>
+      <div className="notice warn stack" style={{ gap: 6 }}>
+        <b>This can&apos;t be undone.</b>
+        <span className="small">
+          Deleting your account removes your profile, photo, XP, votes, comments and check-ins
+          {houses > 0 ? `, plus your ${houses === 1 ? 'submission' : `${houses} submissions`} and ${houses === 1 ? 'its' : 'their'} photos and votes` : ''}.
+          Any pot payment already made stays in the prize pot.
+        </span>
+      </div>
+      {e.form && <p className="err" role="alert">{e.form}</p>}
+      <Field label={`Type ${DELETE_PHRASE} to confirm`} hint="Capital letters or not, either works." htmlFor="deleteConfirm" error={e.confirm}>
+        <input id="deleteConfirm" name="confirm" type="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={typed} onChange={(ev) => setTyped(ev.target.value)} placeholder={DELETE_PHRASE} />
+      </Field>
+      <div>
+        <DeleteButton ready={ready} />
+      </div>
+    </form>
+  );
+}
+
+function DeleteButton({ ready }: { ready: boolean }) {
+  return ready ? <SubmitButton pendingText="Deleting…" className="btn danger">Delete my account forever</SubmitButton> : <button type="button" className="btn danger" disabled>Delete my account forever</button>;
 }
 
 /** Edit a posted submission: its name, address, viewing hours and description. */

@@ -12,7 +12,7 @@ import { becomeHost } from '../actions/profile';
 import { XpGuide, XpProgress, XpSummary } from '@/components/XpGuide';
 import { AvatarUploader } from './AvatarUploader';
 import { RemoveSubmissionButton } from './RemoveSubmissionButton';
-import { AboutForm, HostForm, HouseDetailsForm, PasswordForm } from './ProfileForms';
+import { AboutForm, DeleteAccountForm, HostForm, HouseDetailsForm, PasswordForm } from './ProfileForms';
 import { OpenOnHash } from './OpenOnHash';
 import { ALERT_KINDS } from '@/lib/alerts';
 import { PotPanel } from './PotPanel';
@@ -117,6 +117,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
               <span className="acc-title"><b>About XP</b><XpSummary xp={user.xp} /></span>
             </summary>
             <div className="acc-body"><XpGuide me={{ xp: user.xp, boostUntil: user.xpBoostUntil }} showProgress={false} /></div>
+          </details>
+          <details className="acc" id="delete-account">
+            <summary>
+              <Icon3D name="shield" size={30} />
+              <span className="acc-title"><b>Delete account</b><span className="small muted">Permanently remove your account and everything in it</span></span>
+            </summary>
+            <div className="acc-body"><DeleteAccountForm houses={await db.house.count({ where: { ownerId: user.id } })} /></div>
           </details>
         </div>
       </section>

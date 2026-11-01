@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
-import { requireUser } from '@/lib/auth';
+import { endSession, isBootstrapAdmin, requireUser } from '@/lib/auth';
+import { deletePhotoFiles } from '@/lib/photoStorage';
+import { confirmsDelete, DELETE_PHRASE } from '@/lib/deleteAccount';
 import type { FormState } from '@/lib/forms';
 import { seasonCalendar } from '@/lib/seasonConfig';
 import { sniffImage } from '@/lib/images';
@@ -91,4 +93,24 @@ export async function becomeHost() {
   const user = await requireUser('/profile');
   await db.user.update({ where: { id: user.id }, data: { accountType: 'HOST' } });
   redirect('/profile?host=1#property');
+}
+
+/**
+ * Someone deletes their own account from their profile. They must type DELETE first. Their houses,
+ * photos, votes, check-ins and alerts go with it (database cascades); paid pot records stay for the
+ * books with the name removed. The site owner and the last Super Admin can't delete themselves.
+ */
+export async function deleteMyAccount(_prev: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser('/profile');
+  if (!confirmsDelete(fd.get('confirm'))) return { errors: { confirm: `Type ${DELETE_PHRASE} to confirm.` } };
+  if (isBootstrapAdmin(user.email)) return { errors: { form: 'This is the site owner account, so it can’t be deleted.' } };
+  if (user.role === 'ADMIN' && (await db.user.count({ where: { role: 'ADMIN' } })) <= 1) {
+    return { errors: { form: 'You’re the only Super Admin. Make someone else a Super Admin first.' } };
+  }
+  const photos = await db.housePhoto.findMany({ where: { ownerId: user.id }, select: { blobUrl: true } });
+  await db.user.delete({ where: { id: user.id } });
+  await deletePhotoFiles(photos.map((p) => p.blobUrl));
+  await endSession();
+  revalidatePath('/', 'layout');
+  redirect('/account-deleted');
 }

@@ -53,7 +53,7 @@ export default function Privacy() {
       <p>We keep your account until you delete it or ask us to. Past contests stay in the archive so results remain accurate. Sign-in links expire quickly, and email logs are kept only as long as they are useful for troubleshooting.</p>
 
       <h2>Your choices and rights</h2>
-      <p>You can edit your profile at any time. You can ask us to send you a copy of your data, correct it, or delete your account by <Link href="/contact?topic=Privacy+and+my+data" data-modal="contact:Privacy and my data">sending us a message</Link> or emailing {CONTACT_EMAIL}. Depending on where you live (for example California under the CCPA, or the EU and UK under the GDPR), you may have additional rights, and we will honor them. We will not treat you differently for using them.</p>
+      <p>You can edit your profile at any time, and delete your account yourself under <Link href="/profile#delete-account">Profile, Delete account</Link>. You can ask us to send you a copy of your data, correct it, or delete your account by <Link href="/contact?topic=Privacy+and+my+data" data-modal="contact:Privacy and my data">sending us a message</Link> or emailing {CONTACT_EMAIL}. Depending on where you live (for example California under the CCPA, or the EU and UK under the GDPR), you may have additional rights, and we will honor them. We will not treat you differently for using them.</p>
 
       <h2>Cookies</h2>
       <p>We use one essential cookie to keep you signed in, and Google Analytics cookies to count visits. See our <Link href="/cookies">Cookie Policy</Link> to turn analytics off.</p>
