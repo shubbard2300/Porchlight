@@ -33,6 +33,10 @@ export type MapHouse = {
   edit?: { href: string; label: string };
   /** The printable porch sign, for the same people who can edit. */
   sign?: string;
+  /** How many magic decorations (AR props) the host put on the house. */
+  magic?: number;
+  /** The magic decorations editor, set only for the house's own host. */
+  magicEdit?: string;
 };
 
 /** A sponsor's pin. Shown under the houses so the decorations stay the main event. */
@@ -87,10 +91,12 @@ function popupHtml(h: MapHouse, icon: Icon3DName) {
       <b class="${styles.popName}">${esc(h.name)}</b>
       <span class="${styles.popMeta}">${esc(where)}</span>
       <span class="${styles.popMeta}">${isLitNow(h.litFrom, h.litUntil) ? `<b class="${styles.popOn}">Lights on now</b> · until ${esc(h.litUntil)}` : `Lights off now · on ${esc(h.lit)}`}</span>
+      ${h.magic && !h.magicEdit ? `<span class="${styles.popMagic}"><img src="/icons/3d/sparkles.webp" alt="" width="16" height="16" />${h.magic} magic ${h.magic === 1 ? 'decoration' : 'decorations'} to see through your camera</span>` : ''}
       <span class="${styles.popCrowd}"><i style="background:${CROWD_LEVELS[crowdLevel(h.crowd)].color}"></i>${esc(crowdLine(h.crowd))}</span>
       <div class="${styles.popFoot}"><span class="${styles.popLikes}"><img src="/icons/3d/heart.webp" alt="" width="16" height="16" />${h.likes} verified ${h.likes === 1 ? 'like' : 'likes'}</span>${directions}</div>
       <div class="${styles.popActions}">
         <a class="${styles.popCta}" href="/house/${encodeURIComponent(h.id)}#vote">Check in &amp; vote</a>
+        ${h.magicEdit ? `<a class="${styles.popEdit} ${styles.popMagicBtn}" href="${esc(h.magicEdit)}"><img src="/icons/3d/sparkles.webp" alt="" width="18" height="18" />${h.magic ? `Magic decorations (${h.magic})` : 'Add magic decorations'}</a>` : ''}
         ${h.edit ? `<a class="${styles.popEdit}" href="${esc(h.edit.href)}"><img src="/icons/3d/house.webp" alt="" width="18" height="18" />${esc(h.edit.label)}</a>` : ''}
         ${h.sign ? `<a class="${styles.popEdit} ${styles.popSign}" href="${esc(h.sign)}"><img src="/icons/3d/clipboard.webp" alt="" width="18" height="18" />Print QR sign</a>` : ''}
       </div>

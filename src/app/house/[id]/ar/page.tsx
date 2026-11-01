@@ -8,7 +8,7 @@ import { forHoliday } from '@/lib/arDecor';
 import { seasonCalendar } from '@/lib/seasonConfig';
 import { ArViewer } from './ArViewer';
 
-export const metadata: Metadata = { title: 'AR decorations · Porchlight' };
+export const metadata: Metadata = { title: 'Magic decorations · Porchlight' };
 
 /** Anyone can open a house's AR view; it's meant for visitors standing out front with their phone. */
 export default async function ArViewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ checkin?: string }> }) {
@@ -42,9 +42,9 @@ export default async function ArViewPage({ params, searchParams }: { params: Pro
       {empty ? (
         <section className="panel stack" style={{ justifyItems: 'center', textAlign: 'center', padding: '32px 24px', gap: 14 }}>
           <Icon3D name="sparkles" size={96} />
-          <h1 style={{ fontSize: 26 }}>No AR decorations yet</h1>
+          <h1 style={{ fontSize: 26 }}>No magic decorations yet</h1>
           <p className="muted">{own ? 'Add virtual props to your display and visitors will see them through their camera.' : `${house.name} hasn’t added any virtual props yet. Check back soon.`}</p>
-          <Link href={own ? `/house/${id}/ar/edit` : `/house/${id}`} className="btn primary">{own ? 'Decorate in AR' : 'Back to the house'}</Link>
+          <Link href={own ? `/house/${id}/ar/edit` : `/house/${id}`} className="btn primary">{own ? 'Add magic decorations' : 'Back to the house'}</Link>
         </section>
       ) : (
         <ArViewer houseId={house.id} houseName={house.name} photo={house.photoUrls[0] ?? null} placements={placements} greeting={house.arGreeting} />

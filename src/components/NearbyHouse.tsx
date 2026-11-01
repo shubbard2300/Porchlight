@@ -149,7 +149,7 @@ export function NearbyHouse() {
           <h2 id="nearby-title" className={styles.title}>{house.name}</h2>
           <p id="nearby-body" className={styles.body}>
             {house.hasAr
-              ? 'Check in with one tap, then point your camera at the house to see the host’s AR decorations.'
+              ? 'Check in with one tap, then point your camera at the house to see the host’s magic decorations.'
               : 'Check in with one tap, then score the display and cheer on the host.'}
           </p>
         </div>

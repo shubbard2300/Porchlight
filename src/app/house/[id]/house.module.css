@@ -30,3 +30,6 @@
 .squadScore { font-family: var(--font-display); font-size: 22px; }
 .squadScore span { font-size: 13px; color: var(--text-2); }
 .squadCheer { font-size: 14px; font-style: italic; }
+/* The host's magic decorations card sits at the top of the sidebar on wide screens, under the title on phones. */
+.magicNarrow { display: none; }
+@media (max-width: 860px) { .magicWide { display: none; } .magicNarrow { display: block; } }

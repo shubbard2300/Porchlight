@@ -44,7 +44,7 @@ export function NearbySwitch() {
       <div className="row spread" style={{ gap: 10 }}>
         <span className="small">
           <b>&ldquo;You&rsquo;re here&rdquo; prompts</b>
-          <span className="muted"> · While Porchlight is open, we tap you when you reach a house, so you can check in and open the AR camera in one go. Your location is never saved.</span>
+          <span className="muted"> · While Porchlight is open, we tap you when you reach a house, so you can check in and see any magic decorations in one go. Your location is never saved.</span>
         </span>
         {state === 'on'
           ? <button type="button" className="btn ghost sm" onClick={() => { set('off'); setNote(null); }}>Turn off here</button>

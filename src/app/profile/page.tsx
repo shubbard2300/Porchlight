@@ -20,7 +20,8 @@ import { AlertSettings } from './AlertSettings';
 import { NearbySwitch } from './NearbySwitch';
 import { vapidPublicKey } from '@/lib/push';
 import { stripeConfigured } from '@/lib/stripe';
-import { Tip } from '@/components/Tip';
+import { MagicDecorCard } from '@/components/MagicDecorCard';
+import { forHoliday } from '@/lib/arDecor';
 import { PorchSignCard } from '@/components/PorchSignCard';
 
 export const metadata = { title: 'My profile · Porchlight' };
@@ -42,7 +43,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const isHost = user.accountType === 'HOST';
   const today = contestToday();
   const lvl = level(user.xp);
-  const houses = isHost ? await db.house.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: 'desc' }, include: { photos: { select: photoSelect, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] }, potPayments: { where: { status: 'PAID', source: 'HOST' }, select: { amountCents: true, paidAt: true } } } }) : [];
+  const houses = isHost ? await db.house.findMany({ where: { ownerId: user.id }, orderBy: { createdAt: 'desc' }, include: { photos: { select: photoSelect, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }] }, potPayments: { where: { status: 'PAID', source: 'HOST' }, select: { amountCents: true, paidAt: true } }, arDecorations: { select: { kind: true } } } }) : [];
   const withSeason = houses.map((h) => ({ h, s: getSeason(h.season) }));
   const active = withSeason.filter(({ s }) => s && phase(s, today) !== 'expired');
   const archived = withSeason.filter(({ s }) => !s || phase(s, today) === 'expired');
@@ -135,7 +136,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
             </div>
           )}
 
-          {active.map(({ h, s }, hi) => (
+          {active.map(({ h, s }) => (
             <div key={h.id} id={`submission-${h.id}`} className="submission stack" style={{ scrollMarginTop: 16 }}>
               <div className="row spread">
                 <div><b style={{ fontSize: 18 }}>{h.name}</b><div className="small muted">{s!.name} {s!.year} · {phaseLabel(s!, today).tag}</div>{h.reviewNote && <div className="small muted">Note: {h.reviewNote}</div>}</div>
@@ -148,13 +149,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
                 <HousePhotoPicker houseId={h.id} initial={h.photos} />
               </div>
 
+              <MagicDecorCard houseId={h.id} holiday={s!.name} count={forHoliday(h.arDecorations, s!.name).length} greeting={!!h.arGreeting} id={`magic-${h.id}`} />
+
               <PorchSignCard houseId={h.id} approved={h.status === 'APPROVED'} />
 
-              {hi === 0 && <Tip id="ar-decor" news>New: make your display pop with AR decorations. Add virtual {s!.name} props that visitors see through their phone camera.</Tip>}
               <div className="row">
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}`} className="btn sm ghost">View house page</Link>}
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}/stats`} className="btn sm ghost">My flex stats</Link>}
-                <Link href={`/house/${h.id}/ar/edit`} className="btn sm ghost">AR decorations</Link>
                 {h.status === 'APPROVED' && <Link href={`/house/${h.id}/lights`} className="btn sm ghost">Porch lights</Link>}
               </div>
 

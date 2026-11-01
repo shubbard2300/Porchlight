@@ -47,8 +47,8 @@ export const FAQ: FaqTopic[] = [
       { id: 'edit', q: 'Can I change or remove my submission?', a: [
         'Yes, any time. Update your photos, details and lit-up hours from [your profile](/profile), or remove your submission there. Removing it takes it off the map right away.',
       ] },
-      { id: 'ar-host', q: 'What are AR decorations?', a: [
-        'Virtual 3D props you add on top of your real display, like a ghost on the roof or a reindeer on the lawn. Open AR decorations from [your profile](/profile) or your house page, tap props to drop them on your house photo, drag them into place and save. You can also float a short greeting over the house.',
+      { id: 'ar-host', q: 'What are magic decorations?', a: [
+        '3D props that only exist on screen, added on top of your real display, like a ghost on the roof or a reindeer on the lawn. Visitors see them through their phone camera (this is sometimes called AR, or augmented reality). Open Magic decorations from [your profile](/profile), your house page or your pin on the map, tap props to drop them on your house photo, drag them into place and save. You can also float a short greeting over the house.',
         'Each holiday has its own set of props, so a Christmas porch gets snowmen and reindeer, a Halloween porch gets ghosts and bats, and so on. Visitors standing out front point their phone at your house and see the props right where you put them. It works in the phone’s browser, no app needed.',
       ] },
       { id: 'what-counts', q: 'What kind of displays are welcome?', a: [
@@ -70,12 +70,12 @@ export const FAQ: FaqTopic[] = [
       { id: 'fair', q: 'What stops people from gaming the votes?', a: [
         'Votes need an in-person check-in, each account gets one vote per house, and we review unusual patterns. We remove votes from fake accounts, bots, vote trading or paid voting, and may remove entries that benefit from them. Details are in the [official rules](/rules).',
       ] },
-      { id: 'ar-visit', q: 'How do I see a house’s AR decorations?', a: [
-        'When a host added virtual props, their house page shows an AR decorations card. At the house, tap it and open your camera, line up the faint outline with the real house and tap “Pin it here”. The 3D props stay on the house as you look around, and you can take a photo with them to share.',
-        'On phones that support it (most recent Android phones and iPhones), “Place in AR and walk around” anchors the props in real space so you can walk right up to them.',
+      { id: 'ar-visit', q: 'How do I see a house’s magic decorations?', a: [
+        'When a host added virtual props, their house page and map card show Magic decorations. At the house, tap it and open your camera, line up the faint outline with the real house and tap “Pin it here”. The 3D props stay on the house as you look around, and you can take a photo with them to share.',
+        'On phones that support it (most recent Android phones and iPhones), “Pin them in place and walk around” anchors the props in real space so you can walk right up to them.',
       ] },
       { id: 'youre-here', q: 'Why did Porchlight say “You’re here”?', a: [
-        'When you’re signed in, Porchlight is open and your browser already lets it use your location, we tap you as you reach the front of a contest house. “View house” checks you in and opens the house, straight into the AR camera when the host added decorations. “Dismiss” hides it for that house for a few hours.',
+        'When you’re signed in, Porchlight is open and your browser already lets it use your location, we tap you as you reach the front of a contest house. “View house” checks you in and opens the house, straight into the camera when the host added magic decorations. “Dismiss” hides it for that house for a few hours.',
         'It works while the app is open on your screen (phones don’t let websites track you in the background), only for houses that show their address, and your location is never saved. Turn it on or off for each device under Alerts on your [profile](/profile#alerts).',
       ] },
       { id: 'route', q: 'How do I plan a night out?', a: [

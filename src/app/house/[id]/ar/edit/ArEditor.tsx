@@ -68,7 +68,7 @@ export function ArEditor({ houseId, photo, palette, initial, initialGreeting, gr
     const r = await saveArScene(houseId, { placements: items, greeting });
     if (!r.ok) { setStatus({ ok: false, text: r.error }); return; }
     setDirty(false);
-    setStatus({ ok: true, text: r.count ? `Saved. Visitors will see ${r.count} ${r.count === 1 ? 'prop' : 'props'} through their camera.` : 'Saved. Your porch has no AR props right now.' });
+    setStatus({ ok: true, text: r.count ? `Saved. Visitors will see ${r.count} magic ${r.count === 1 ? 'decoration' : 'decorations'} through their camera.` : 'Saved. Your house has no magic decorations right now.' });
   });
 
   const sel = selected !== null ? getDecor(items[selected]?.kind ?? '') : undefined;

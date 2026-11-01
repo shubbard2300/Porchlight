@@ -761,3 +761,18 @@ main.home > .season-tabs + #map { margin-top: -42px; }
 .theme-tabs a { padding: 4px 11px 4px 6px; font-size: 13px; gap: 6px; }
 .theme-tabs .count { font-size: 11px; padding: 0 6px; }
 @media (max-width: 760px) { main.home > .season-tabs + #map { margin-top: -28px; } }
+
+/* Magic decorations (AR props): the host's card on their profile and own house page. */
+.magic-card { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border: var(--edge); border-radius: var(--r-md); background: linear-gradient(150deg, var(--lilac-soft), var(--paper) 72%); box-shadow: 4px 4px 0 var(--lilac); }
+.magic-card-stage { position: relative; flex: none; width: 112px; height: 104px; border: var(--edge); border-radius: 16px; background: radial-gradient(circle at 50% 110%, #3b2f7a, var(--ink) 70%); box-shadow: 3px 3px 0 var(--ink); overflow: hidden; transition: transform .15s; }
+.magic-card-stage:hover { transform: rotate(-2deg) scale(1.03); }
+.magic-prop { position: absolute; display: block; animation: float 2.6s ease-in-out infinite alternate; filter: drop-shadow(0 0 8px rgba(255, 220, 140, .55)); }
+.magic-prop-0 { left: 32px; top: 30px; }
+.magic-prop-1 { left: 8px; top: 8px; animation-delay: -.8s; }
+.magic-prop-2 { right: 8px; top: 12px; animation-delay: -1.6s; }
+.magic-prop-3 { right: 12px; bottom: 6px; animation-delay: -2.2s; }
+.magic-spark { position: absolute; left: 14px; bottom: 14px; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber), 60px -40px 0 -1px #fff, 30px -76px 0 -2px #fff; animation: twinkle 1.8s ease-in-out infinite; }
+.magic-card-title { font-family: var(--font-display); font-size: 19px; }
+.magic-new { background: var(--amber); font-size: 11px; padding: 1px 8px; }
+@media (max-width: 520px) { .magic-card { align-items: flex-start; gap: 12px; padding: 12px; } .magic-card-stage { width: 84px; height: 84px; } .magic-prop-0 { left: 22px; top: 22px; } .magic-prop-0 img { width: 38px; height: 38px; } .magic-prop:not(.magic-prop-0) img { width: 26px; height: 26px; } }
+@media (prefers-reduced-motion: reduce) { .magic-prop, .magic-spark { animation: none; } .magic-card-stage { transition: none; } .magic-card-stage:hover { transform: none; } }
