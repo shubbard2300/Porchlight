@@ -156,7 +156,7 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
   const placeInAr = async () => {
     setNote(null);
     if (worldAr === 'quicklook') {
-      await openQuickLook(placements, greeting, houseName).catch(() => setNote('AR Quick Look couldn’t open. Try the camera view instead.'));
+      await openQuickLook(placements, greeting, houseName).catch(() => setNote('The walk-around view couldn’t open. Try the camera view instead.'));
       return;
     }
     const root = overlay.current;
@@ -176,7 +176,7 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
       });
     } catch {
       root.style.display = 'none';
-      setNote('This phone couldn’t start AR. Try the camera view instead.');
+      setNote('This phone couldn’t start that view. Try the camera view instead.');
     }
   };
 
@@ -196,7 +196,7 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
   if (mode === 'intro') {
     return (
       <section className="panel stack" style={{ gap: 16, textAlign: 'center', justifyItems: 'center', padding: '28px 20px' }}>
-        <span className="label">AR decorations · {houseName}</span>
+        <span className="label">Magic decorations · {houseName}</span>
         <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)' }}>See the magic you can’t see</h1>
         <p className="muted" style={{ maxWidth: 460 }}>The host added {placements.length === 1 ? 'a virtual prop' : `${placements.length} virtual props`} to their display. Stand out front, point your phone at the house and line it up with the outline.</p>
         <ArScene placements={NO_PLACEMENTS} photo={photo} className={styles.preview}>
@@ -204,13 +204,13 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
         </ArScene>
         <div className="row" style={{ justifyContent: 'center' }}>
           <button type="button" className="btn primary" onClick={begin}>Open my camera</button>
-          {worldAr && <button type="button" className="btn ghost" onClick={placeInAr}>Place in AR and walk around</button>}
+          {worldAr && <button type="button" className="btn ghost" onClick={placeInAr}>Pin them in place and walk around</button>}
         </div>
         {note && <p className="notice warn small" role="alert">{note}</p>}
-        <p className="small muted">{worldAr ? '“Place in AR” anchors the props in real space, so they stay put as you walk around. ' : ''}We use your camera and motion sensor only on this screen. Nothing is recorded or uploaded unless you save a photo.</p>
+        <p className="small muted">{worldAr ? '“Pin them in place” anchors the decorations in real space, so they stay put as you walk around. ' : ''}We use your camera and motion sensor only on this screen. Nothing is recorded or uploaded unless you save a photo.</p>
         <div ref={overlay} className={styles.xrOverlay} style={{ display: 'none' }}>
           <div className={styles.hud}>
-            <button type="button" className={styles.close} aria-label="Leave AR" onClick={() => xrRun.current?.end()}>✕</button>
+            <button type="button" className={styles.close} aria-label="Close the camera" onClick={() => xrRun.current?.end()}>✕</button>
             <span>{XR_HINT[xrStatus]}</span>
           </div>
         </div>
@@ -221,8 +221,8 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
   if (mode === 'snap' && shot) {
     return (
       <section className={`panel ${styles.snapWrap}`} style={{ padding: '24px 20px' }}>
-        <span className="label">Your AR photo</span>
-        <img src={shot.url} alt={`${houseName} with AR decorations`} className={styles.snap} />
+        <span className="label">Your magic photo</span>
+        <img src={shot.url} alt={`${houseName} with magic decorations`} className={styles.snap} />
         <div className="row" style={{ justifyContent: 'center' }}>
           <button type="button" className="btn primary" onClick={share}>Save or share</button>
           <button type="button" className="btn ghost" onClick={begin}>Back to the camera</button>
@@ -233,7 +233,7 @@ export function ArViewer({ houseId, houseName, photo, placements, greeting }: { 
   }
 
   return (
-    <div className={styles.stage} role="application" aria-label={`${houseName} in AR`}>
+    <div className={styles.stage} role="application" aria-label={`${houseName} with magic decorations`}>
       <video ref={video} className={styles.video} playsInline muted autoPlay hidden={!camera} />
       {!camera && <div className={styles.night} aria-hidden="true" />}
       <div className={styles.hud}>

@@ -20,6 +20,7 @@ import { dollars } from '@/lib/pot';
 import { potTotal, unpaidPledgeCents } from '@/lib/potServer';
 import { contestToday, phase, phaseLabel } from '@/lib/seasons';
 import { isStaff } from '@/lib/roles';
+import { forHoliday } from '@/lib/arDecor';
 import { seasonCalendar } from '@/lib/seasonConfig';
 
 const STEPS: [Icon3DName, string, string][] = [
@@ -59,6 +60,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     user && h.ownerId === user.id ? { href: `/profile#submission-${h.id}`, label: 'Edit your house' }
       : staff ? { href: `/admin/submissions/${h.id}`, label: 'Edit this house' }
         : undefined;
+  // Magic decorations (AR props) per house, counting only props that fit this holiday, like the house page does.
+  const decorRows = await db.arDecoration.findMany({ where: { houseId: { in: ranked.map((h) => h.id) } }, select: { houseId: true, kind: true } });
+  const magicCount = new Map<string, number>();
+  for (const d of forHoliday(decorRows, season.name)) magicCount.set(d.houseId, (magicCount.get(d.houseId) ?? 0) + 1);
   const pins: MapHouse[] = ranked.flatMap((h, i) => h.lat === null || h.lng === null ? [] : [{
     id: h.id,
     name: h.name,
@@ -75,6 +80,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
     crowd: crowd[h.id] ?? 0,
     edit: editFor(h),
     sign: user && (h.ownerId === user.id || staff) ? `/house/${h.id}/sign` : undefined,
+    magic: magicCount.get(h.id) ?? 0,
+    magicEdit: user && h.ownerId === user.id ? `/house/${h.id}/ar/edit` : undefined,
   }]);
   const pitstops: MapPitstop[] = (await db.merchant.findMany({
     where: { active: true, lat: { not: null }, lng: { not: null } },

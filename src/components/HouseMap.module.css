@@ -72,6 +72,10 @@
   padding: 7px 12px; border-radius: 12px; background: var(--paper); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
 }
 
+/* Magic decorations: a line for visitors, and a glowing button for the host on their own card. */
+.popMagic { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--ink); }
+.popMagicBtn { background: linear-gradient(150deg, var(--lilac-soft), var(--paper)); box-shadow: 3px 3px 0 var(--lilac), 3px 3px 0 1.5px var(--ink); }
+
 /* Hover title */
 .tipWrap { pointer-events: none; }
 .tipWrap :global(.maplibregl-popup-content) {
@@ -108,6 +112,7 @@
 /* A host's card has three buttons: Check in across the top, Edit and Print sign side by side under it. */
 .sheet .popActions:has(.popSign) { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
 .sheet .popActions:has(.popSign) .popCta { grid-column: 1 / -1; }
+.sheet .popActions .popMagicBtn { grid-column: 1 / -1; }
 /* The smallest phones: a shorter picture and slimmer buttons, so the pair still fits on one row. */
 @media (max-width: 360px) {
   .sheet .popArt { height: 72px; }

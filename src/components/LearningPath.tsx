@@ -19,7 +19,7 @@ const STEPS: Record<Tour, (name: string | null) => Step[]> = {
   host: (name) => [
     { icon: 'party', title: name ? `Welcome, ${name}!` : 'Welcome, host!', text: 'Every display you add makes the whole neighborhood’s light tour better. Hosts light the way; visitors vote on the most-loved porch.', reward: `+${SIGNUP_BONUS_XP} XP · Porch Pass` },
     { icon: 'camera', title: 'Get your house on the map', text: 'A night photo with the lights on and your address are all it takes. We review new houses quickly and email you when you’re live.', reward: `+${APPROVAL_XP} XP when approved` },
-    { icon: 'people', title: 'Bring the neighbors by', text: 'Print your porch QR sign so visitors can check in and score your display. Then add AR decorations: virtual holiday props visitors see through their phone camera.' },
+    { icon: 'people', title: 'Bring the neighbors by', text: 'Print your porch QR sign so visitors can check in and score your display. Then add magic decorations: holiday props that float on your house when visitors look through their phone camera.' },
     { icon: 'trophy', title: 'The most-loved porch wins', text: 'Verified likes decide the pot. Share your invite code with neighbors: more houses means a better tour for everyone.' },
   ],
 };
