@@ -114,7 +114,7 @@ export const FAQ: FaqTopic[] = [
         'We use your location only at the moment you check in, to confirm you’re near the house. We store how far away you were, not where you were standing.',
       ] },
       { id: 'data', q: 'Do you sell my information?', a: [
-        'No. We don’t sell or rent your personal information. The [Privacy Policy](/privacy) explains what we keep and why, and you can ask us to delete your account any time.',
+        'No. We don’t sell or rent your personal information. The [Privacy Policy](/privacy) explains what we keep and why, and you can delete your account any time under [Profile, Delete account](/profile#delete-account).',
       ] },
     ],
   },

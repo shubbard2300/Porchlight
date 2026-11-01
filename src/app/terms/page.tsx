@@ -41,7 +41,7 @@ export default function Terms() {
       <p>The Porchlight name, logo, design, and code belong to {OWNER_NAME}. Don&apos;t copy or scrape the site without permission.</p>
 
       <h2>Ending your account</h2>
-      <p>You can stop using Porchlight and ask us to delete your account at any time. We may suspend or close accounts that break these terms.</p>
+      <p>You can stop using Porchlight and delete your account at any time from your profile. We may suspend or close accounts that break these terms.</p>
 
       <h2>Disclaimers</h2>
       <p>Porchlight is provided &quot;as is.&quot; We don&apos;t guarantee the site will always be available or error free, and we are not responsible for the condition of any property, for what happens on visits, or for content posted by users. Visit houses at your own risk and follow local laws.</p>
