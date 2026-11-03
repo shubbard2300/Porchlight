@@ -952,3 +952,7 @@ main.home > .season-tabs + #map { margin-top: -48px; }
 .faq-item.open .faq-plus { background: var(--amber); border-color: var(--amber); }
 .faq-item button { font-family: var(--font-brand); font-weight: 600; letter-spacing: -0.01em; }
 main[data-season='halloween'] .hero::after { background-position: right 24px top 64px; }
+/* Christmas swaps the porch light for a tree drawn the same way: a flat green triangle, amber outlines spreading out, a lit star. */
+.lamp-tree { overflow: visible; }
+.lamp-tree .tree-star { filter: drop-shadow(0 0 10px rgba(255, 176, 0, .7)); }
+@media (max-width: 760px) { .lamp-tree { width: 190px; top: 54%; } .lamp-tree path:nth-of-type(4) { display: none; } }
