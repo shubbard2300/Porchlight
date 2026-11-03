@@ -3,21 +3,21 @@
   position: relative;
   height: clamp(380px, 64vh, 680px);
   border: var(--edge);
-  border-radius: 28px;
-  box-shadow: 6px 6px 0 var(--ink);
+  border-radius: 2px;
+  box-shadow: none;
   overflow: hidden;
-  background: radial-gradient(120% 90% at 30% 20%, #2b2770, var(--ink));
+  background: radial-gradient(120% 90% at 30% 20%, #26262c, var(--ink));
 }
 .map { position: absolute; inset: 0; }
-.map :global(.maplibregl-ctrl-group) { border: var(--edge); border-radius: 12px; box-shadow: 3px 3px 0 var(--ink); overflow: hidden; }
+.map :global(.maplibregl-ctrl-group) { border: var(--edge); border-radius: 2px; box-shadow: none; overflow: hidden; }
 .map :global(.maplibregl-ctrl-top-right) { top: 6px; right: 6px; }
 
 .badge {
   position: absolute; top: 14px; left: 14px; z-index: 2;
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 14px 8px 10px; border-radius: 16px;
+  padding: 8px 14px 8px 10px; border-radius: 2px;
   background: var(--ink); color: var(--on-dark);
-  border: 2px solid var(--on-dark); box-shadow: 4px 4px 0 var(--amber);
+  border: 1px solid var(--on-dark); box-shadow: none;
   pointer-events: none;
 }
 .badge b { display: block; font-family: var(--font-display); font-size: 15px; line-height: 1.2; }
@@ -26,18 +26,18 @@
 .emptyNote {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2;
   max-width: calc(100% - 28px); text-align: center; padding: 10px 18px;
-  background: var(--paper); border: var(--edge); border-radius: 18px; box-shadow: 3px 3px 0 var(--ink);
+  background: var(--paper); border: var(--edge); border-radius: 2px; box-shadow: none;
   font-size: 14px; font-weight: 700; pointer-events: none;
 }
 
 /* Popup card */
 .popWrap :global(.maplibregl-popup-content) {
-  padding: 0; border: var(--edge); border-radius: 18px; box-shadow: 4px 4px 0 var(--ink);
+  padding: 0; border: var(--edge); border-radius: 2px; box-shadow: none;
   overflow: hidden; font-family: var(--font-body); color: var(--ink); background: var(--paper);
 }
 .popWrap :global(.maplibregl-popup-close-button) {
   top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 999px; z-index: 1;
-  background: var(--paper); border: 2px solid var(--ink); font-size: 18px; line-height: 1;
+  background: var(--paper); border: 1px solid var(--ink); font-size: 18px; line-height: 1;
 }
 .pop { width: 260px; }
 .popArt { position: relative; height: 132px; display: grid; place-items: center; background: var(--ink); }
@@ -45,7 +45,7 @@
 .popArt img.popIcon { width: 72px; height: 72px; object-fit: contain; }
 .popRank {
   position: absolute; left: 10px; bottom: 10px; padding: 2px 10px; border-radius: 999px;
-  background: var(--amber); border: 2px solid var(--ink); font-weight: 800; font-size: 13px;
+  background: var(--amber); border: 1px solid var(--ink); font-weight: 800; font-size: 13px;
 }
 .popBody { display: grid; gap: 4px; padding: 12px 14px 14px; }
 .popLabel { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
@@ -57,11 +57,11 @@
 .popLikes { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 800; }
 .popLink {
   font-size: 13px; font-weight: 800; text-decoration: none; padding: 4px 12px; border-radius: 999px;
-  background: var(--paper); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+  background: var(--paper); border: 1px solid var(--ink); box-shadow: none;
 }
 .popCta {
   margin-top: 8px; display: block; text-align: center; font-size: 14px; font-weight: 800; text-decoration: none; padding: 8px 12px;
-  border-radius: 12px; background: var(--amber); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
+  border-radius: 2px; background: var(--amber); border: 1px solid var(--ink); box-shadow: none; color: var(--ink);
 }
 
 .popActions { display: grid; }
@@ -69,23 +69,23 @@
 /* Only the house's host (and staff) see this. */
 .popEdit {
   margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 800; text-decoration: none;
-  padding: 7px 12px; border-radius: 12px; background: var(--paper); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); color: var(--ink);
+  padding: 7px 12px; border-radius: 2px; background: var(--paper); border: 1px solid var(--ink); box-shadow: none; color: var(--ink);
 }
 
 /* Magic decorations: a line for visitors, and a glowing button for the host on their own card. */
 .popMagic { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--ink); }
-.popMagicBtn { background: linear-gradient(150deg, var(--lilac-soft), var(--paper)); box-shadow: 3px 3px 0 var(--lilac), 3px 3px 0 1.5px var(--ink); }
+.popMagicBtn { background: linear-gradient(150deg, var(--lilac-soft), var(--paper)); box-shadow: none; }
 
 /* Hover title */
 .tipWrap { pointer-events: none; }
 .tipWrap :global(.maplibregl-popup-content) {
-  padding: 6px 12px; border: var(--edge); border-radius: 999px; box-shadow: 3px 3px 0 var(--ink); background: var(--paper);
+  padding: 6px 12px; border: var(--edge); border-radius: 999px; box-shadow: none; background: var(--paper);
 }
 .tipWrap :global(.maplibregl-popup-tip) { display: none; }
 .tipName { font-family: var(--font-display); font-size: 13.5px; color: var(--ink); white-space: nowrap; }
 
 @media (max-width: 760px) {
-  .frame { height: clamp(360px, 70vh, 560px); border-radius: 22px; }
+  .frame { height: clamp(360px, 70vh, 560px); border-radius: 2px; }
 }
 /* Fullscreen takes the whole frame, so the phone sheet comes along. */
 .frame:fullscreen { border-radius: 0; border: 0; box-shadow: none; }
@@ -95,7 +95,7 @@
   position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3;
   display: flex; flex-direction: column; max-height: calc(100% - 128px);
   background: var(--paper); color: var(--ink); font-family: var(--font-body);
-  border: var(--edge); border-radius: 20px; box-shadow: 4px 4px 0 var(--ink); overflow: hidden;
+  border: var(--edge); border-radius: 2px; box-shadow: none; overflow: hidden;
   animation: sheetUp 0.22s ease-out;
 }
 .sheetBody { overflow-y: auto; overscroll-behavior: contain; min-height: 0; -webkit-overflow-scrolling: touch; }
@@ -124,7 +124,7 @@
 .sheetClose {
   position: absolute; top: 8px; right: 8px; z-index: 1; width: 34px; height: 34px; border-radius: 999px;
   display: grid; place-items: center; padding: 0; cursor: pointer;
-  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); font-size: 22px; line-height: 1;
+  background: var(--paper); color: var(--ink); border: 1px solid var(--ink); font-size: 22px; line-height: 1;
 }
 @keyframes sheetUp { from { transform: translateY(24px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } }
@@ -132,7 +132,7 @@
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 12px 4px 0; font-size: 13px; font-weight: 700; color: var(--text-2); }
 .legend b { color: var(--ink); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); }
+.legend i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--ink); }
 .legendNote { font-weight: 500; }
 .popTier { justify-self: start; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 8px; color: var(--ink); }
 .popOffer { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; }
@@ -148,13 +148,13 @@
 .notes { display: grid; gap: 8px; margin-top: 12px; justify-items: start; }
 .adminNote {
   display: inline-block; font-size: 14px; color: var(--ink); text-decoration: none; padding: 8px 14px;
-  background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--ink);
+  background: var(--paper); border: 1px solid var(--ink); border-radius: 2px; box-shadow: none;
 }
 .adminNote:hover, .adminNote:focus-visible { background: #fff0c2; }
 .adminOnly { font-size: 12px; font-weight: 700; color: var(--text-3); }
 .hostNote {
   display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px;
-  font-size: 14px; color: var(--text-2); background: var(--paper); border: 2px solid var(--ink); border-radius: 16px; box-shadow: 3px 3px 0 var(--ink);
+  font-size: 14px; color: var(--text-2); background: var(--paper); border: 1px solid var(--ink); border-radius: 2px; box-shadow: none;
 }
 .hostNote img { flex: none; }
 .hostNote b { color: var(--ink); }

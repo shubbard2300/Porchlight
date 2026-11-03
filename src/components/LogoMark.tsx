@@ -24,12 +24,12 @@ export function LogoMark({ size = 40, className }: { size?: number; className?: 
           <feGaussianBlur stdDeviation="3" />
         </filter>
       </defs>
-      <rect width="120" height="120" rx="30" fill="#14123a" />
+      <rect width="120" height="120" rx="30" fill="#111114" />
       <circle className="logo-halo" cx="60" cy="50" r="46" fill={`url(#${glow})`} opacity=".6" />
       <path d={bulb} fill={`url(#${flame})`} />
       <path d={bulb} fill="#ffb000" filter={`url(#${soft})`} opacity=".5" />
-      <path d="M46 60 V49 L60 37 L74 49 V60" fill="none" stroke="#14123a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M55 60 V53 h10 V60 M46 60 H74 M53 60 V80 M67 60 V80" fill="none" stroke="#14123a" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M46 60 V49 L60 37 L74 49 V60" fill="none" stroke="#111114" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M55 60 V53 h10 V60 M46 60 H74 M53 60 V80 M67 60 V80" fill="none" stroke="#111114" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
       <rect x="46" y="89" width="28" height="6" rx="3" fill="#fff4e4" />
       <rect x="48" y="98" width="24" height="6" rx="3" fill="#fff4e4" />
       <path d="M53 107 h14 l-3 5 h-8 Z" fill="#fff4e4" />
