@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { currentUser } from '@/lib/auth';
 import { CommunityBoard } from '@/components/CommunityBoard';
-import { HeroHouse } from '@/components/HeroHouse';
+import { HeroLight } from '@/components/HeroLight';
 import { HouseCard } from '@/components/HouseCard';
 import { Tip } from '@/components/Tip';
 import { HouseMap, type MapBlock, type MapHouse, type MapNotice, type MapPitstop } from '@/components/HouseMap';
 import { housesIn, placedBlocks } from '@/lib/blockStandings';
 import { Icon3D, type Icon3DName } from '@/components/Icon3D';
-import { StringLights, Ticker } from '@/components/StringLights';
+import { Ticker } from '@/components/Ticker';
 import { forViewer, publicPin } from '@/lib/mapPins';
 import { bracketsFor } from '@/lib/brackets';
 import { seasonStandings } from '@/lib/seasonStandings';
@@ -140,46 +140,47 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
         )}
       </section>
 
-      <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties}>
-        <StringLights />
+      <section className="hero" style={{ '--accent': theme.roof } as React.CSSProperties} aria-labelledby="hero-title">
+        <div className="hero-meta">
+          <span className={`pill ${p}`}>{label.tag}</span>
+          <span>{label.line}</span>
+        </div>
         <div className="hero-copy">
-          <div className="row">
-            <span className={`pill ${p}`}>{label.tag}</span>
-            <span className="muted small">{label.line}</span>
-          </div>
-          <h1><span className="glow-text">{season.name}</span> {season.year}{p === 'final' ? ': final results' : ''}</h1>
-          <p className="muted" style={{ maxWidth: 560, fontSize: 17 }}>
+          <h1 id="hero-title"><span className="glow-text">{season.name}</span> <span className="hero-year">{season.year}</span>{p === 'final' && <span className="hero-sub">Final results</span>}</h1>
+          <p className="hero-lede">
             {p === 'soon' && 'We’re building this year’s light map together. Add your porch early so neighbors can plan their route.'}
             {p === 'live' && `This map is made by all of us. Add your porch, visit your neighbors in person, and help the community choose its ${theme.superlative.toLowerCase()} house by ${theme.day}.`}
             {p === 'final' && 'Voting is closed. Thank you for lighting it up together. These results stay up for one week, then move to each host’s archive.'}
           </p>
-          <div className="pot">
-            <Icon3D name="money" size={48} />
-            <div>
-              {pot.paidCents > 0 ? (
-                <>
-                  <b className="num">{dollars(pot.paidCents)}</b>
-                  <div className="muted small">
-                    in the community pot from {potFrom(pot.hosts, pot.sponsors)}
-                    {pledged > 0 && <> · {dollars(pledged)} more pledged</>} · <Link href="/rules">Official rules</Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <b className="num">{dollars(pledged)}</b>
-                  <div className="muted small">pledged to the community pot · free to enter · <Link href="/rules">Official rules</Link></div>
-                </>
-              )}
-            </div>
-          </div>
           {p !== 'final' && (
-            <div className="row" style={{ gap: 14 }}>
+            <div className="row" style={{ gap: 12 }}>
               <Link href="/submit" data-modal={user ? undefined : 'join:host'} className="btn primary">Add your porch</Link>
               {!user && <Link href="/join/viewer" data-modal="join:viewer" className="btn ghost">Join the vote</Link>}
             </div>
           )}
         </div>
-        <HeroHouse theme={theme} />
+        <HeroLight theme={theme} code={`PL ${String(season.year).slice(2)}/${season.day.slice(5).replace('-', '')}`} />
+        <dl className="hero-facts">
+          <div>
+            <dt>Community pot</dt>
+            <dd><b className="num">{dollars(pot.paidCents > 0 ? pot.paidCents : pledged)}</b></dd>
+            <dd className="small">
+              {pot.paidCents > 0
+                ? <>from {potFrom(pot.hosts, pot.sponsors)}{pledged > 0 && <> · {dollars(pledged)} more pledged</>}</>
+                : <>pledged · free to enter</>} · <Link href="/rules">Official rules</Link>
+            </dd>
+          </div>
+          <div>
+            <dt>Porches lit</dt>
+            <dd><b className="num">{houses.length}</b></dd>
+            <dd className="small">on the {season.name} map</dd>
+          </div>
+          <div>
+            <dt>{p === 'soon' ? 'Voting' : 'Calendar'}</dt>
+            <dd><b className="num">{season.day.slice(5).replace('-', '.')}</b></dd>
+            <dd className="small">{label.line}</dd>
+          </div>
+        </dl>
       </section>
 
       <CommunityBoard counts={community} mine={mine} seasonName={season.name} signedIn={Boolean(user)} />
@@ -190,7 +191,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ s
           <div className="steps">
             {STEPS.map(([icon, title, text], i) => (
               <div key={title} className={`panel step step-${i + 1} reveal`}>
-                <div className="step-top"><span className="step-icon"><Icon3D name={icon} size={52} /></span><span aria-hidden="true" className="step-num">0{i + 1}</span></div>
+                <div className="step-top"><span aria-hidden="true" className="step-num">0{i + 1}</span><span className="step-icon"><Icon3D name={icon} size={28} /></span></div>
                 <h3>{title}</h3>
                 <p className="muted">{text}</p>
               </div>

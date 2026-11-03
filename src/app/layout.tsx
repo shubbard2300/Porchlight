@@ -29,16 +29,15 @@ export const metadata: Metadata = {
   icons: { apple: '/app-icons/apple-touch-icon.png' },
 };
 
-export const viewport: Viewport = { themeColor: '#14123a' };
+export const viewport: Viewport = { themeColor: '#111114' };
 
 export const dynamic = 'force-dynamic';
 
 const FONTS = 'https://fonts.googleapis.com/css2?' + [
-  'Unbounded:wght@700;800', // wordmark
-  'Plus+Jakarta+Sans:wght@400;500;600;700;800', // body, all seasons
-  'Bricolage+Grotesque:opsz,wght@12..96,600..800', // default headings
-  'Grenze:wght@600;700;800', 'Grenze+Gotisch:wght@800', // Halloween headings + hero accent
-  'Fraunces:opsz,wght,SOFT,WONK@9..144,600..900,0..100,0..1', 'Berkshire+Swash', // Christmas headings + hero accent
+  'Inter+Tight:wght@300..800', // wordmark, headings, numbers: one grotesk across every season
+  'Inter:opsz,wght@14..32,400..700', // body, all seasons
+  'Grenze+Gotisch:wght@800', // Halloween hero accent
+  'Berkshire+Swash', // Christmas hero accent
 ].map((f) => `family=${f}`).join('&') + '&display=swap';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

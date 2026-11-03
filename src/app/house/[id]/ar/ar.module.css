@@ -8,7 +8,7 @@
 span.prop { pointer-events: none; }
 .prop img { display: block; width: 100%; height: auto; max-width: none; }
 .prop:active { cursor: grabbing; }
-.selected { outline: 2.5px dashed var(--amber); outline-offset: 4px; border-radius: 14px; }
+.selected { outline: 2.5px dashed var(--amber); outline-offset: 4px; border-radius: 2px; }
 .greeting { position: absolute; left: 50%; top: 5%; transform: translateX(-50%); max-width: 88%; margin: 0; padding: 0.35em 0.9em; border-radius: 999px; background: rgba(11, 10, 36, 0.72); border: 2px solid var(--amber); color: var(--cream); font-family: var(--font-accent); font-weight: var(--accent-weight); font-size: clamp(14px, 6.4cqi, 30px); line-height: 1.15; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 24px rgba(255, 176, 0, 0.45); }
 
 .bob { animation: bob 2.6s ease-in-out infinite; }
@@ -27,7 +27,7 @@ span.prop { pointer-events: none; }
 .stageCol { display: grid; gap: 12px; position: sticky; top: 16px; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 44px; }
 .palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 10px; }
-.tile { display: grid; justify-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: var(--r-md); border: 2px solid var(--ink); background: var(--paper); box-shadow: 3px 3px 0 var(--ink); font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; transition: transform 0.12s; }
+.tile { display: grid; justify-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: var(--r-md); border: 1px solid var(--ink); background: var(--paper); box-shadow: none; font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; transition: transform 0.12s; }
 .tile:hover:not(:disabled) { transform: translateY(-2px); }
 .tile:disabled { opacity: 0.45; cursor: not-allowed; }
 .tile img { width: 48px; height: 48px; }
@@ -46,7 +46,7 @@ span.prop { pointer-events: none; }
 .close { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 999px; background: rgba(255, 255, 255, 0.16); color: #fff; text-decoration: none; font-size: 18px; }
 .dock { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 18px 16px max(20px, env(safe-area-inset-bottom)); background: linear-gradient(transparent, rgba(11, 10, 36, 0.85)); }
 .dock :global(.btn.ghost) { background: rgba(255, 255, 255, 0.14); color: #fff; border-color: rgba(255, 255, 255, 0.6); }
-.note { position: absolute; left: 16px; right: 16px; bottom: calc(max(20px, env(safe-area-inset-bottom)) + 70px); z-index: 2; margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--amber-soft); color: var(--ink); font-weight: 700; text-align: center; }
+.note { position: absolute; left: 16px; right: 16px; bottom: calc(max(20px, env(safe-area-inset-bottom)) + 70px); z-index: 2; margin: 0; padding: 10px 14px; border-radius: 2px; background: var(--amber-soft); color: var(--ink); font-weight: 700; text-align: center; }
 .snapWrap { display: grid; gap: 12px; justify-items: center; }
 .snap { width: 100%; max-width: 420px; border-radius: var(--r-lg); border: var(--edge); box-shadow: var(--pop); }
 .preview { max-width: 360px; width: 100%; margin: 0 auto; box-shadow: var(--pop); border: var(--edge); }
